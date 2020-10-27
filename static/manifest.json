@@ -1,0 +1,20 @@
+{
+	"background_color": "#353033",
+	"theme_color": "#fff",
+	"name": "Itemize",
+	"short_name": "Itemize",
+	"display": "minimal-ui",
+	"start_url": "/",
+	"icons": [
+		{
+			"src": "logo-192.png",
+			"sizes": "192x192",
+			"type": "image/png"
+		},
+		{
+			"src": "logo-512.png",
+			"sizes": "512x512",
+			"type": "image/png"
+		}
+	]
+}

@@ -1,0 +1,86 @@
+/* Colors:
+ *
+ * Text: 		#ffffff - white
+ * Background: 	#353033 - dark gray
+ *
+ * Green 1:		#3CB34F - lightest green
+ * Green 2:		#159545 - light green
+ * Green 3:		#0F6539 - green
+ *
+ * Gray 2:		#7F7CAF - light gray
+ * Gray 3:		#8B88B6 - gray
+ * Gray 4:		#9693BD - dark gray
+ */
+:root {
+	--text: 		#ffffff; /* white */
+	--background: 	#353033; /* dark gray */
+	/*--background: 	#29353B; /* dark gray */
+	--green-1:		#3CB34F; /* lightest green */
+	--green-2:		#159545; /* light green */
+	--green-3:		#0F6539; /* green */
+	--gray-2:		#7F7C7F; /* light gray */
+	--gray-3:		#8B8886; /* gray */
+	--gray-4:		#96939D; /* dark gray */
+}
+
+li {
+	list-style-type: 'ᐉ ';
+	list-style-type: '» ';
+}
+
+body {
+	margin: 0;
+	font-family: Roboto, -apple-system, BlinkMacSystemFont, Segoe UI, Oxygen, Ubuntu, Cantarell, Fira Sans, Droid Sans, Helvetica Neue, sans-serif;
+	font-size: 14px;
+	line-height: 1.5;
+	color: var(--text);
+	background-color: var(--background);
+}
+
+h1, h2, h3, h4, h5, h6 {
+	margin: 0 0 0.5em 0;
+	font-weight: 400;
+	line-height: 1.2;
+}
+
+h1 {
+	font-size: 2em;
+}
+
+a {
+	color: var(--green-2);
+}
+
+a:active {
+	color: var(--green-3);
+}
+
+main {
+    position: relative;
+    max-width: 56em;
+    background-color: rgba(0, 0, 0, 0.1);
+    padding: 2em;
+    margin: 0 auto;
+    box-sizing: border-box;
+}
+
+img {
+	max-width: 100%;
+	max-height: 100%;
+	width: 100%;
+	height: 100%;
+}
+
+code {
+	font-family: menlo, inconsolata, monospace;
+	background-color: rgba(0, 0, 0, 0.15);
+	border: 1px solid rgba(255, 255, 255, 0.1);
+	border-radius: 0.2em;
+	padding: 0.0em  0.2em;
+}
+
+@media (min-width: 400px) {
+	body {
+		font-size: 16px;
+	}
+}
