@@ -190,6 +190,6 @@ Hilsen XXX`,
 		<br />
 		<br />
 		Følg oss også gjerne på
-		<a target="_blank" rel="noopener noreferrer" href="https://www.facebook.com/itemizeNTNU">facebook</a>.
+		<a target="_blank" rel="noopener noreferrer" href="https://www.facebook.com/ItemizeNTNU">facebook</a>.
 	</p>
 </div>

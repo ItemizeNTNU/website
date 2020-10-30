@@ -59,5 +59,6 @@
 		<li>
 			<a aria-current={segment === 'registrering' ? 'page' : undefined} href="registrering"> registrering </a>
 		</li>
+		<li><a aria-current={segment === 'ressurser' ? 'page' : undefined} href="ressurser"> ressurser </a></li>
 	</ul>
 </nav>

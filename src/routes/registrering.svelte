@@ -12,12 +12,8 @@
 	</p>
 	<ul>
 		<li>
-			<a target="_blank" rel="noopener noreferrer" href="https://forms.gle/nddSAz2fbbap91F86">Onsdag 28. oktober
-				16:15 - Sahara F272 - Arbeidskveld</a>
-		</li>
-		<li>
 			<a href="https://forms.gle/Tstw4FyFAjuKuw3WA" target="_blank" rel="noopener noreferrer">Lørdag 31. oktober
-				12:00 - Sahara F272 - NACTF</a>
+				12:00 - EL3 - NACTF</a>
 		</li>
 	</ul>
 </main>
