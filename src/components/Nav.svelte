@@ -1,5 +1,7 @@
 <script>
 	export let segment;
+	const sider = ['hjem', 'historie', 'for-bedrifter', 'arrangementer', 'ressurser'];
+	const home = sider.shift();
 </script>
 
 <style>
@@ -51,14 +53,11 @@
 
 <nav>
 	<ul>
-		<li><a aria-current={segment === undefined ? 'page' : undefined} href="."> hjem </a></li>
-		<li><a aria-current={segment === 'historie' ? 'page' : undefined} href="historie"> historie </a></li>
-		<li>
-			<a aria-current={segment === 'for-bedrifter' ? 'page' : undefined} href="for-bedrifter"> for bedrifter </a>
-		</li>
-		<li>
-			<a aria-current={segment === 'registrering' ? 'page' : undefined} href="registrering"> registrering </a>
-		</li>
-		<li><a aria-current={segment === 'ressurser' ? 'page' : undefined} href="ressurser"> ressurser </a></li>
+		<li><a aria-current={segment === undefined ? 'page' : undefined} href="."> {home} </a></li>
+		{#each sider as side}
+			<li>
+				<a aria-current={segment === side ? 'page' : undefined} href={side}> {side.replace(/-|_/g, ' ')} </a>
+			</li>
+		{/each}
 	</ul>
 </nav>
