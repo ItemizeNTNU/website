@@ -1,17 +1,13 @@
 <script>
 	const events = [
 		{
-			hva: 'NACTF',
+			hva: 'CTF',
 			hvor: 'EL3',
 			hvor_link: 'http://use.mazemap.com/?v=1&campuses=ntnu&sharepoitype=identifier&sharepoi=325-G102',
-			når: 'Lørdag 13. oktober 12:00',
-			link: 'https://forms.gle/Tstw4FyFAjuKuw3WA',
-			ctf: {
-				navn: 'NACTF',
-				link: 'https://ctftime.org/event/1157',
-			},
+			når: 'Lørdag 7. november 12:00',
+			link: 'https://forms.gle/8pi4PrgMLrANambk7',
 			info:
-				'På lørdag deltar vi på NACTF! Den er mer rettet mot nybegynnere, så vi håper det blir lærerikt for alle og enhver.',
+				'På lørdag deltar vi på CTF! Vi kjører samme opplegg som forrige helg med pizza og sitter igjen på EL3.',
 		},
 	];
 </script>
