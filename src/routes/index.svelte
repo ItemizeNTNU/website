@@ -191,5 +191,9 @@ Hilsen XXX`,
 		<br />
 		Følg oss også gjerne på
 		<a target="_blank" rel="noopener noreferrer" href="https://www.facebook.com/ItemizeNTNU">facebook</a>.
+		<br />
+		Vi bruker også
+		<a href="https://discord.gg/Et9cCKnyg9" target="_blank" rel="noopener noreferrer">discord</a>
+		for all intern kommunikasjon.
 	</p>
 </div>
