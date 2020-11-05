@@ -2,12 +2,16 @@
 	const events = [
 		{
 			hva: 'CTF',
-			hvor: 'EL3',
-			hvor_link: 'http://use.mazemap.com/?v=1&campuses=ntnu&sharepoitype=identifier&sharepoi=325-G102',
+			hvor: 'Digitalt / Discord',
+			hvor_link: undefined,
 			når: 'Lørdag 7. november 12:00',
-			link: 'https://forms.gle/8pi4PrgMLrANambk7',
+			link: undefined,
+			ctf: {
+				navn: 'KipodAfterFree CTF',
+				link: 'https://ctftime.org/event/1133',
+			},
 			info:
-				'På lørdag deltar vi på CTF! Vi kjører samme opplegg som forrige helg med pizza og sitter igjen på EL3.',
+				'På lørdag deltar vi på KipodAfterFree CTF! Grunnet nye rettningslinjer for nasjonale smittevernstiltak så deltar vi kun digitalt denne gangen. Vi kommer til å bruke Discord som kommunikasjonsplatform under CTFen.',
 		},
 	];
 </script>
@@ -62,21 +66,30 @@
 						<tr>
 							<td>Hvor:</td>
 							<td>
-								<a href={event.hvor_link} target="_blank" rel="noopener noreferrer">{event.hvor}</a>
+								{#if event.hvor_link}
+									<a href={event.hvor_link} target="_blank" rel="noopener noreferrer">{event.hvor}</a>
+								{:else}{event.hvor}{/if}
 							</td>
 						</tr>
 						<tr>
 							<td>Når:</td>
 							<td>{event.når}</td>
 						</tr>
-						<tr>
-							<td>Registrering:</td>
-							<td><a href={event.link} target="_blank" rel="noopener noreferrer">her</a></td>
-						</tr>
-						{#if event.ctf}
+						{#if event.link}
+							<tr>
+								<td>Registrering:</td>
+								<td><a href={event.link} target="_blank" rel="noopener noreferrer">her</a></td>
+							</tr>
+						{/if}
+						{#if event.ctf && event.ctf.navn}
 							<td>CTF:</td>
 							<td>
-								<a href={event.ctf.link} target="_blank" rel="noopener noreferrer">{event.ctf.navn}</a>
+								{#if event.ctf.link}
+									<a
+										href={event.ctf.link}
+										target="_blank"
+										rel="noopener noreferrer">{event.ctf.navn}</a>
+								{:else}{event.ctf.navn}{/if}
 							</td>
 						{/if}
 						<tr>
