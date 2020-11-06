@@ -25,6 +25,10 @@
 	}
 </style>
 
+<svelte:head>
+	<title>For Bedrifter</title>
+</svelte:head>
+
 <main>
 	<h1>Ressurser:</h1>
 	<ul class="overview">
@@ -132,6 +136,15 @@
 		<li>
 			<a href="https://zxing.org/w/decode.jspx" target="_blank" rel="noopener noreferrer">ZXing Decoder</a>
 			<p>Online implementasjon av XZing, et QRcode verktøy som støtter mange ulike 1D og 2D QRkode formater.</p>
+		</li>
+		<li>
+			<a href="https://github.com/Gallopsled/pwntools" target="_blank" rel="noopener noreferrer">pwntools</a>
+			<p>
+				Pwntools er et CTF toolkit skrevet i python for rask prototyping og tar seg av mye av "boilerplate"
+				koden som man skriver hver gang. Pwntools har også en god del kule og nyttige funksjoner som en ofte
+				bruker på CTFer, som generering av shellcode payloads eller enkel asynkron håndtering av sockets og
+				prosesser.
+			</p>
 		</li>
 		<li>
 			<a href="https://godbolt.org/" target="_blank" rel="noopener noreferrer">Compiler Explorer</a>
