@@ -11,7 +11,7 @@
 				link: 'https://ctftime.org/event/1133',
 			},
 			info:
-				'På lørdag deltar vi på KipodAfterFree CTF! Grunnet nye rettningslinjer for nasjonale smittevernstiltak så deltar vi kun digitalt denne gangen. Vi kommer til å bruke Discord som kommunikasjonsplatform under CTFen.',
+				'På lørdag deltar vi på KipodAfterFree CTF! Grunnet nye retningslinjer for nasjonale smitteverntiltak så deltar vi kun digitalt denne gangen. Vi kommer til å bruke Discord som kommunikasjonsplattform under CTFen.',
 		},
 	];
 </script>
