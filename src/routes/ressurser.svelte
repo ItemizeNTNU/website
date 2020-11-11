@@ -26,7 +26,7 @@
 </style>
 
 <svelte:head>
-	<title>For Bedrifter</title>
+	<title>Ressurser</title>
 </svelte:head>
 
 <main>
