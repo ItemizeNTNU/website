@@ -168,6 +168,11 @@
 			</p>
 		</li>
 		<li>
+			<a href="https://stegonline.georgeom.net/checklist" target="_blank" rel="noopener noreferrer">StegOnline
+				Checklist</a>
+			<p>En fin liste over ting man bør teste når man går gjennom steganography oppgaver.</p>
+		</li>
+		<li>
 			<a href="https://requestbin.com" target="_blank" rel="noopener noreferrer">requestbin</a>
 			<p>
 				Lar deg sette opp webhook endpoints for callbacks, fin måte å kunne hente ut informasjon hvis du ikke
