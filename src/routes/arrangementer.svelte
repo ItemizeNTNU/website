@@ -1,17 +1,17 @@
 <script>
 	const events = [
 		{
-			hva: 'CTF',
-			hvor: 'Digitalt / Discord',
-			hvor_link: undefined,
-			når: 'Lørdag 7. november 12:00',
-			link: undefined,
+			hva: 'Itemize KID CTF 2020',
+			hvor: 'Digitalt',
+			// hvor_link: undefined,
+			når: 'Lørdag 14. november 12:00 - Søndag 15. november 12:00',
+			påmelding: undefined,
 			ctf: {
-				navn: 'KipodAfterFree CTF',
-				link: 'https://ctftime.org/event/1133',
+				navn: 'Itemize KID CTF 2020',
+				link: 'https://kid2020.itemize.no/',
 			},
 			info:
-				'På lørdag deltar vi på KipodAfterFree CTF! Grunnet nye retningslinjer for nasjonale smitteverntiltak så deltar vi kun digitalt denne gangen. Vi kommer til å bruke Discord som kommunikasjonsplattform under CTFen.',
+				'På lørdag åpner vi opp for alle CTFen vi i Itemize hadde laget for KID 2020. CTFen er åpen i 24 timer, men oppgavene vil være tilgjengelige også etterpå. Nivået er rettet mot nybegynnere og spillere som ikke har spilt CTF før. Man kan spille som lag eller alene.',
 		},
 	];
 </script>
@@ -75,10 +75,10 @@
 							<td>Når:</td>
 							<td>{event.når}</td>
 						</tr>
-						{#if event.link}
+						{#if event.påmelding}
 							<tr>
 								<td>Registrering:</td>
-								<td><a href={event.link} target="_blank" rel="noopener noreferrer">her</a></td>
+								<td><a href={event.påmelding} target="_blank" rel="noopener noreferrer">her</a></td>
 							</tr>
 						{/if}
 						{#if event.ctf && event.ctf.navn}
