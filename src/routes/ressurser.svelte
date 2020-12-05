@@ -132,6 +132,7 @@
 		<li>
 			<a href="https://hashes.com" target="_blank" rel="noopener noreferrer">Hashes</a>
 			<p>Online verktøy for å detektere hash type samt søke etter kjente hashes.</p>
+			<p id="flag-part" hidden>b9d6b360c532f30e9cf97a9e84e64479</p>
 		</li>
 		<li>
 			<a href="https://zxing.org/w/decode.jspx" target="_blank" rel="noopener noreferrer">ZXing Decoder</a>
