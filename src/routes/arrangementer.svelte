@@ -14,37 +14,8 @@
 				'På lørdag åpner vi opp for alle CTFen vi i Itemize hadde laget for KID 2020. CTFen er åpen i 24 timer, men oppgavene vil være tilgjengelige også etterpå. Nivået er rettet mot nybegynnere og spillere som ikke har spilt CTF før. Man kan spille som lag eller alene.',
 		},
 	];
+	events.pop();
 </script>
-
-<style>
-	li {
-		list-style-type: none;
-		background-color: rgba(255, 255, 255, 0.1);
-		padding: 0.5em;
-		margin-bottom: 1em;
-		border: 2px solid rgba(0, 0, 0, 0);
-		transition: border 0.2s;
-	}
-
-	li:hover {
-		border: 2px solid rgba(255, 255, 255, 0.05);
-		transition: border 0s;
-	}
-
-	li p {
-		text-align: center;
-	}
-
-	ul {
-		padding: 0;
-	}
-
-	td {
-		padding: 0 0.5em;
-		text-align: left;
-		vertical-align: top;
-	}
-</style>
 
 <svelte:head>
 	<title>Arrangementer</title>
@@ -85,10 +56,9 @@
 							<td>CTF:</td>
 							<td>
 								{#if event.ctf.link}
-									<a
-										href={event.ctf.link}
-										target="_blank"
-										rel="noopener noreferrer">{event.ctf.navn}</a>
+									<a href={event.ctf.link} target="_blank" rel="noopener noreferrer">
+										{event.ctf.navn}
+									</a>
 								{:else}{event.ctf.navn}{/if}
 							</td>
 						{/if}
@@ -105,9 +75,39 @@
 			<li>
 				<p>
 					Det ser ikke ut som vi har noen planlagte arrangementer annonsert enda. Kom gjerne tilbake igjen
-					senere 🙃.
+					senere 🙃
 				</p>
 			</li>
 		{/each}
 	</ul>
 </main>
+
+<style>
+	li {
+		list-style-type: none;
+		background-color: rgba(255, 255, 255, 0.1);
+		padding: 0.5em;
+		margin-bottom: 1em;
+		border: 2px solid rgba(0, 0, 0, 0);
+		transition: border 0.2s;
+	}
+
+	li:hover {
+		border: 2px solid rgba(255, 255, 255, 0.05);
+		transition: border 0s;
+	}
+
+	li p {
+		text-align: center;
+	}
+
+	ul {
+		padding: 0;
+	}
+
+	td {
+		padding: 0 0.5em;
+		text-align: left;
+		vertical-align: top;
+	}
+</style>

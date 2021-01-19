@@ -42,6 +42,66 @@ Hilsen XXX`,
 	)}`;
 </script>
 
+<svelte:head>
+	<title>Itemize NTNU</title>
+</svelte:head>
+
+<div class="logo">
+	<Logo />
+</div>
+
+<div class="background">{brainfuck}</div>
+
+<div class="content">
+	<!-- Info -->
+	<p>
+		Er du interessert i informasjonssikkerhet?
+		<br />
+		Vil du lære mer om snill hacking?
+		<br />
+		Liker du å holde på med
+		<a target="_blank" rel="noopener noreferrer" href={ctf_info_url} title={ctf_info}>CTFer</a>
+		?
+		<br />
+		<span class="heavy">
+			Join NTNU's
+			<a target="_blank" rel="noopener noreferrer" href={ctf_info_url} title={ctf_info}>CTF</a>
+			lag!
+		</span>
+	</p>
+	<p>
+		Vi er en studentorganisasjon ved NTNU Trondheim som digger informasjonssikkerhet og CTFer.
+		<br />
+		Du kan finne en liste over fremtidige arrangementer
+		<a href="/registrering">her</a>.
+
+		<!-- Vi har drop-in med pizza og hacking hver <span class="highlight">onsdag 16:00</span> og ut kvelden. -->
+	</p>
+
+	<ul>
+		<li>Vi er NTNUs CTF-lag.</li>
+		<li>Vi er en interesseorganisasjon for alle ved NTNU Trondheim.</li>
+		<li>Vi jobber for å fremme god sikkerhetskultur i Norge.</li>
+	</ul>
+
+	<!-- Contact -->
+	<br />
+	<h1>Bli medlem!</h1>
+	<p>
+		For å registrere deg som medlem, bare send en epost til:
+		<br />
+		<a href={mailhref}> hack@itemize.no </a>
+		<br />
+		<br />
+		Følg oss også gjerne på
+		<a target="_blank" rel="noopener noreferrer" href="https://www.facebook.com/ItemizeNTNU">facebook</a>.
+		<br />
+		Vi bruker også
+		<a href="https://discord.gg/Et9cCKnyg9" target="_blank" rel="noopener noreferrer">discord</a>
+		for all intern kommunikasjon.
+	</p>
+</div>
+
 <style>
 	.content {
 		display: flex;
@@ -67,10 +127,6 @@ Hilsen XXX`,
 		font-weight: 900;
 		margin: 0.3em;
 		display: block;
-	}
-
-	.highlight {
-		color: var(--green-1);
 	}
 
 	.content * {
@@ -137,63 +193,3 @@ Hilsen XXX`,
 		}
 	}
 </style>
-
-<svelte:head>
-	<title>Itemize</title>
-</svelte:head>
-
-<div class="logo">
-	<Logo />
-</div>
-
-<div class="background">{brainfuck}</div>
-
-<div class="content">
-	<!-- Info -->
-	<p>
-		Er du interessert i informasjonssikkerhet?
-		<br />
-		Vil du lære mer om snill hacking?
-		<br />
-		Liker du å holde på med
-		<a target="_blank" rel="noopener noreferrer" href={ctf_info_url} title={ctf_info}>CTFer</a>
-		?
-		<br />
-		<span class="heavy">
-			Join NTNU's
-			<a target="_blank" rel="noopener noreferrer" href={ctf_info_url} title={ctf_info}>CTF</a>
-			lag!
-		</span>
-	</p>
-	<p>
-		Vi er en studentorganisasjon ved NTNU Trondheim som digger informasjonssikkerhet og CTFer.
-		<br />
-		Du kan finne en liste over fremtidige arrangementer
-		<a href="/registrering">her</a>.
-
-		<!-- Vi har drop-in med pizza og hacking hver <span class="highlight">onsdag 16:00</span> og ut kvelden. -->
-	</p>
-
-	<ul>
-		<li>Vi er NTNUs CTF-lag.</li>
-		<li>Vi er en interesseorganisasjon for alle ved NTNU Trondheim.</li>
-		<li>Vi jobber for å fremme god sikkerhetskultur i Norge.</li>
-	</ul>
-
-	<!-- Contact -->
-	<br />
-	<h1>Bli medlem!</h1>
-	<p>
-		For å registrere deg som medlem, bare send en epost til:
-		<br />
-		<a href={mailhref}> hack@itemize.no </a>
-		<br />
-		<br />
-		Følg oss også gjerne på
-		<a target="_blank" rel="noopener noreferrer" href="https://www.facebook.com/ItemizeNTNU">facebook</a>.
-		<br />
-		Vi bruker også
-		<a href="https://discord.gg/Et9cCKnyg9" target="_blank" rel="noopener noreferrer">discord</a>
-		for all intern kommunikasjon.
-	</p>
-</div>

@@ -12,15 +12,14 @@
  * Gray 4:		#9693BD - dark gray
  */
 :root {
-	--text: 		#ffffff; /* white */
-	--background: 	#353033; /* dark gray */
-	/*--background: 	#29353B; /* dark gray */
+	--text:			#FFFFFF; /* white */
+	--background:	#353033; /* dark gray */
 	--green-1:		#3CB34F; /* lightest green */
 	--green-2:		#159545; /* light green */
 	--green-3:		#0F6539; /* green */
 	--gray-2:		#7F7C7F; /* light gray */
 	--gray-3:		#8B8886; /* gray */
-	--gray-4:		#96939D; /* dark gray */
+	--gray-4:		#969395; /* dark gray */
 }
 
 li {
