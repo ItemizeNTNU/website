@@ -1,20 +1,19 @@
 <script>
 	const events = [
 		{
-			hva: 'Itemize KID CTF 2020',
+			hva: 'justCTF',
 			hvor: 'Digitalt',
 			// hvor_link: undefined,
-			når: 'Lørdag 14. november 12:00 - Søndag 15. november 12:00',
+			når: 'Lørdag 30. januar 12:00',
 			påmelding: undefined,
 			ctf: {
-				navn: 'Itemize KID CTF 2020',
-				link: 'https://kid2020.itemize.no/',
+				navn: 'justCTF [*] 2020',
+				link: 'https://2020.justctf.team/',
 			},
 			info:
-				'På lørdag åpner vi opp for alle CTFen vi i Itemize hadde laget for KID 2020. CTFen er åpen i 24 timer, men oppgavene vil være tilgjengelige også etterpå. Nivået er rettet mot nybegynnere og spillere som ikke har spilt CTF før. Man kan spille som lag eller alene.',
+				'På lørdag deltar vi på justCTF (av justCatTheFish). Grunnet nasjonale tiltak blir opplegget heldigitalt over Discord.',
 		},
 	];
-	events.pop();
 </script>
 
 <svelte:head>
@@ -23,7 +22,9 @@
 <main>
 	<h1>Arrangementer</h1>
 	<p>Her finner du oversikt over våre fremtidige arrangementer.</p>
-	<p>På grunn av smittesporing trenger vi å registrere alle som ønsker å delta på fremtidige arrangementer.</p>
+	<p>
+		På grunn av smittesporing trenger vi å registrere alle som ønsker å delta på fremtidige fysiske arrangementer.
+	</p>
 	<p>
 		Vennligst meld deg på en av lenkene under før du møter opp til et arrangement. Det er ingen tidsfrist for
 		påmelding, så lenge du melder deg på før du fysisk møter opp.
