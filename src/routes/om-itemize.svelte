@@ -11,7 +11,7 @@
             mail: 'nestleder@itemize.no',
         },
         {
-            name: 'Kristian In\'t Veld',
+            name: 'Kristian in\'t Veld',
             position: 'Driftsansvarlig',
             mail: 'drift@itemize.no',
         },
@@ -26,7 +26,7 @@
             mail: 'arrangement@itemeize.no',
         },
         {
-            name: 'Knut Buene',
+            name: 'Knut Formo Buene',
             position: 'PR- og rekrutteringsansvarlig',
             mail: 'pr@itemize.no',
         },
@@ -65,7 +65,7 @@
     <h2>Kontakt</h2>
 
     <p>
-        Vi har imot innmeldinger, spørsmål og andre henvendelser på mail: <a href="mailto:hack@itemize.no">hack@itemize.no</a>
+        Vi tar imot innmeldinger, spørsmål og andre henvendelser på mail: <a href="mailto:hack@itemize.no">hack@itemize.no</a>
     </p>
     <p>
         <i>Postadresse:</i><br>
@@ -87,7 +87,7 @@
         {#each board as person}
             <li>
                 <b>{person.position}</b>: {person.name}
-                <span class='right'><a href='{person.mail}'>{person.mail}</a></span>
+                <span class='right'><a href='mailto:{person.mail}'>{person.mail}</a></span>
             </li>
         {/each}
     </ul>
