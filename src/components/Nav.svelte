@@ -1,6 +1,6 @@
 <script>
 	export let segment;
-	const sider = ['hjem', 'historie', 'for-bedrifter', 'arrangementer', 'ressurser'];
+	const sider = ['hjem', 'om-itemize', 'historie', 'for-bedrifter', 'arrangementer', 'ressurser'];
 	const home = sider.shift();
 </script>
 
