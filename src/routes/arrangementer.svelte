@@ -1,17 +1,49 @@
 <script>
 	const events = [
 		{
-			hva: 'justCTF',
-			hvor: 'Digitalt',
-			// hvor_link: undefined,
-			når: 'Lørdag 30. januar 12:00',
-			påmelding: undefined,
+			hva: 'Diskusjonskveld',
+			hvor: 'TBA (info kommer på discord)',
+			når: 'Torsdag 18. februar 17:15',
+			info: 'Tett dialog og spørsmålsrunder om Itemize NTNU',
+		},
+		{
+			hva: 'darkCON CTF',
+			hvor: 'Discord',
+			når: 'Lørdag 20. februar 12:00',
 			ctf: {
-				navn: 'justCTF [*] 2020',
-				link: 'https://2020.justctf.team/',
+				navn: 'darkCON CTF',
+				link: 'https://ctftime.org/event/1250',
 			},
+			info: 'Vi deltar på darkCON CTF. Grunnet nasjonale tiltak blir opplegget heldigitalt over Discord.',
+		},
+		{
+			hva: 'Terminalkurs 101 & darkCON gjennomgang',
+			hvor: 'Discord',
+			når: 'Torsdag 25. februar 17:15',
 			info:
-				'På lørdag deltar vi på justCTF (av justCatTheFish). Grunnet nasjonale tiltak blir opplegget heldigitalt over Discord.',
+				'Blir intro kurs til bruk av terminal og nyttige verktøy. Etter kurset blir det gjennomgang av oppgaver og løsninger til darkCON CTF.',
+		},
+		{
+			hva: 'Aero CTF',
+			hvor: 'Discord',
+			når: 'Lørdag 27. februar 12:00',
+			ctf: {
+				navn: 'Aero CTF',
+				link: 'https://ctftime.org/event/1224',
+			},
+			info: 'Vi deltar på Aero CTF. Grunnet nasjonale tiltak blir opplegget heldigitalt over Discord.',
+		},
+		{
+			hva: 'Gjennomgang av Aero CTF',
+			hvor: 'Discord',
+			når: 'Torsdag 4. mars 18:00',
+			info: 'Gjennomgang av oppgaver og løsninger til Aero CTF',
+		},
+		{
+			hva: 'CTF med EY',
+			hvor: 'TBA',
+			når: 'TBA',
+			info: 'O_o',
 		},
 	];
 </script>
@@ -23,11 +55,12 @@
 	<h1>Arrangementer</h1>
 	<p>Her finner du oversikt over våre fremtidige arrangementer.</p>
 	<p>
+		<b>NB Fysiske arrangementer:</b>
+		<br />
 		På grunn av smittesporing trenger vi å registrere alle som ønsker å delta på fremtidige fysiske arrangementer.
-	</p>
-	<p>
-		Vennligst meld deg på en av lenkene under før du møter opp til et arrangement. Det er ingen tidsfrist for
-		påmelding, så lenge du melder deg på før du fysisk møter opp.
+		<br />
+		Vennligst meld deg på en av lenkene under før du møter opp til et arrangement. Det er ingen tidsfrist for påmelding,
+		så lenge du melder deg på før du fysisk møter opp.
 	</p>
 	<ul>
 		{#each events as event}
