@@ -43,7 +43,7 @@
     <p>
         Itemize NTNU er en frivillig interesseorganisasjon for studenter og ansatte ved NTNU Trondheim som liker eller vil lære om informasjonssikkerhet og hacking.
         I vedtektene til Itemize NTNU står det også at Itemize skal være med på å fremme god sikkerhetskultur i Norge.
-        Dette gjør vi ved å delta på både nasjonale og internasjonale CTFer jevnlig.
+        Dette gjør vi ved å delta på både nasjonale og internasjonale CTFer jevnlig samt å holde både interne og eksterne kurs.
     </p>
     <p>
         Driften til Itemize er prosjektbasert, noe som betyr at medlemmer kan velge å engasjere seg i kortvarige prosjekter.
@@ -83,7 +83,7 @@
 
     <ul>
         {#each board as person}
-            <li class="boxes">
+            <li>
                 <b>{person.position}</b>: {person.name}
                 <span class='right'><a href='mailto:{person.mail}'>{person.mail}</a></span>
             </li>
@@ -93,7 +93,7 @@
 </main>
 
 <style>
-	.boxes {
+	li {
 		list-style-type: none;
 		background-color: rgba(255, 255, 255, 0.1);
 		padding: 0.5em;
@@ -102,7 +102,7 @@
 		transition: border 0.2s;
 	}
 
-	.boxes:hover {
+	li:hover {
 		border: 2px solid rgba(255, 255, 255, 0.05);
 		transition: border 0s;
 	}
