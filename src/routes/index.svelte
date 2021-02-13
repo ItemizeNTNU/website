@@ -85,11 +85,6 @@
 		font-size: 1em;
 	}
 
-	h1 {
-		margin-top: 1em;
-		margin-bottom: 0;
-	}
-
 	.heavy {
 		font-weight: 900;
 		margin: 0.3em;
@@ -131,10 +126,6 @@
 	@media (min-width: 700px) {
 		.content {
 			font-size: 1.3em;
-		}
-
-		h1 {
-			margin-top: 3em;
 		}
 		.logo {
 			padding: 7vw 15vw;
