@@ -85,7 +85,7 @@
 
     <ul>
         {#each board as person}
-            <li>
+            <li class="boxes">
                 <b>{person.position}</b>: {person.name}
                 <span class='right'><a href='mailto:{person.mail}'>{person.mail}</a></span>
             </li>
@@ -95,7 +95,7 @@
 </main>
 
 <style>
-	li {
+	.boxes {
 		list-style-type: none;
 		background-color: rgba(255, 255, 255, 0.1);
 		padding: 0.5em;
@@ -104,7 +104,7 @@
 		transition: border 0.2s;
 	}
 
-	li:hover {
+	.boxes:hover {
 		border: 2px solid rgba(255, 255, 255, 0.05);
 		transition: border 0s;
 	}
