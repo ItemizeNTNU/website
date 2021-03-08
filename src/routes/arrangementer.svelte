@@ -1,49 +1,32 @@
 <script>
 	const events = [
 		{
-			hva: 'Diskusjonskveld',
-			hvor: 'TBA (info kommer på discord)',
-			når: 'Torsdag 18. februar 17:15',
-			info: 'Tett dialog og spørsmålsrunder om Itemize NTNU',
-		},
-		{
-			hva: 'darkCON CTF',
+			hva: 'UTCTF',
 			hvor: 'Discord',
-			når: 'Lørdag 20. februar 12:00',
+			når: 'Lørdag 13. mars 12:00',
 			ctf: {
-				navn: 'darkCON CTF',
-				link: 'https://ctftime.org/event/1250',
+				navn: 'UTCTF',
+				link: 'https://ctftime.org/event/1177',
 			},
-			info: 'Vi deltar på darkCON CTF. Grunnet nasjonale tiltak blir opplegget heldigitalt over Discord.',
+			info: 'Vi deltar på UTCTF. Grunnet nasjonale tiltak blir opplegget heldigitalt over Discord.',
 		},
 		{
-			hva: 'Terminalkurs 101 & darkCON gjennomgang',
+			hva: 'UTCTF gjennomgang',
 			hvor: 'Discord',
-			når: 'Torsdag 25. februar 17:15',
-			info:
-				'Blir intro kurs til bruk av terminal og nyttige verktøy. Etter kurset blir det gjennomgang av oppgaver og løsninger til darkCON CTF.',
-		},
-		{
-			hva: 'Aero CTF',
-			hvor: 'Discord',
-			når: 'Lørdag 27. februar 12:00',
-			ctf: {
-				navn: 'Aero CTF',
-				link: 'https://ctftime.org/event/1224',
-			},
-			info: 'Vi deltar på Aero CTF. Grunnet nasjonale tiltak blir opplegget heldigitalt over Discord.',
-		},
-		{
-			hva: 'Gjennomgang av Aero CTF',
-			hvor: 'Discord',
-			når: 'Torsdag 4. mars 18:00',
-			info: 'Gjennomgang av oppgaver og løsninger til Aero CTF',
+			når: 'Torsdag 18. mars 18:15',
+			info: 'Gjennomgang av oppgaver og løsninger til UTCTF.',
 		},
 		{
 			hva: 'CTF med EY',
 			hvor: 'TBA',
-			når: 'TBA',
-			info: 'O_o',
+			når: 'Torsdag 25. mars 17:15',
+			info: 'Mer info kommer',
+		},
+		{
+			hva: 'CTF med Deloitte',
+			hvor: 'TBA',
+			når: '8. april',
+			info: 'Mer info kommer',
 		},
 	];
 </script>
