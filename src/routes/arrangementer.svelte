@@ -8,7 +8,8 @@
 				navn: 'UTCTF',
 				link: 'https://ctftime.org/event/1177',
 			},
-			info: 'Vi deltar på UTCTF. Grunnet nasjonale tiltak blir opplegget heldigitalt over Discord.',
+			info:
+				'Vi deltar på UTCTF. Det blir foodora til alle som deltar 🍔. Grunnet nasjonale tiltak blir opplegget digitalt over Discord.',
 		},
 		{
 			hva: 'UTCTF gjennomgang',
@@ -18,15 +19,15 @@
 		},
 		{
 			hva: 'CTF med EY',
-			hvor: 'TBA',
+			hvor: 'Teams/Discord',
 			når: 'Torsdag 25. mars 17:15',
-			info: 'Mer info kommer',
+			info: 'EY hoster CTF for oss. Påmelding kommer.',
 		},
 		{
 			hva: 'CTF med Deloitte',
 			hvor: 'TBA',
 			når: '8. april',
-			info: 'Mer info kommer',
+			info: 'Deloitte hoster sin nasjonale CTF delfinale hos oss. Påmelding kommer.',
 		},
 	];
 </script>
