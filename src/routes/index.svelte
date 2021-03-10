@@ -6,8 +6,6 @@
 		'Capture The Flag er konkurranser som omhandler forskjellige aspekter av IT-sikkerhet, og er en god måte å lære seg noen av de praktiske skilza man bruker som «etisk hacker» 😎\nTrykk for mer info.';
 	const ctf_info_url = 'https://ctftime.org/ctf-wtf/';
 
-	const info = (e) => {};
-
 	let brainfuck = '';
 
 	let chars =
@@ -20,7 +18,6 @@
 		i = (i + 1) % chars.length;
 		if (brainfuck.length < 3000) {
 			setTimeout(writeNext, (30 + Math.pow(Math.random(), 2) * 100 + Math.pow(Math.random(), 6) * 500) * 0.3);
-			// setTimeout(writeNext, 1);
 		}
 	};
 	onMount(() => {
@@ -54,18 +51,18 @@
 		?
 		<br />
 		Vil du være med på NTNU Trondheim's CTF lag?
-		<span class="heavy">
-			
-			<a href="https://discord.gg/Et9cCKnyg9" target="_blank" rel="noopener noreferrer" style=""><button>Bli med på Discorden her!</button></a>
-		</span>
 	</p>
+	<a href="https://discord.gg/Et9cCKnyg9" target="_blank" rel="noopener noreferrer" class="heavy"
+		><button>Bli med på Discorden her!</button></a
+	>
 	<p>
 		Du kan finne en liste over fremtidige arrangementer
 		<a href="/registrering">her</a>.
-		<br/>
-		Følg oss også gjerne på 
+		<br />
+		Følg oss også gjerne på
 		<a target="_blank" rel="noopener noreferrer" href="https://www.facebook.com/ItemizeNTNU">facebook</a>.
 	</p>
+	<div class="space" />
 </div>
 
 <style>
@@ -87,8 +84,10 @@
 
 	.heavy {
 		font-weight: 900;
-		margin: 0.3em;
-		display: block;
+		margin: 0.5em;
+	}
+	button {
+		font-size: 1.5em;
 	}
 
 	.content * {
@@ -121,6 +120,10 @@
 		left: 0;
 		width: 100%;
 		height: 22em;
+	}
+
+	.space {
+		height: 1.5em;
 	}
 
 	@media (min-width: 700px) {
