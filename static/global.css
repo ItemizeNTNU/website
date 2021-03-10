@@ -53,6 +53,25 @@ a {
 a:active {
 	color: var(--green-3);
 }
+button {
+	padding: 0.5em;
+	background-color: var(--green-1);
+	border-radius: 0.5em;
+	border-color: var(--green-1);
+}
+button:hover{
+	background-color: var(--green-2);
+	border-color: var(--green-2);
+}
+button:active{
+	background-color: var(--green-3);
+	border-color: var(--green-3);
+}
+a button{
+	text-decoration: none;
+	color: var(--text);
+	cursor: pointer;
+}
 
 main {
     position: relative;
@@ -81,5 +100,10 @@ code {
 @media (min-width: 400px) {
 	body {
 		font-size: 16px;
+	}
+}
+@media (min-width: 56em) {
+	main {
+		margin-bottom: 3.5em;
 	}
 }

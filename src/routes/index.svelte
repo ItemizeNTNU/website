@@ -6,8 +6,6 @@
 		'Capture The Flag er konkurranser som omhandler forskjellige aspekter av IT-sikkerhet, og er en god måte å lære seg noen av de praktiske skilza man bruker som «etisk hacker» 😎\nTrykk for mer info.';
 	const ctf_info_url = 'https://ctftime.org/ctf-wtf/';
 
-	const info = (e) => {};
-
 	let brainfuck = '';
 
 	let chars =
@@ -20,26 +18,11 @@
 		i = (i + 1) % chars.length;
 		if (brainfuck.length < 3000) {
 			setTimeout(writeNext, (30 + Math.pow(Math.random(), 2) * 100 + Math.pow(Math.random(), 6) * 500) * 0.3);
-			// setTimeout(writeNext, 1);
 		}
 	};
 	onMount(() => {
 		writeNext();
 	});
-
-	const defMail = {
-		to: 'hack@itemize.no',
-		subject: 'Jeg vil bli medlem av Itemize NTNU!',
-		body: `Hei,
-
-Mitt navn er XXXX og går X. klasse XXX og vil gjerne bli medlem av Itemize NTNU!
-
-Hilsen XXX`,
-	};
-	// const mailhref = Object.entries(defaultMail).map(([key, value]) => encodeURIComponent(key) + "=" + encodeURIComponent(value)).join("=");
-	const mailhref = `mailto:${defMail.to}?subject=${encodeURIComponent(defMail.subject)}&body=${encodeURIComponent(
-		defMail.body
-	)}`;
 </script>
 
 <svelte:head>
@@ -55,6 +38,10 @@ Hilsen XXX`,
 <div class="content">
 	<!-- Info -->
 	<p>
+		Vi er en studentorganisasjon ved NTNU Trondheim som digger informasjonssikkerhet og CTFer.
+		<!-- Vi har drop-in med pizza og hacking hver <span class="highlight">onsdag 16:00</span> og ut kvelden. -->
+	</p>
+	<p>
 		Er du interessert i informasjonssikkerhet?
 		<br />
 		Vil du lære mer om snill hacking?
@@ -63,43 +50,19 @@ Hilsen XXX`,
 		<a target="_blank" rel="noopener noreferrer" href={ctf_info_url} title={ctf_info}>CTFer</a>
 		?
 		<br />
-		<span class="heavy">
-			Join NTNU's
-			<a target="_blank" rel="noopener noreferrer" href={ctf_info_url} title={ctf_info}>CTF</a>
-			lag!
-		</span>
+		Vil du være med på NTNU Trondheim's CTF lag?
 	</p>
+	<a href="https://discord.gg/Et9cCKnyg9" target="_blank" rel="noopener noreferrer" class="heavy"
+		><button>Bli med på Discorden her!</button></a
+	>
 	<p>
-		Vi er en studentorganisasjon ved NTNU Trondheim som digger informasjonssikkerhet og CTFer.
-		<br />
 		Du kan finne en liste over fremtidige arrangementer
 		<a href="/registrering">her</a>.
-
-		<!-- Vi har drop-in med pizza og hacking hver <span class="highlight">onsdag 16:00</span> og ut kvelden. -->
-	</p>
-
-	<ul>
-		<li>Vi er NTNUs CTF-lag.</li>
-		<li>Vi er en interesseorganisasjon for alle ved NTNU Trondheim.</li>
-		<li>Vi jobber for å fremme god sikkerhetskultur i Norge.</li>
-	</ul>
-
-	<!-- Contact -->
-	<br />
-	<h1>Bli medlem!</h1>
-	<p>
-		For å registrere deg som medlem, bare send en epost til:
-		<br />
-		<a href={mailhref}> hack@itemize.no </a>
-		<br />
 		<br />
 		Følg oss også gjerne på
 		<a target="_blank" rel="noopener noreferrer" href="https://www.facebook.com/ItemizeNTNU">facebook</a>.
-		<br />
-		Vi bruker også
-		<a href="https://discord.gg/Et9cCKnyg9" target="_blank" rel="noopener noreferrer">discord</a>
-		for all intern kommunikasjon.
 	</p>
+	<div class="space" />
 </div>
 
 <style>
@@ -109,24 +72,22 @@ Hilsen XXX`,
 		align-items: center;
 		flex-direction: column;
 		font-size: 1em;
-		padding: 0 1em 15em;
+		padding: 0 1em 0em;
 	}
 
 	p {
 		text-align: center;
 		margin-top: 1em;
 		margin-bottom: 1em;
-	}
-
-	h1 {
-		margin-top: 1em;
-		margin-bottom: 0;
+		font-size: 1em;
 	}
 
 	.heavy {
 		font-weight: 900;
-		margin: 0.3em;
-		display: block;
+		margin: 0.5em;
+	}
+	button {
+		font-size: 1.5em;
 	}
 
 	.content * {
@@ -161,16 +122,16 @@ Hilsen XXX`,
 		height: 22em;
 	}
 
+	.space {
+		height: 1.5em;
+	}
+
 	@media (min-width: 700px) {
 		.content {
 			font-size: 1.3em;
 		}
-
-		h1 {
-			margin-top: 3em;
-		}
 		.logo {
-			padding: 10vw 15vw;
+			padding: 7vw 15vw;
 		}
 		.background {
 			font-size: 3vw;
@@ -185,7 +146,7 @@ Hilsen XXX`,
 			font-size: 1.4em;
 		}
 		.logo {
-			padding: 10vw 25vw;
+			padding: 7vw 25vw;
 		}
 		.background {
 			font-size: 2.4vw;

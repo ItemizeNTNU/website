@@ -41,16 +41,14 @@
     <h1>Om Itemize</h1>
 
     <p>
-        Itemize er en interesseorganisasjon for studenter og ansatte ved NTNU Trondheim.
-        Vi er en frivillig organisasjon med medlemmer som liker eller vil lære om informasjonssikkerhet og hacking.
-        Vi er også et CTF-lag og deltar på nasjonale og internasjonale CTFer jevnlig.
+        Itemize NTNU er en frivillig interesseorganisasjon for studenter og ansatte ved NTNU Trondheim som liker eller vil lære om informasjonssikkerhet og hacking.
         I vedtektene til Itemize NTNU står det også at Itemize skal være med på å fremme god sikkerhetskultur i Norge.
+        Dette gjør vi ved å delta på både nasjonale og internasjonale CTFer jevnlig samt å holde både interne og eksterne kurs.
     </p>
     <p>
         Driften til Itemize er prosjektbasert, noe som betyr at medlemmer kan velge å engasjere seg i kortvarige prosjekter.
         Dette sikrer at Itemize utvikler seg videre.
-        Det går også an å være medlem uten å være med på prosjekter.
-        Da er man bare med på de CTFene man kan og de andre arrangementene man har mulighet til.
+        Det er selvfølgelig også mulig å være medlem uten å være med på prosjekter, men heller bare være med på CTFer og andre arrangementene man har mulighet til.
     </p>
     <p>
         Itemize NTNU er tilknyttet Institutt for informasjonssikkerhet og kommunikasjonsteknologi og får store deler av støtten til driften derifra.
