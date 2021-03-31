@@ -1,33 +1,12 @@
 <script>
 	const events = [
 		{
-			hva: 'UTCTF',
-			hvor: 'Discord',
-			når: 'Lørdag 13. mars 12:00',
-			ctf: {
-				navn: 'UTCTF',
-				link: 'https://ctftime.org/event/1177',
-			},
-			info:
-				'Vi deltar på UTCTF. Det blir foodora til alle som deltar 🍔. Grunnet nasjonale tiltak blir opplegget digitalt over Discord.',
-		},
-		{
-			hva: 'UTCTF gjennomgang',
-			hvor: 'Discord',
-			når: 'Torsdag 18. mars 18:15',
-			info: 'Gjennomgang av oppgaver og løsninger til UTCTF.',
-		},
-		{
-			hva: 'CTF med EY',
-			hvor: 'Teams/Discord',
-			når: 'Torsdag 25. mars 17:15',
-			info: 'EY hoster CTF for oss. Påmelding kommer.',
-		},
-		{
 			hva: 'CTF med Deloitte',
-			hvor: 'TBA',
-			når: '8. april',
-			info: 'Deloitte hoster sin nasjonale CTF delfinale hos oss. Påmelding kommer.',
+			hvor: 'Discord',
+			når: 'Torsdag 8. april kl 17:15',
+			påmelding: 'https://cloud.itemize.no/apps/forms/rBFpyXNiRNgc6f6w',
+			info:
+				'Deloitte holder CTF i samarbeid med Itemize! 😃 CTF-en vil være en delfinale hvor vinnerlagene med pallplassering vil kvalifisere seg til en nasjonal finalerunde mot andre lag fra universiteter som UiB, UiT, UiO og NTNU Gjøvik. Se Discord for mer informasjon.',
 		},
 	];
 </script>
