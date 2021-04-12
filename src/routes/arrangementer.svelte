@@ -1,12 +1,30 @@
 <script>
 	const events = [
 		{
-			hva: 'CTF med Deloitte',
+			hva: 'UMDCTF 2021',
 			hvor: 'Discord',
-			når: 'Torsdag 8. april kl 17:15',
-			påmelding: 'https://cloud.itemize.no/apps/forms/rBFpyXNiRNgc6f6w',
-			info:
-				'Deloitte holder CTF i samarbeid med Itemize! 😃 CTF-en vil være en delfinale hvor vinnerlagene med pallplassering vil kvalifisere seg til en nasjonal finalerunde mot andre lag fra universiteter som UiB, UiT, UiO og NTNU Gjøvik. Se Discord for mer informasjon.',
+			når: 'Lørdag 17. april kl 12:00',
+			ctf: {
+				navn: 'UMDCTF 2021',
+				link: 'https://ctftime.org/event/1288',
+			},
+			info: 'Vi deltar på UMDCTF. Arrangementet foregår digitalt på Discord.',
+		},
+		{
+			hva: 'HeroCTF v3',
+			hvor: 'TBA',
+			når: 'Lørdag 24. april kl 12:00',
+			ctf: {
+				navn: 'HeroCTF v3',
+				link: 'https://ctftime.org/event/1284',
+			},
+			info: 'Vi deltar på HeroCTF. Vi håper på å møtes fysisk hvis det lar seg gjennomføre.',
+		},
+		{
+			hva: 'Itemize-kveld',
+			hvor: 'TBA',
+			når: 'Torsdag 29. april kl 18:15',
+			info: 'Semesteravslutning',
 		},
 	];
 </script>
