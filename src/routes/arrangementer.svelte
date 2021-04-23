@@ -1,30 +1,24 @@
 <script>
 	const events = [
 		{
-			hva: 'UMDCTF 2021',
-			hvor: 'Discord',
-			når: 'Lørdag 17. april kl 12:00',
-			ctf: {
-				navn: 'UMDCTF 2021',
-				link: 'https://ctftime.org/event/1288',
-			},
-			info: 'Vi deltar på UMDCTF. Arrangementet foregår digitalt på Discord.',
-		},
-		{
 			hva: 'HeroCTF v3',
-			hvor: 'TBA',
+			hvor: 'EL1',
+			hvor_link: ' https://link.mazemap.com/QJDzk6yq',
 			når: 'Lørdag 24. april kl 12:00',
+			påmelding: 'https://cloud.itemize.no/apps/forms/PWbzRzZAmPKoNy4A',
 			ctf: {
 				navn: 'HeroCTF v3',
 				link: 'https://ctftime.org/event/1284',
 			},
-			info: 'Vi deltar på HeroCTF. Vi håper på å møtes fysisk hvis det lar seg gjennomføre.',
+			info:
+				'På lørdag deltar vi på HeroCTF! 🎉 <br> Arrangementet blir holdt fysisk på EL1, men det vil selvsagt også være mulig å delta på CTF-en digitalt på Discord for de som ønsker det. Alle som møter opp fysisk må registrerer seg på forhånd for å holde orden på smittesporingen.',
 		},
 		{
 			hva: 'Itemize-kveld',
-			hvor: 'TBA',
+			hvor: 'EL2',
+			hvor_link: 'https://link.mazemap.com/3dDBJomf',
 			når: 'Torsdag 29. april kl 18:15',
-			info: 'Semesteravslutning',
+			info: 'Semesteravslutning / TBA',
 		},
 	];
 </script>
@@ -38,10 +32,12 @@
 	<p>
 		<b>NB Fysiske arrangementer:</b>
 		<br />
-		På grunn av smittesporing trenger vi å registrere alle som ønsker å delta på fremtidige fysiske arrangementer.
+		På grunn av smittesporing trenger vi å registrere alle som ønsker å delta på fysiske arrangementer.
 		<br />
-		Vennligst meld deg på en av lenkene under før du møter opp til et arrangement. Det er ingen tidsfrist for påmelding,
+		Vennligst meld deg på registreringslenken før du møter opp til et arrangement. Det er ingen tidsfrist for påmelding,
 		så lenge du melder deg på før du fysisk møter opp.
+		<br />
+		All data blir slettet 2 uker etter arrangement.
 	</p>
 	<ul>
 		{#each events as event}
