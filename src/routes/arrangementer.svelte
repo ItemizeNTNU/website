@@ -1,24 +1,13 @@
 <script>
 	const events = [
 		{
-			hva: 'HeroCTF v3',
-			hvor: 'EL1',
-			hvor_link: ' https://link.mazemap.com/QJDzk6yq',
-			når: 'Lørdag 24. april kl 12:00',
-			påmelding: 'https://cloud.itemize.no/apps/forms/PWbzRzZAmPKoNy4A',
-			ctf: {
-				navn: 'HeroCTF v3',
-				link: 'https://ctftime.org/event/1284',
-			},
-			info:
-				'På lørdag deltar vi på HeroCTF! 🎉 <br> Arrangementet blir holdt fysisk på EL1, men det vil selvsagt også være mulig å delta på CTF-en digitalt på Discord for de som ønsker det. Alle som møter opp fysisk må registrerer seg på forhånd for å holde orden på smittesporingen.',
-		},
-		{
 			hva: 'Itemize-kveld',
 			hvor: 'EL2',
+			påmelding: 'https://cloud.itemize.no/apps/forms/CJbXpG4JtQKDYWGD',
 			hvor_link: 'https://link.mazemap.com/3dDBJomf',
-			når: 'Torsdag 29. april kl 18:15',
-			info: 'Semesteravslutning / TBA',
+			når: 'Torsdag 29. april kl 17:15',
+			info:
+				'Siste Itemize-kveld dette semesteret. Det blir mini-kurs til HackTheBox, prosjektjobbing og ellers sosialt og god stemning med pizza! 🥳',
 		},
 	];
 </script>
