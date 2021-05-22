@@ -20,10 +20,10 @@
 	</ul>
 	<ul>
 		{#if $user}
-			<li><span>Hello {$user?.name}</span></li>
-			<li><a href="/logout"><Icon><FaSignOutAlt /></Icon></a></li>
+			<li><span>Hei {$user?.name}</span></li>
+			<li><a title="Logg ut" href="/logout"><Icon><FaSignOutAlt /></Icon></a></li>
 		{:else}
-			<li><a href="/login"><Icon><FaLock /></Icon></a></li>
+			<li><a title="Logg inn" href="/login"><Icon><FaLock /></Icon></a></li>
 		{/if}
 	</ul>
 </nav>
