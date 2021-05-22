@@ -22,9 +22,8 @@
 	--gray-4:		#969395; /* dark gray */
 }
 
-li {
-	list-style-type: 'ᐉ ';
-	list-style-type: '» ';
+*, *::after, *::before {
+	box-sizing: inherit;
 }
 
 body {
@@ -34,6 +33,7 @@ body {
 	line-height: 1.5;
 	color: var(--text);
 	background-color: var(--background);
+	box-sizing: border-box;
 }
 
 h1, h2, h3, h4, h5, h6 {
@@ -53,24 +53,10 @@ a {
 a:active {
 	color: var(--green-3);
 }
-button {
-	padding: 0.5em;
-	background-color: var(--green-1);
-	border-radius: 0.5em;
-	border-color: var(--green-1);
-}
-button:hover{
-	background-color: var(--green-2);
-	border-color: var(--green-2);
-}
-button:active{
-	background-color: var(--green-3);
-	border-color: var(--green-3);
-}
-a button{
-	text-decoration: none;
-	color: var(--text);
-	cursor: pointer;
+
+li {
+	list-style-type: 'ᐉ ';
+	list-style-type: '» ';
 }
 
 main {
@@ -96,6 +82,60 @@ code {
 	border-radius: 0.2em;
 	padding: 0.0em  0.2em;
 }
+
+input,
+textarea,
+button {
+	font-size: 1em;
+	border: none;
+	padding: 0.25em;
+	margin: 0 0.2em;
+	border-radius: 0.25em;
+	background-color: #fff1;
+	box-sizing: border-box;
+	color: inherit;
+	cursor: pointer;
+	border: 2px solid #fff0;
+	transition: 200ms linear;
+}
+label {
+	cursor: pointer;
+}
+input:focus,
+textarea:focus,
+button:focus {
+	background-color: var(--green-3);
+}
+input:focus-visible,
+textarea:focus-visible,
+button:focus-visible {
+	outline: 0.1em solid var(--green-2);
+}
+button:active {
+	background-color: var(--green-1);
+}
+
+input[type="checkbox"] {
+	vertical-align: text-top;
+	appearance: none;
+	margin-top: 0.125em;
+	margin-right: 1em;
+	width: 1em;
+	height: 1em;
+	padding: 0;
+	position: relative;
+}
+input:hover,
+textarea:hover,
+button:hover {
+	border-color: #fff8;
+}
+input[type="checkbox"]:checked {
+	border: 0.4em solid var(--green-1);
+	border-radius: 50%;
+}
+
+
 
 @media (min-width: 400px) {
 	body {

@@ -1,15 +1,15 @@
 <script>
-	import Logo from '../components/Logo.svelte';
-	import { onMount } from 'svelte';
+	import Logo from "../components/Logo.svelte";
+	import { onMount } from "svelte";
 
 	const ctf_info =
-		'Capture The Flag er konkurranser som omhandler forskjellige aspekter av IT-sikkerhet, og er en god måte å lære seg noen av de praktiske skilza man bruker som «etisk hacker» 😎\nTrykk for mer info.';
-	const ctf_info_url = 'https://ctftime.org/ctf-wtf/';
+		"Capture The Flag er konkurranser som omhandler forskjellige aspekter av IT-sikkerhet, og er en god måte å lære seg noen av de praktiske skilza man bruker som «etisk hacker» 😎\nTrykk for mer info.";
+	const ctf_info_url = "https://ctftime.org/ctf-wtf/";
 
-	let brainfuck = '';
+	let brainfuck = "";
 
 	let chars =
-		'++++++++[->++++++++<]>+++++++++.<++++++[->++++++<]>+++++++.<+++[->---<]>------.++++++++.----.<++++[->++++<]>+.<++++[->----<]>-----.<++++++++[->--------<]>-----.<++++++[->++++++<]>++++++++++.++++++.------.+++++++.<++++++++[->--------<]>--------.---.>';
+		"++++++++[->++++++++<]>+++++++++.<++++++[->++++++<]>+++++++.<+++[->---<]>------.++++++++.----.<++++[->++++<]>+.<++++[->----<]>-----.<++++++++[->--------<]>-----.<++++++[->++++++<]>++++++++++.++++++.------.+++++++.<++++++++[->--------<]>--------.---.>";
 	chars = chars.repeat(4);
 	let i = 0;
 	const writeNext = () => {
@@ -52,9 +52,7 @@
 		<br />
 		Vil du være med på NTNU Trondheim's CTF lag?
 	</p>
-	<a href="https://discord.gg/Et9cCKnyg9" target="_blank" rel="noopener noreferrer" class="heavy"
-		><button>Bli med på Discorden her!</button></a
-	>
+	<a href="https://discord.gg/Et9cCKnyg9" target="_blank" rel="noopener noreferrer" class="heavy"><button>Bli med på Discorden her!</button></a>
 	<p>
 		Du kan finne en liste over fremtidige arrangementer
 		<a href="/registrering">her</a>.
@@ -113,7 +111,7 @@
 
 	.background::after {
 		background: linear-gradient(to bottom, transparent, var(--background) 60%);
-		content: '';
+		content: "";
 		z-index: 0;
 		position: absolute;
 		top: 0;
@@ -124,6 +122,26 @@
 
 	.space {
 		height: 1.5em;
+	}
+
+	button {
+		padding: 0.5em;
+		background-color: var(--green-1);
+		border-radius: 0.5em;
+		border-color: var(--green-1);
+	}
+	button:hover {
+		background-color: var(--green-2);
+		border-color: var(--green-2);
+	}
+	button:active {
+		background-color: var(--green-3);
+		border-color: var(--green-3);
+	}
+	a button {
+		text-decoration: none;
+		color: var(--text);
+		cursor: pointer;
 	}
 
 	@media (min-width: 700px) {

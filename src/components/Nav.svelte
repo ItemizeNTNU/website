@@ -1,14 +1,41 @@
 <script>
+	import { user } from "../utils/stores";
+	import FaLock from "svelte-icons/fa/FaLock.svelte";
+	import FaSignOutAlt from "svelte-icons/fa/FaSignOutAlt.svelte";
+	import Icon from "./Icon.svelte";
+
 	export let segment;
-	const sider = ['hjem', 'om-itemize', 'historie', 'for-bedrifter', 'arrangementer', 'ressurser'];
+	const sider = ["hjem", "om-itemize", "historie", "for-bedrifter", "arrangementer", "ressurser"];
 	const home = sider.shift();
 </script>
+
+<nav>
+	<ul>
+		<li><a aria-current={segment === undefined ? "page" : undefined} href="."> {home} </a></li>
+		{#each sider as side}
+			<li>
+				<a aria-current={segment === side ? "page" : undefined} href={side}> {side.replace(/-|_/g, " ")} </a>
+			</li>
+		{/each}
+	</ul>
+	<ul>
+		{#if $user}
+			<li><span>Hei {$user?.name}</span></li>
+			<li><a title="Logg ut" href="/logout"><Icon><FaSignOutAlt /></Icon></a></li>
+		{:else}
+			<li><a title="Logg inn" href="/login"><Icon><FaLock /></Icon></a></li>
+		{/if}
+	</ul>
+</nav>
 
 <style>
 	nav {
 		border-bottom: 1px solid rgba(60, 179, 79, 0.1);
 		font-weight: 300;
 		padding: 0 1em;
+		display: flex;
+		flex-direction: row;
+		justify-content: space-between;
 	}
 
 	ul {
@@ -18,7 +45,7 @@
 
 	/* clearfix */
 	ul::after {
-		content: '';
+		content: "";
 		display: block;
 		clear: both;
 	}
@@ -35,7 +62,7 @@
 
 	[aria-current]::after {
 		position: absolute;
-		content: '';
+		content: "";
 		width: calc(100% - 1em);
 		height: 2px;
 		background-color: rgb(60, 179, 79);
@@ -43,21 +70,11 @@
 		bottom: -1px;
 	}
 
-	a {
+	a,
+	span {
 		text-decoration: none;
 		color: inherit;
 		padding: 1em 0.5em;
 		display: block;
 	}
 </style>
-
-<nav>
-	<ul>
-		<li><a aria-current={segment === undefined ? 'page' : undefined} href="."> {home} </a></li>
-		{#each sider as side}
-			<li>
-				<a aria-current={segment === side ? 'page' : undefined} href={side}> {side.replace(/-|_/g, ' ')} </a>
-			</li>
-		{/each}
-	</ul>
-</nav>
