@@ -57,7 +57,7 @@
 			return `${day} ${date.getFullYear()}-${zfill(date.getMonth() + 1)}-${zfill(date.getDate())} ${zfill(date.getHours())}:${zfill(date.getMinutes())}`;
 		} else {
 			const year = new Date().getFullYear() != date.getFullYear() ? date.getFullYear() : "";
-			const month = ["januar", "februar", "mars", "april", "mai", "juni", "juli", "august", "september", "oktober", "november", "desember"][date.getMonth() - 1];
+			const month = ["januar", "februar", "mars", "april", "mai", "juni", "juli", "august", "september", "oktober", "november", "desember"][date.getMonth()];
 			return `${day} ${date.getDate()}. ${month} ${year} kl ${zfill(date.getHours())}:${zfill(date.getMinutes())}`;
 		}
 	};
