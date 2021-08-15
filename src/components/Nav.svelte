@@ -2,6 +2,7 @@
 	import { user } from "../utils/stores";
 	import FaLock from "svelte-icons/fa/FaLock.svelte";
 	import FaSignOutAlt from "svelte-icons/fa/FaSignOutAlt.svelte";
+	import FaUser from "svelte-icons/fa/FaUser.svelte";
 	import Icon from "./Icon.svelte";
 
 	export let segment;
@@ -20,7 +21,7 @@
 	</ul>
 	<ul>
 		{#if $user}
-			<li><span>Hei {$user?.name}</span></li>
+			<li><a title="Profil" href="/profil"><Icon><FaUser /></Icon></a></li>
 			<li><a title="Logg ut" href="/logout"><Icon><FaSignOutAlt /></Icon></a></li>
 		{:else}
 			<li><a title="Logg inn" href="/login"><Icon><FaLock /></Icon></a></li>

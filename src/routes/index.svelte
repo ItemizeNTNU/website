@@ -52,10 +52,10 @@
 		<br />
 		Vil du være med på NTNU Trondheim's CTF lag?
 	</p>
-	<a href="https://discord.gg/Et9cCKnyg9" target="_blank" rel="noopener noreferrer" class="heavy"><button>Bli med på Discorden her!</button></a>
+	<a href="/registrer"><button>Bli medlem her!</button></a>
 	<p>
 		Du kan finne en liste over fremtidige arrangementer
-		<a href="/registrering">her</a>.
+		<a href="/arrangementer">her</a>.
 		<br />
 		Følg oss også gjerne på
 		<a target="_blank" rel="noopener noreferrer" href="https://www.facebook.com/ItemizeNTNU">facebook</a>.

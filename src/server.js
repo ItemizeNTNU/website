@@ -8,8 +8,9 @@ import mongoose from 'mongoose';
 import { json as jsonParser } from 'body-parser';
 
 import { router as calender } from "./server/calender";
+import { router as user } from "./server/user";
 
-const APIS = [calender];
+const APIS = [calender, user];
 
 dotenv.config();
 const { PORT, NODE_ENV, CLIENT_ID, CLIENT_SECRET, SECRET, BASE_URL, MONGO_DB_URL } = process.env;
@@ -35,20 +36,21 @@ express()
 			authRequired: false,
 		}),
 		(req, res, next) => { // create req.user object
-			const { name, roles, email, sub } = { roles: [], ...req.oidc?.user };
-			req.user = { name, roles, email, id: sub };
+			const { name, roles, email, sub, imageUrl, fullName } = { roles: [], ...req.oidc?.user };
+			if (name) req.user = { name, roles, email, id: sub, imageUrl, fullName };
 			next();
 		}
 	)
-	.get('/api/user', async (req, res) => {
-		if (req.user?.name) {
-			res.send({ "user": req.user });
-		} else {
-			res.send({});
-		}
-	})
 	.use('/api', ...APIS)
-	.use(sapper.middleware())
+	.use(sapper.middleware({
+		session: (req, res) => ({
+			user: req.user?.name ? req.user : undefined
+		})
+	}))
+	.use((err, req, res, next) => {
+		console.error('Error:', err.stack)
+		res.status(500).send({ message: 'Something broke :/' })
+	})
 	.listen(PORT, err => {
-		if (err) console.log('error', err);
+		if (err) console.error('error', err);
 	});
