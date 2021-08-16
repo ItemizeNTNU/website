@@ -1,9 +1,9 @@
 <script context="module">
-	import api, { fetchResource } from "../utils/api";
+	import api, { fetchResource } from '../utils/api';
 
 	export async function preload(page, session) {
 		if (!session.user) {
-			this.redirect(302, "/login");
+			this.redirect(302, '/login');
 		}
 		const dbUser = await api.getUser(session.user.id, { fetch: this.fetch });
 		return { user: dbUser.json };
@@ -11,30 +11,30 @@
 </script>
 
 <script>
-	import FaSync from "svelte-icons/fa/FaSync.svelte";
-	import FaTrashAlt from "svelte-icons/fa/FaTrashAlt.svelte";
-	import FaDiscord from "svelte-icons/fa/FaDiscord.svelte";
-	import Button from "../components/Button.svelte";
+	import FaSync from 'svelte-icons/fa/FaSync.svelte';
+	import FaTrashAlt from 'svelte-icons/fa/FaTrashAlt.svelte';
+	import FaDiscord from 'svelte-icons/fa/FaDiscord.svelte';
+	import Button from '../components/Button.svelte';
 
 	export let user;
 	let error;
 
 	const refresh = async () => {
-		console.log("refreshing user...");
+		console.log('refreshing user...');
 		user = (await api.getUser(user.id)).json;
 	};
 
 	const discordRefresh = async () => {
-		error = "";
-		const resp = await fetchResource("/api/discord/refresh", { method: "POST", errorText: "Unable to refresh Discord data: ERROR" });
+		error = '';
+		const resp = await fetchResource('/api/discord/refresh', { method: 'POST', errorText: 'Unable to refresh Discord data: ERROR' });
 		if (resp.error) {
 			error = resp.error;
 		}
 		await refresh();
 	};
 	const discordDelete = async () => {
-		error = "";
-		const resp = await fetchResource("/api/discord", { method: "DELETE", errorText: "Unable to unlink Discord profile: ERROR" });
+		error = '';
+		const resp = await fetchResource('/api/discord', { method: 'DELETE', errorText: 'Unable to unlink Discord profile: ERROR' });
 		if (resp.error) {
 			error = resp.error;
 		}

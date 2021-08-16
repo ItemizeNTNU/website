@@ -1,19 +1,19 @@
-import express from "express";
+import express from 'express';
 import joi from 'joi';
-import { permission, removeEmptyObjects } from "./utils";
-import fusion from '../server/fusion'
-import discord, { getGuildUser } from "./discord";
+import { permission, removeEmptyObjects } from './utils';
+import fusion from '../server/fusion';
+import discord from './discord';
 
 export const router = express.Router();
 
 const DEFAULT_PROFILE_IMAGE = 'https://itemize.no/logo-512.png'; // TODO: change to proper default profile
 
-const validateNTNUEmail = e => {
+const validateNTNUEmail = (e) => {
 	if (String(e).toLowerCase().endsWith('@stud.ntnu.no')) {
 		throw Error('Vennligst ikke bruk din stud e-post adresse, da du mister tilgang til denne etter fullført utdannelse.');
 	}
 	return e;
-}
+};
 
 const UserSchema = joi.object({
 	fullName: joi.string().min(3).max(64).required(),
@@ -23,18 +23,18 @@ const UserSchema = joi.object({
 		type: joi.string().allow('student', 'alumni', 'employee').required(),
 		study: {
 			program: joi.when('$type', { is: ['alumni', 'student'], then: joi.string().min(3).max(64).required(), otherwise: joi.strip() }),
-			year: joi.when('$type', { is: 'student', then: joi.number().integer().min(1).max(100).required(), otherwise: joi.strip() }),
+			year: joi.when('$type', { is: 'student', then: joi.number().integer().min(1).max(100).required(), otherwise: joi.strip() })
 		},
 		alumni: {
-			joinYear: joi.when('$type', { is: 'alumni', then: joi.number().integer().min(2014).max(new Date().getFullYear()).required(), otherwise: joi.strip() }),
+			joinYear: joi.when('$type', { is: 'alumni', then: joi.number().integer().min(2014).max(new Date().getFullYear()).required(), otherwise: joi.strip() })
 		},
 		employee: {
 			title: joi.when('$type', { is: 'employee', then: joi.string().min(3).max(64).required(), otherwise: joi.strip() })
-		},
+		}
 	}
 });
 
-const validate_user = data => {
+const validate_user = (data) => {
 	const user = UserSchema.validate(data, { abortEarly: true, convert: true, stripUnknown: true, context: { type: data.data?.type } });
 	if (!user.error) {
 		removeEmptyObjects(user.value);
@@ -51,7 +51,7 @@ router.get('/user/:id', async (req, res) => {
 		return res.status(400).send({ message: 'Error fetching user' });
 	}
 	let { id, email, data, fullName, imageUrl } = user.json;
-	let { displayName, type, study, alumni, employee, discord } = (data || {});
+	let { displayName, type, study, alumni, employee, discord } = data || {};
 	fullName = fullName || displayName;
 	displayName = fullName || fullName;
 	imageUrl = imageUrl || DEFAULT_PROFILE_IMAGE;
@@ -59,7 +59,7 @@ router.get('/user/:id', async (req, res) => {
 
 	let self = undefined;
 	if (req.user.id == id) {
-		self = { isDiscordMember: discord?.isMember }
+		self = { isDiscordMember: discord?.isMember };
 	}
 
 	return res.send({ id, email, fullName, name: displayName, imageUrl, type, study, alumni, employee, discord: discordUsername, self });
@@ -76,7 +76,7 @@ router.put('/user', async (req, res) => {
 
 	const resp = await fusion.createUser({
 		sendSetPasswordEmail: true,
-		user: user.value,
+		user: user.value
 	});
 	return res.status(resp.status).send(resp.client);
 });
@@ -90,7 +90,7 @@ router.get('/discord/callback', permission(), async (req, res) => {
 		return res.redirect('/profil');
 	}
 	const id = await discord.getDiscordId(req, res, req.query.code);
-	if (id && await discord.updateDiscordInfo(req, res, id, req.user)) {
+	if (id && (await discord.updateDiscordInfo(req, res, id, req.user))) {
 		res.redirect('/profil');
 	}
 });

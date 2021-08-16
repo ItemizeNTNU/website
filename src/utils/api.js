@@ -6,17 +6,19 @@ const defFetchOptions = {
 	urlData: '',
 	errorText: 'Unable to fetch resource: ERROR',
 	fetch: undefined,
-	headers: {},
-}
+	headers: {}
+};
 export const fetchResource = async (path, options = defFetchOptions) => {
 	options = { ...defFetchOptions, ...options };
-	path = options.host + path
+	path = options.host + path;
 	const settings = {
 		method: options.method,
-		headers: options.headers,
+		headers: options.headers
 	};
 	if (options.urlData) {
-		settings.body = Object.keys(options.urlData).map(k => encodeURIComponent(k) + '=' + encodeURIComponent(options.urlData[k])).join('&');
+		settings.body = Object.keys(options.urlData)
+			.map((k) => encodeURIComponent(k) + '=' + encodeURIComponent(options.urlData[k]))
+			.join('&');
 		settings.headers['Content-Type'] = 'application/x-www-form-urlencoded';
 	}
 	if (options.json) {
@@ -32,10 +34,14 @@ export const fetchResource = async (path, options = defFetchOptions) => {
 		}
 		try {
 			resp.text = await resp.text();
-		} catch (err) { }
+		} catch (err) {
+			// try to read body if any
+		}
 		try {
 			resp.json = JSON.parse(resp.text);
-		} catch (err) { }
+		} catch (err) {
+			// try to convert to json, if json format
+		}
 		if (!resp.ok) {
 			resp.error = resp.json?.message || (typeof resp.text == 'string' ? resp.text : resp.statusText);
 		}
@@ -52,10 +58,10 @@ export const fetchResource = async (path, options = defFetchOptions) => {
 
 export const registerUser = async (user, options = {}) => {
 	return await fetchResource('/api/user', { method: 'PUT', json: user, errorText: 'ERROR', ...options });
-}
+};
 
 export const getUser = async (id, options) => {
 	return await fetchResource(`/api/user/${id}`, options);
-}
+};
 
 export default { registerUser, getUser };

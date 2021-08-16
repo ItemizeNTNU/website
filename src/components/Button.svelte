@@ -1,10 +1,10 @@
 <script>
-	import { goto } from "@sapper/app";
-	import Icon from "./Icon.svelte";
+	import { goto } from '@sapper/app';
+	import Icon from './Icon.svelte';
 	export let icon;
 	export let disabled = false;
 	let running = false;
-	export let href = "";
+	export let href = '';
 	export let submit = href ? async () => await goto(href) : () => {};
 	let submitWrapper = async () => {
 		if (!disabled) {

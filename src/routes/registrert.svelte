@@ -1,7 +1,7 @@
 <script context="module">
 	export async function preload(page, session) {
 		if (session.user) {
-			this.redirect(302, "/profil");
+			this.redirect(302, '/profil');
 		}
 	}
 </script>

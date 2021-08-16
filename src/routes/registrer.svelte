@@ -1,16 +1,16 @@
 <script context="module">
 	export async function preload(page, session) {
 		if (session.user) {
-			this.redirect(302, "/profil");
+			this.redirect(302, '/profil');
 		}
 	}
 </script>
 
 <script>
-	import { onMount } from "svelte";
-	import { fade } from "svelte/transition";
+	import { onMount } from 'svelte';
+	import { fade } from 'svelte/transition';
 
-	const html = "<" + "!-- Hysj. Registreringsskjemaet er blitt flyttet hit: https://itemize.no/den-ekte-registreringssiden -->"; // issue https://github.com/sveltejs/prettier-plugin-svelte/issues/244
+	const html = '<' + '!-- Hysj. Registreringsskjemaet er blitt flyttet hit: https://itemize.no/den-ekte-registreringssiden -->'; // issue https://github.com/sveltejs/prettier-plugin-svelte/issues/244
 
 	let showHelp = true;
 	onMount(() => {

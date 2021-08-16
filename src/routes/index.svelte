@@ -1,15 +1,15 @@
 <script>
-	import Logo from "../components/Logo.svelte";
-	import { onMount } from "svelte";
+	import Logo from '../components/Logo.svelte';
+	import { onMount } from 'svelte';
 
 	const ctf_info =
-		"Capture The Flag er konkurranser som omhandler forskjellige aspekter av IT-sikkerhet, og er en god måte å lære seg noen av de praktiske skilza man bruker som «etisk hacker» 😎\nTrykk for mer info.";
-	const ctf_info_url = "https://ctftime.org/ctf-wtf/";
+		'Capture The Flag er konkurranser som omhandler forskjellige aspekter av IT-sikkerhet, og er en god måte å lære seg noen av de praktiske skilza man bruker som «etisk hacker» 😎\nTrykk for mer info.';
+	const ctf_info_url = 'https://ctftime.org/ctf-wtf/';
 
-	let brainfuck = "";
+	let brainfuck = '';
 
 	let chars =
-		"++++++++[->++++++++<]>+++++++++.<++++++[->++++++<]>+++++++.<+++[->---<]>------.++++++++.----.<++++[->++++<]>+.<++++[->----<]>-----.<++++++++[->--------<]>-----.<++++++[->++++++<]>++++++++++.++++++.------.+++++++.<++++++++[->--------<]>--------.---.>";
+		'++++++++[->++++++++<]>+++++++++.<++++++[->++++++<]>+++++++.<+++[->---<]>------.++++++++.----.<++++[->++++<]>+.<++++[->----<]>-----.<++++++++[->--------<]>-----.<++++++[->++++++<]>++++++++++.++++++.------.+++++++.<++++++++[->--------<]>--------.---.>';
 	chars = chars.repeat(4);
 	let i = 0;
 	const writeNext = () => {
@@ -80,10 +80,6 @@
 		font-size: 1em;
 	}
 
-	.heavy {
-		font-weight: 900;
-		margin: 0.5em;
-	}
 	button {
 		font-size: 1.5em;
 	}
@@ -111,7 +107,7 @@
 
 	.background::after {
 		background: linear-gradient(to bottom, transparent, var(--background) 60%);
-		content: "";
+		content: '';
 		z-index: 0;
 		position: absolute;
 		top: 0;

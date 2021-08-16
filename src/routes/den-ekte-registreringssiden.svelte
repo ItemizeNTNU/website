@@ -1,47 +1,47 @@
 <script context="module">
 	export async function preload(page, session) {
 		if (session.user) {
-			this.redirect(302, "/profil");
+			this.redirect(302, '/profil');
 		}
 	}
 </script>
 
 <script>
-	import { goto } from "@sapper/app";
-	import api from "../utils/api";
+	import { goto } from '@sapper/app';
+	import api from '../utils/api';
 
 	const types = {
-		student: "Student",
-		employee: "Ansatt",
-		alumni: "Alumni",
+		student: 'Student',
+		employee: 'Ansatt',
+		alumni: 'Alumni'
 	};
 	let user = {
-		fullName: "",
-		email: "",
+		fullName: '',
+		email: '',
 		data: {
 			type: Object.keys(types)[0],
-			displayName: "",
+			displayName: '',
 			study: {
-				program: "",
-				year: 1,
+				program: '',
+				year: 1
 			},
 			alumni: {
-				joinYear: new Date().getFullYear(),
+				joinYear: new Date().getFullYear()
 			},
 			employee: {
-				title: "",
-			},
-		},
+				title: ''
+			}
+		}
 	};
 	let error = {
-		email: "",
+		email: ''
 	};
 	let resp;
 	let register = async () => {
 		resp = null;
 		resp = await api.registerUser(user);
 		if (!resp.error) {
-			await goto("/registrert");
+			await goto('/registrert');
 		}
 	};
 </script>
@@ -52,7 +52,7 @@
 
 <main>
 	{#if resp?.error}
-		<p class="error">{resp.error.replace(/.*failed custom validation because /, "") || "Ups. Noe gikk galt :/"}</p>
+		<p class="error">{resp.error.replace(/.*failed custom validation because /, '') || 'Ups. Noe gikk galt :/'}</p>
 	{/if}
 	<div class="form">
 		<div class="cell">Fullt Navn:</div>
@@ -77,27 +77,27 @@
 				{/each}
 			</select>
 		</div>
-		{#if user.data.type == "student"}
+		{#if user.data.type == 'student'}
 			<div class="comment">Student ved NTNU Trondheim.</div>
-		{:else if user.data.type == "alumni"}
+		{:else if user.data.type == 'alumni'}
 			<div class="comment">Tidligere Itemize medlem.</div>
-		{:else if user.data.type == "employee"}
+		{:else if user.data.type == 'employee'}
 			<div class="comment">Ansatt ved NTNU.</div>
 		{/if}
 
-		{#if user.data.type == "student" || user.data.type == "alumni"}
+		{#if user.data.type == 'student' || user.data.type == 'alumni'}
 			<div class="cell">Studieprogram:</div>
 			<div class="cell"><input type="text" bind:value={user.data.study.program} /></div>
-			{#if user.data.type == "student"}
+			{#if user.data.type == 'student'}
 				<div class="cell">Studieår:</div>
 				<div class="cell"><input type="number" min="1" max="100" bind:value={user.data.study.year} /></div>
 				<div class="comment">Nåværende progresjonsår i studiet. Vanligvis mellom 1 og 5.</div>
-			{:else if user.data.type == "alumni"}
+			{:else if user.data.type == 'alumni'}
 				<div class="cell">Medlems år:</div>
 				<div class="cell"><input type="number" min="2014" max={new Date().getFullYear()} bind:value={user.data.alumni.joinYear} /></div>
 				<div class="comment">Hvis du er tideligere alumni, hvilket år ble du først med i Itemize?</div>
 			{/if}
-		{:else if user.data.type == "employee"}
+		{:else if user.data.type == 'employee'}
 			<div class="cell">Title:</div>
 			<div class="cell"><input type="text" bind:value={user.data.employee.title} /></div>
 			<div class="comment">Fyll ut best beskrivende jobb tittel.</div>

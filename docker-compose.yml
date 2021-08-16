@@ -1,4 +1,4 @@
-version: "3.8"
+version: '3.8'
 services:
   web:
     build: .
@@ -9,9 +9,9 @@ services:
       BASE_URL:
       MONGO_DB_URL: ${MONGO_DB_URL:-mongodb://mongo/website}
     ports:
-      - "3000:3000"
+      - '3000:3000'
     restart: unless-stopped
-  
+
   mongo:
     image: mongo
     restart: unless-stopped

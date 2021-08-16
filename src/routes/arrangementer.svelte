@@ -1,76 +1,76 @@
 <script context="module">
-	export async function preload(page, session) {
-		const res = await this.fetch("/api/events");
+	export async function preload() {
+		const res = await this.fetch('/api/events');
 		const events = await res.json();
 		return { events };
 	}
 </script>
 
 <script>
-	import ToggleIcon from "../components/ToggleIcon.svelte";
-	import { user } from "../utils/stores";
-	import { slide } from "svelte/transition";
-	import FaCog from "svelte-icons/fa/FaCog.svelte";
-	import FaEyeSlash from "svelte-icons/fa/FaEyeSlash.svelte";
-	import Button from "../components/Button.svelte";
+	import ToggleIcon from '../components/ToggleIcon.svelte';
+	import { user } from '../utils/stores';
+	import { slide } from 'svelte/transition';
+	import FaCog from 'svelte-icons/fa/FaCog.svelte';
+	import FaEyeSlash from 'svelte-icons/fa/FaEyeSlash.svelte';
+	import Button from '../components/Button.svelte';
 	export let events;
 	let error;
 	let showNew = false;
 	const newEventDefault = {
-		name: "",
+		name: '',
 		location: {
-			name: "",
-			url: "",
+			name: '',
+			url: ''
 		},
-		register_url: "",
-		date: "",
+		register_url: '',
+		date: '',
 		ctf: {
-			name: "",
-			url: "",
+			name: '',
+			url: ''
 		},
-		info: "",
-		hidden: false,
+		info: '',
+		hidden: false
 	};
 	let newEvent = JSON.parse(JSON.stringify(newEventDefault));
 	const notEmpty = (name, value) => {
 		if (!value) {
-			throw name + " kan ikke være tomt";
+			throw name + ' kan ikke være tomt';
 		}
 	};
 	const notURL = (name, value) => {
-		if (value && !value.startsWith("https://")) {
+		if (value && !value.startsWith('https://')) {
 			throw name + " må starte med 'https://'";
 		}
 	};
 	const zfill = (value, digits = 2) => {
 		value = String(value);
-		while (value.length < digits) value = "0" + value;
+		while (value.length < digits) value = '0' + value;
 		return value;
 	};
 	const parseDate = (value, strict = true) => {
 		let date = new Date(value);
 		if (isNaN(date.getTime())) {
-			return "Ugyldig dato";
+			return 'Ugyldig dato';
 		}
-		const day = ["Søndag", "Mandag", "Tirsdag", "Onsdag", "Torsdag", "Fredag", "Lørdag"][date.getDay()];
+		const day = ['Søndag', 'Mandag', 'Tirsdag', 'Onsdag', 'Torsdag', 'Fredag', 'Lørdag'][date.getDay()];
 		if (strict) {
 			return `${day} ${date.getFullYear()}-${zfill(date.getMonth() + 1)}-${zfill(date.getDate())} ${zfill(date.getHours())}:${zfill(date.getMinutes())}`;
 		} else {
-			const year = new Date().getFullYear() != date.getFullYear() ? date.getFullYear() : "";
-			const month = ["januar", "februar", "mars", "april", "mai", "juni", "juli", "august", "september", "oktober", "november", "desember"][date.getMonth()];
+			const year = new Date().getFullYear() != date.getFullYear() ? date.getFullYear() : '';
+			const month = ['januar', 'februar', 'mars', 'april', 'mai', 'juni', 'juli', 'august', 'september', 'oktober', 'november', 'desember'][date.getMonth()];
 			return `${day} ${date.getDate()}. ${month} ${year} kl ${zfill(date.getHours())}:${zfill(date.getMinutes())}`;
 		}
 	};
 	const validate = () => {
-		notEmpty("Navn", newEvent.name);
-		notEmpty("Hvor", newEvent.location.name);
-		notEmpty("Info", newEvent.info);
-		if (newEvent.ctf.url) notEmpty("CTF Navn", newEvent.ctf.name);
-		notURL("Hvor link", newEvent.location.url);
-		notURL("Registrer link", newEvent.register_url);
-		notURL("CTF link", newEvent.ctf.url);
+		notEmpty('Navn', newEvent.name);
+		notEmpty('Hvor', newEvent.location.name);
+		notEmpty('Info', newEvent.info);
+		if (newEvent.ctf.url) notEmpty('CTF Navn', newEvent.ctf.name);
+		notURL('Hvor link', newEvent.location.url);
+		notURL('Registrer link', newEvent.register_url);
+		notURL('CTF link', newEvent.ctf.url);
 		const dateError = parseDate(newEvent.date);
-		if (dateError.includes("Ugyldig")) {
+		if (dateError.includes('Ugyldig')) {
 			throw dateError;
 		}
 	};
@@ -81,21 +81,21 @@
 			error = err;
 			return;
 		}
-		error = "";
+		error = '';
 		newEvent.date = new Date(newEvent.date);
-		const res = await fetch("/api/events", {
-			method: "POST",
+		const res = await fetch('/api/events', {
+			method: 'POST',
 			headers: {
-				"Content-Type": "application/json",
+				'Content-Type': 'application/json'
 			},
-			body: JSON.stringify(newEvent),
+			body: JSON.stringify(newEvent)
 		});
 		if (res.status == 200) {
 			newEvent = { ...newEventDefault };
-			const data = await fetch("/api/events");
+			const data = await fetch('/api/events');
 			events = await data.json();
 		} else {
-			error = "Unable to save event: " + res.statusText;
+			error = 'Unable to save event: ' + res.statusText;
 		}
 	};
 </script>
@@ -115,7 +115,7 @@
 		<br />
 		All data blir slettet 2 uker etter arrangement.
 	</p>
-	{#if $user?.roles?.includes("Styret")}
+	{#if $user?.roles?.includes('Styret')}
 		<div class="center">
 			<ToggleIcon bind:value={showNew} />
 		</div>
@@ -133,14 +133,14 @@
 				<label><span class="col">CTF Link:</span> <input type="text" bind:value={newEvent.ctf.url} /></label>
 				<label><span class="col">Info:</span> <textarea rows="3" bind:value={newEvent.info} /></label>
 				<label><span class="col">Skjult:</span> <input type="checkbox" bind:value={newEvent.hidden} bind:checked={newEvent.hidden} /></label>
-				<span class="col" /> <button on:click|preventDefault={addNew}>{newEvent._id ? "Oppdater" : "Legg til"}</button>
+				<span class="col" /> <button on:click|preventDefault={addNew}>{newEvent._id ? 'Oppdater' : 'Legg til'}</button>
 			</form>
 		{/if}
 	{/if}
 	<ul>
 		{#each events as event}
 			<li class="card">
-				{#if $user?.roles?.includes("Styret")}
+				{#if $user?.roles?.includes('Styret')}
 					<div class="buttons">
 						{#if event.hidden}
 							<Button disabled icon={FaEyeSlash} />
@@ -240,7 +240,7 @@
 		vertical-align: top;
 	}
 
-	input:not([type="checkbox"]),
+	input:not([type='checkbox']),
 	textarea,
 	button {
 		width: 15em;

@@ -7,8 +7,8 @@ import mongoose from 'mongoose';
 import { json as jsonParser } from 'body-parser';
 
 import './server/load_envs';
-import { router as calender } from "./server/calender";
-import { router as user } from "./server/user";
+import { router as calender } from './server/calender';
+import { router as user } from './server/user';
 
 const APIS = [calender, user];
 
@@ -32,9 +32,10 @@ express()
 			secret: FUSION_AUTH_SECRET,
 			idpLogout: false,
 			idTokenSigningAlg: 'HS256',
-			authRequired: false,
+			authRequired: false
 		}),
-		(req, res, next) => { // create req.user object
+		(req, _, next) => {
+			// create req.user object
 			const { name, roles, email, sub, imageUrl, fullName } = { roles: [], ...req.oidc?.user };
 			if (name) req.user = { name, roles, email, id: sub, imageUrl, fullName };
 			next();
@@ -44,20 +45,22 @@ express()
 	.use('/api*', (req, res) => {
 		res.status(404).send({ message: 'API endpoint not found' });
 	})
-	.use(sapper.middleware({
-		session: (req, res) => ({
-			user: req.user?.name ? req.user : undefined
+	.use(
+		sapper.middleware({
+			session: (req) => ({
+				user: req.user?.name ? req.user : undefined
+			})
 		})
-	}))
-	.use((err, req, res, next) => {
-		console.error('Error:', err.stack)
+	)
+	.use((err, req, res) => {
+		console.error('Error:', err.stack);
 		try {
 			if (!res.headersSent) res.status(500);
-			res.send({ message: 'Something broke :/' })
+			res.send({ message: 'Something broke :/' });
 		} catch {
-			if (!res.writableEnded) res.end()
+			if (!res.writableEnded) res.end();
 		}
 	})
-	.listen(PORT, err => {
+	.listen(PORT, (err) => {
 		if (err) console.error('error', err);
 	});

@@ -8,23 +8,6 @@
 	});
 </script>
 
-<style>
-	li p {
-		margin-top: 0.2em;
-		margin-bottom: 0.2em;
-	}
-	li {
-		margin-bottom: 1.5em;
-	}
-
-	ul.overview li {
-		margin-bottom: 0;
-	}
-	h2 {
-		margin-top: 2em;
-	}
-</style>
-
 <svelte:head>
 	<title>Ressurser</title>
 </svelte:head>
@@ -40,10 +23,7 @@
 	<ul>
 		<li>
 			<a href="https://play.picoctf.org/practice" target="_blank" rel="noopener noreferrer">PicoCTF</a>
-			<p>
-				PicoCTF sin practice gym er et fint sted å begynne med introduksjonsoppgaver for web, kryptografi,
-				reverse enginering, forensics og linux kommandolinje.
-			</p>
+			<p>PicoCTF sin practice gym er et fint sted å begynne med introduksjonsoppgaver for web, kryptografi, reverse enginering, forensics og linux kommandolinje.</p>
 		</li>
 		<li>
 			<a href="https://ctf.hacker101.com" target="_blank" rel="noopener noreferrer">Hacker 101</a>
@@ -60,36 +40,27 @@
 		<li>
 			<a href="https://www.hackthebox.eu" target="_blank" rel="noopener noreferrer">Hack The Box</a>
 			<p>
-				Hack The Box (HTB) har ulike virtuelle maskiner eller bokser hvor du gjør større deler av mer reell
-				penetrasjonstesting. Alle boksene pleier å følge prosessen med å starte ved scanning, få kjørt kode som
-				bruker, for så å eskalere opp til system/root bruker.
+				Hack The Box (HTB) har ulike virtuelle maskiner eller bokser hvor du gjør større deler av mer reell penetrasjonstesting. Alle boksene pleier å følge prosessen med å starte
+				ved scanning, få kjørt kode som bruker, for så å eskalere opp til system/root bruker.
 			</p>
 			<p>
-				Fordel med HTB over andre CTFer er at ting gjerne føles litt mer reelt. Oppgaver og bokser er gjerne
-				litt mer omfatende enn kun én enkelt CTF oppgave, men mange av boksene kan løses med standard verktøy og
-				går gjerne ikke fult så inn i detaljer som andre mer tradisjonelle CTF oppgaver.
+				Fordel med HTB over andre CTFer er at ting gjerne føles litt mer reelt. Oppgaver og bokser er gjerne litt mer omfatende enn kun én enkelt CTF oppgave, men mange av boksene
+				kan løses med standard verktøy og går gjerne ikke fult så inn i detaljer som andre mer tradisjonelle CTF oppgaver.
 			</p>
 		</li>
 		<li>
 			<a href="https://tryhackme.com" target="_blank" rel="noopener noreferrer">Try Hack Me</a>
-			<p>
-				Alternativ til Hack The Box. Har virtuelle maskiner hvor du gjør hele penetrasjonstesting prosessen med
-				scanning, få bruker og eskaler til root/system.
-			</p>
+			<p>Alternativ til Hack The Box. Har virtuelle maskiner hvor du gjør hele penetrasjonstesting prosessen med scanning, få bruker og eskaler til root/system.</p>
 		</li>
 	</ul>
 
 	<h2 id="youtube-kalaer">YouTube Kanaler</h2>
 	<ul>
 		<li>
-			<a
-				href="https://www.youtube.com/channel/UClcE-kVhqyiHCcjYwcpfj9w"
-				target="_blank"
-				rel="noopener noreferrer">LiveOverflow</a>
+			<a href="https://www.youtube.com/channel/UClcE-kVhqyiHCcjYwcpfj9w" target="_blank" rel="noopener noreferrer">LiveOverflow</a>
 			<p>
-				LiveOverflow lager høykvalitets videoer hvor han presenterer temaer, sårbarheter og alt annen interesant
-				innen infosec. Han går også gjennom CTF oppgaver og fokuserer mer på unike og lærerike oppgaver i stedet
-				for kvantitet.
+				LiveOverflow lager høykvalitets videoer hvor han presenterer temaer, sårbarheter og alt annen interesant innen infosec. Han går også gjennom CTF oppgaver og fokuserer mer
+				på unike og lærerike oppgaver i stedet for kvantitet.
 			</p>
 		</li>
 		<li>
@@ -99,15 +70,13 @@
 		<li>
 			<a href="https://www.youtube.com/c/ippsec/" target="_blank" rel="noopener noreferrer">IppSec</a>
 			<p>
-				IppSec går gjennom alle Hack The Boks oppgaver som blir lagt ut etter de ikke lenger er "aktive". Han
-				går også jennom andre verktøyer og metoder fra tid til annen. Han viser også hele prosessen med å gå
-				gjennom boksen.
+				IppSec går gjennom alle Hack The Boks oppgaver som blir lagt ut etter de ikke lenger er "aktive". Han går også jennom andre verktøyer og metoder fra tid til annen. Han
+				viser også hele prosessen med å gå gjennom boksen.
 			</p>
 			<p>
 				Sjekk også ut
 				<a href="https://ippsec.rocks" target="_blank" rel="noopener noreferrer">ippsec.rocks</a>
-				hvor du kan søke gjennom alle videoene han har gått gjennom etter spesifikke verktøy eller metoder,
-				kommer med timestamps til videoene.
+				hvor du kan søke gjennom alle videoene han har gått gjennom etter spesifikke verktøy eller metoder, kommer med timestamps til videoene.
 			</p>
 		</li>
 	</ul>
@@ -117,16 +86,15 @@
 		<li>
 			<a href="https://gchq.github.io/CyberChef/" target="_blank" rel="noopener noreferrer">CyberChef</a>
 			<p>
-				CyberChef er et online verktøy med over 300 ulike moduler bygget inn. Har alt fra base64 til kryptering
-				og fil gjenskjenning. CyberChef har også automatiske moduler samt tillater chaining med moduler etter
-				hverandre. Mange CTF oppgaver kan ofte løses ene og alene i CyberChef.
+				CyberChef er et online verktøy med over 300 ulike moduler bygget inn. Har alt fra base64 til kryptering og fil gjenskjenning. CyberChef har også automatiske moduler samt
+				tillater chaining med moduler etter hverandre. Mange CTF oppgaver kan ofte løses ene og alene i CyberChef.
 			</p>
 		</li>
 		<li>
 			<a href="https://portswigger.net/burp" target="_blank" rel="noopener noreferrer">Burp Suite</a>
 			<p>
-				En web proxy for å logge, redigere og injekte forespørsler mellom deg og nettleseren din. Bra verktøy
-				for å gjøre manuelle endringer til forespørsler eller gjenta forespørsler flere ganger.
+				En web proxy for å logge, redigere og injekte forespørsler mellom deg og nettleseren din. Bra verktøy for å gjøre manuelle endringer til forespørsler eller gjenta
+				forespørsler flere ganger.
 			</p>
 		</li>
 		<li>
@@ -141,50 +109,32 @@
 		<li>
 			<a href="https://github.com/Gallopsled/pwntools" target="_blank" rel="noopener noreferrer">pwntools</a>
 			<p>
-				Pwntools er et CTF toolkit skrevet i python for rask prototyping og tar seg av mye av "boilerplate"
-				koden som man skriver hver gang. Pwntools har også en god del kule og nyttige funksjoner som en ofte
-				bruker på CTFer, som generering av shellcode payloads eller enkel asynkron håndtering av sockets og
-				prosesser.
+				Pwntools er et CTF toolkit skrevet i python for rask prototyping og tar seg av mye av "boilerplate" koden som man skriver hver gang. Pwntools har også en god del kule og
+				nyttige funksjoner som en ofte bruker på CTFer, som generering av shellcode payloads eller enkel asynkron håndtering av sockets og prosesser.
 			</p>
 		</li>
 		<li>
 			<a href="https://godbolt.org/" target="_blank" rel="noopener noreferrer">Compiler Explorer</a>
-			<p>
-				Online verktøy for å studere assembly bytecode. Støtter en rekke ulike kompilatorer i flere ulike språk.
-				Fint for å sammenligne hva kode faktisk kompilerer til.
-			</p>
+			<p>Online verktøy for å studere assembly bytecode. Støtter en rekke ulike kompilatorer i flere ulike språk. Fint for å sammenligne hva kode faktisk kompilerer til.</p>
 		</li>
 		<li>
-			<a
-				href="https://github.com/DominicBreuker/stego-toolkit"
-				target="_blank"
-				rel="noopener noreferrer">stego-toolkit</a>
+			<a href="https://github.com/DominicBreuker/stego-toolkit" target="_blank" rel="noopener noreferrer">stego-toolkit</a>
 			<p>
 				En samling steganography verktøy samlet i en enkel verktøykase. Finnes også et
-				<a
-					href="https://hub.docker.com/r/dominicbreuker/stego-toolkit"
-					target="_blank"
-					rel="noopener noreferrer">docker image</a>
+				<a href="https://hub.docker.com/r/dominicbreuker/stego-toolkit" target="_blank" rel="noopener noreferrer">docker image</a>
 				du kan kjøre, så slipper du å installere alle verktøy selv.
 			</p>
 		</li>
 		<li>
-			<a href="https://stegonline.georgeom.net/checklist" target="_blank" rel="noopener noreferrer">StegOnline
-				Checklist</a>
+			<a href="https://stegonline.georgeom.net/checklist" target="_blank" rel="noopener noreferrer">StegOnline Checklist</a>
 			<p>En fin liste over ting man bør teste når man går gjennom steganography oppgaver.</p>
 		</li>
 		<li>
 			<a href="https://requestbin.com" target="_blank" rel="noopener noreferrer">requestbin</a>
-			<p>
-				Lar deg sette opp webhook endpoints for callbacks, fin måte å kunne hente ut informasjon hvis du ikke
-				har en egen server tilgjengelig.
-			</p>
+			<p>Lar deg sette opp webhook endpoints for callbacks, fin måte å kunne hente ut informasjon hvis du ikke har en egen server tilgjengelig.</p>
 		</li>
 		<li>
-			<a
-				href="https://www.boxentriq.com/code-breaking/cipher-identifier"
-				target="_blank"
-				rel="noopener noreferrer">Cipher Identifier</a>
+			<a href="https://www.boxentriq.com/code-breaking/cipher-identifier" target="_blank" rel="noopener noreferrer">Cipher Identifier</a>
 			<p>Verktøy som kan hjelpe å identifisere hvilken type krypteringscipher som har blitt brukt.</p>
 		</li>
 		<li>
@@ -197,3 +147,20 @@
 		</li>
 	</ul>
 </main>
+
+<style>
+	li p {
+		margin-top: 0.2em;
+		margin-bottom: 0.2em;
+	}
+	li {
+		margin-bottom: 1.5em;
+	}
+
+	ul.overview li {
+		margin-bottom: 0;
+	}
+	h2 {
+		margin-top: 2em;
+	}
+</style>
