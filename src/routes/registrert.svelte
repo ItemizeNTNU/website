@@ -1,7 +1,7 @@
 <script context="module">
 	export async function preload(page, session) {
 		if (session.user) {
-			this.redirect(302, "/profil");
+			this.redirect(302, '/profil');
 		}
 	}
 </script>
@@ -17,5 +17,5 @@
 		du gå til <a href="/login">login siden</a> eller trykke på hengelåsen oppe i høyre hjørne for å logge inn.
 	</p>
 
-	<p>Sjekk gjerne ut din <a href="/profil">profil side</a> for å endre instillinger som visningsnavn eller for å får tilgang til vår Discord server.</p>
+	<p>Sjekk gjerne ut din <a href="/profil">profil side</a> for å endre instillinger som visningsnavn eller for å får tilgang til vår Discord-server.</p>
 </main>

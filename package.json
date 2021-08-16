@@ -1,42 +1,47 @@
 {
-  "name": "itemize-website",
-  "description": "The website for itemize.no.",
-  "version": "1.0.0",
-  "scripts": {
-    "dev": "sapper dev",
-    "build": "sapper build --legacy",
-    "export": "sapper export --legacy",
-    "start": "node __sapper__/build",
-    "test": "run-p --race dev cy:run"
-  },
-  "dependencies": {
-    "body-parser": "^1.19.0",
-    "compression": "^1.7.1",
-    "dotenv": "^9.0.2",
-    "express": "^4.17.1",
-    "express-openid-connect": "^2.4.0",
-    "joi": "^17.4.2",
-    "mongoose": "^5.12.9",
-    "node-fetch": "^2.6.1",
-    "sirv": "^1.0.0",
-    "svelte-icons": "^2.1.0",
-    "svelte-preprocess": "^4.3.2"
-  },
-  "devDependencies": {
-    "@babel/core": "^7.0.0",
-    "@babel/plugin-syntax-dynamic-import": "^7.0.0",
-    "@babel/plugin-transform-runtime": "^7.0.0",
-    "@babel/preset-env": "^7.0.0",
-    "@babel/runtime": "^7.0.0",
-    "@rollup/plugin-babel": "^5.0.0",
-    "@rollup/plugin-commonjs": "^14.0.0",
-    "@rollup/plugin-node-resolve": "^8.0.0",
-    "@rollup/plugin-replace": "^2.2.0",
-    "npm-run-all": "^4.1.5",
-    "rollup": "^2.3.4",
-    "rollup-plugin-svelte": "^6.0.0",
-    "rollup-plugin-terser": "^7.0.0",
-    "sapper": "^0.28.0",
-    "svelte": "^3.17.3"
-  }
+	"name": "itemize-website",
+	"description": "The website for itemize.no.",
+	"version": "1.0.0",
+	"scripts": {
+		"dev": "sapper dev",
+		"build": "sapper build --legacy",
+		"export": "sapper export --legacy",
+		"start": "node __sapper__/build",
+		"lint": "prettier --check --plugin-search-dir=. .; eslint --ignore-path ./.gitignore .; depcheck",
+		"format": "prettier --write --plugin-search-dir=. ."
+	},
+	"dependencies": {
+		"body-parser": "^1.19.0",
+		"compression": "^1.7.1",
+		"dotenv": "^9.0.2",
+		"express": "^4.17.1",
+		"express-openid-connect": "^2.4.0",
+		"joi": "^17.4.2",
+		"mongoose": "^5.12.9",
+		"node-fetch": "^2.6.1",
+		"sirv": "^1.0.0",
+		"svelte-icons": "^2.1.0"
+	},
+	"devDependencies": {
+		"@babel/core": "^7.0.0",
+		"@babel/plugin-syntax-dynamic-import": "^7.0.0",
+		"@babel/plugin-transform-runtime": "^7.0.0",
+		"@babel/preset-env": "^7.0.0",
+		"@babel/runtime": "^7.0.0",
+		"@rollup/plugin-babel": "^5.0.0",
+		"@rollup/plugin-commonjs": "^14.0.0",
+		"@rollup/plugin-node-resolve": "^8.0.0",
+		"@rollup/plugin-replace": "^2.2.0",
+		"depcheck": "^1.4.2",
+		"eslint": "^7.32.0",
+		"eslint-config-prettier": "^8.3.0",
+		"eslint-plugin-svelte3": "^3.2.0",
+		"prettier": "^2.3.2",
+		"prettier-plugin-svelte": "^2.3.1",
+		"rollup": "^2.3.4",
+		"rollup-plugin-svelte": "^6.0.0",
+		"rollup-plugin-terser": "^7.0.0",
+		"sapper": "^0.28.0",
+		"svelte": "^3.17.3"
+	}
 }

@@ -22,6 +22,7 @@ export default {
 		output: config.client.output(),
 		plugins: [
 			replace({
+				preventAssignment: true,
 				'process.browser': true,
 				'process.env.NODE_ENV': JSON.stringify(mode)
 			}),
@@ -36,30 +37,38 @@ export default {
 			}),
 			commonjs(),
 
-			legacy && babel({
-				extensions: ['.js', '.mjs', '.html', '.svelte'],
-				babelHelpers: 'runtime',
-				exclude: ['node_modules/@babel/**'],
-				presets: [
-					['@babel/preset-env', {
-						targets: '> 0.25%, not dead'
-					}]
-				],
-				plugins: [
-					'@babel/plugin-syntax-dynamic-import',
-					['@babel/plugin-transform-runtime', {
-						useESModules: true
-					}]
-				]
-			}),
+			legacy &&
+				babel({
+					extensions: ['.js', '.mjs', '.html', '.svelte'],
+					babelHelpers: 'runtime',
+					exclude: ['node_modules/@babel/**'],
+					presets: [
+						[
+							'@babel/preset-env',
+							{
+								targets: '> 0.25%, not dead'
+							}
+						]
+					],
+					plugins: [
+						'@babel/plugin-syntax-dynamic-import',
+						[
+							'@babel/plugin-transform-runtime',
+							{
+								useESModules: true
+							}
+						]
+					]
+				}),
 
-			!dev && terser({
-				module: true
-			})
+			!dev &&
+				terser({
+					module: true
+				})
 		],
 
 		preserveEntrySignatures: false,
-		onwarn,
+		onwarn
 	},
 
 	server: {
@@ -67,6 +76,7 @@ export default {
 		output: config.server.output(),
 		plugins: [
 			replace({
+				preventAssignment: true,
 				'process.browser': false,
 				'process.env.NODE_ENV': JSON.stringify(mode)
 			}),
@@ -83,7 +93,7 @@ export default {
 		external: Object.keys(pkg.dependencies).concat(require('module').builtinModules),
 
 		preserveEntrySignatures: 'strict',
-		onwarn,
+		onwarn
 	},
 
 	serviceworker: {
@@ -92,6 +102,7 @@ export default {
 		plugins: [
 			resolve(),
 			replace({
+				preventAssignment: true,
 				'process.browser': true,
 				'process.env.NODE_ENV': JSON.stringify(mode)
 			}),
@@ -100,6 +111,6 @@ export default {
 		],
 
 		preserveEntrySignatures: false,
-		onwarn,
+		onwarn
 	}
 };

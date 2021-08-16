@@ -1,16 +1,17 @@
-version: "3.8"
+version: '3.8'
 services:
   web:
     build: .
+    env_file: 
+      - .env
     environment:
-      CLIENT_ID:
-      SECRET:
-      BASE_URL:
       MONGO_DB_URL: ${MONGO_DB_URL:-mongodb://mongo/website}
     ports:
-      - "3000:3000"
+      - '${LISTEN:-3000}:3000'
     restart: unless-stopped
-  
+
   mongo:
-    image: mongo
+    image: mongo:4.4.8
     restart: unless-stopped
+    volumes:
+        - './data/mongodb:/data'

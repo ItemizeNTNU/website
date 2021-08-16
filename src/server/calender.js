@@ -1,6 +1,6 @@
 import mongoose from 'mongoose';
-import express from "express";
-import { permission } from "./utils";
+import express from 'express';
+import { permission } from './utils';
 
 export const router = express.Router();
 
@@ -8,18 +8,18 @@ const eventSchema = mongoose.Schema({
 	name: String,
 	location: {
 		name: String,
-		url: String,
+		url: String
 	},
 	register_url: String,
 	date: Date,
 	ctf: {
 		name: String,
-		url: String,
+		url: String
 	},
 	info: String,
 	hidden: Boolean,
 	created: { type: Date, default: Date.now },
-	edited: Date,
+	edited: Date
 });
 eventSchema.index({ date: 1 });
 const Event = mongoose.model('events', eventSchema);
@@ -28,10 +28,16 @@ router.get('/events', async (req, res) => {
 	const page = Math.max((req.query.page || 1) - 1, 0);
 	const count = 100;
 	const search = { date: { $gt: Date.now() - 1000 * 60 * 60 * 6 } };
-	if (!req.user.roles.includes("Styret")) {
+	if (!req.user.roles.includes('Styret')) {
 		search.hidden = 0;
 	}
-	res.send(await Event.find(search).sort({ date: 1 }).skip(page * count).limit(count).lean());
+	res.send(
+		await Event.find(search)
+			.sort({ date: 1 })
+			.skip(page * count)
+			.limit(count)
+			.lean()
+	);
 });
 router.post('/events', permission('Styret'), async (req, res) => {
 	const event = req.body;

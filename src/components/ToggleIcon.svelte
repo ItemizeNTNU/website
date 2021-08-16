@@ -1,7 +1,7 @@
 <script>
-	import FaAngleDown from "svelte-icons/fa/FaAngleDown.svelte";
-	import FaAngleUp from "svelte-icons/fa/FaAngleUp.svelte";
-	import Icon from "./Icon.svelte";
+	import FaAngleDown from 'svelte-icons/fa/FaAngleDown.svelte';
+	import FaAngleUp from 'svelte-icons/fa/FaAngleUp.svelte';
+	import Icon from './Icon.svelte';
 
 	export let value = false;
 	export let rotate = 180;

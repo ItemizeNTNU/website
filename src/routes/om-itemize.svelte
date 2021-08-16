@@ -1,37 +1,37 @@
 <script>
-	import People from "../components/People.svelte";
+	import People from '../components/People.svelte';
 
 	const board = [
 		{
-			name: "Aleksander Styrmoe",
-			position: "Leder",
-			mail: "leder@itemize.no",
+			name: 'Aleksander Styrmoe',
+			position: 'Leder',
+			mail: 'leder@itemize.no'
 		},
 		{
-			name: "Sigurd Varhaugvik",
-			position: "Nestleder",
-			mail: "nestleder@itemize.no",
+			name: 'Sigurd Varhaugvik',
+			position: 'Nestleder',
+			mail: 'nestleder@itemize.no'
 		},
 		{
 			name: "Kristian in't Veld",
-			position: "Driftsansvarlig",
-			mail: "drift@itemize.no",
+			position: 'Driftsansvarlig',
+			mail: 'drift@itemize.no'
 		},
 		{
-			name: "Anna Fridtun Aarekol",
-			position: "Prosjektansvarlig",
-			mail: "prosjekt@itemize.no",
+			name: 'Anna Fridtun Aarekol',
+			position: 'Prosjektansvarlig',
+			mail: 'prosjekt@itemize.no'
 		},
 		{
-			name: "Håkon Tjomsland",
-			position: "CTF- og arrangementsansvarlig",
-			mail: "arrangement@itemize.no",
+			name: 'Håkon Tjomsland',
+			position: 'CTF- og arrangementsansvarlig',
+			mail: 'arrangement@itemize.no'
 		},
 		{
-			name: "Knut Formo Buene",
-			position: "PR- og rekrutteringsansvarlig",
-			mail: "pr@itemize.no",
-		},
+			name: 'Knut Formo Buene',
+			position: 'PR- og rekrutteringsansvarlig',
+			mail: 'pr@itemize.no'
+		}
 	];
 </script>
 

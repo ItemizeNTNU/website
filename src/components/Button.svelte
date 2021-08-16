@@ -1,17 +1,22 @@
 <script>
-	import Icon from "./Icon.svelte";
-	export let submit = () => {};
+	import { goto } from '@sapper/app';
+	import Icon from './Icon.svelte';
 	export let icon;
 	export let disabled = false;
-	let submitWrapper = () => {
+	let running = false;
+	export let href = '';
+	export let submit = href ? async () => await goto(href) : () => {};
+	let submitWrapper = async () => {
 		if (!disabled) {
-			submit();
+			running = true;
+			await submit();
+			running = false;
 		}
 	};
 	let content;
 </script>
 
-<button on:click|preventDefault={submitWrapper} class:clear={icon && !content?.textContent} class:disabled>
+<button on:click|preventDefault={submitWrapper} class:clear={icon && !content?.textContent} class:disabled={disabled || running}>
 	{#if icon}
 		<Icon><svelte:component this={icon} /></Icon>
 	{/if}
@@ -33,5 +38,8 @@
 	}
 	.clear {
 		background: none;
+		width: auto;
+		min-height: 2.325em;
+		min-width: 2.325em;
 	}
 </style>
