@@ -13,3 +13,5 @@ services:
   mongo:
     image: mongo:4.4.8
     restart: unless-stopped
+    volumes:
+        - './data/mongodb:/data'
