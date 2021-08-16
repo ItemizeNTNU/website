@@ -27,7 +27,7 @@
 	<h1>Registrer deg og bli medlem!</h1>
 	<p>Ønsker du å bli medlem av Itemize NTNU? Itemize NTNU er åpen for studenter og ansatte ved NTNU Trondheim, samt tidligere alumni.</p>
 	<p>
-		Som medlem har du mulighet for å bli med på Discord serveren vår, hvor all intern kommunikasjon foregår, samt mulighet for å bli med på prosjekter eller stemme ved
+		Som medlem har du mulighet for å bli med på Discord-serveren vår, hvor all intern kommunikasjon foregår, samt mulighet for å bli med på prosjekter eller stemme ved
 		generalforsamling.
 	</p>
 	<br />

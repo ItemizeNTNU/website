@@ -2,9 +2,11 @@ const defFetchOptions = {
 	host: '',
 	method: 'GET',
 	json: '',
+	/** Only works for one layer! */
+	urlData: '',
 	errorText: 'Unable to fetch resource: ERROR',
 	fetch: undefined,
-	headers: {}
+	headers: {},
 }
 export const fetchResource = async (path, options = defFetchOptions) => {
 	options = { ...defFetchOptions, ...options };
@@ -13,6 +15,10 @@ export const fetchResource = async (path, options = defFetchOptions) => {
 		method: options.method,
 		headers: options.headers,
 	};
+	if (options.urlData) {
+		settings.body = Object.keys(options.urlData).map(k => encodeURIComponent(k) + '=' + encodeURIComponent(options.urlData[k])).join('&');
+		settings.headers['Content-Type'] = 'application/x-www-form-urlencoded';
+	}
 	if (options.json) {
 		settings.body = JSON.stringify(options.json);
 		settings.headers['Content-Type'] = 'application/json';
@@ -48,4 +54,8 @@ export const registerUser = async (user, options = {}) => {
 	return await fetchResource('/api/user', { method: 'PUT', json: user, errorText: 'ERROR', ...options });
 }
 
-export default { registerUser };
+export const getUser = async (id, options) => {
+	return await fetchResource(`/api/user/${id}`, options);
+}
+
+export default { registerUser, getUser };

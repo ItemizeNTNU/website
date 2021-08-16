@@ -3,17 +3,16 @@ import express from 'express';
 import compression from 'compression';
 import * as sapper from '@sapper/server';
 import { auth } from 'express-openid-connect';
-import dotenv from 'dotenv';
 import mongoose from 'mongoose';
 import { json as jsonParser } from 'body-parser';
 
+import './server/load_envs';
 import { router as calender } from "./server/calender";
 import { router as user } from "./server/user";
 
 const APIS = [calender, user];
 
-dotenv.config();
-const { PORT, NODE_ENV, CLIENT_ID, CLIENT_SECRET, SECRET, BASE_URL, MONGO_DB_URL } = process.env;
+const { PORT, NODE_ENV, FUSION_AUTH_CLIENT_ID, FUSION_AUTH_CLIENT_SECRET, FUSION_AUTH_SECRET, BASE_URL, MONGO_DB_URL } = process.env;
 const dev = NODE_ENV === 'development';
 
 mongoose.connection.on('error', console.log);
@@ -28,9 +27,9 @@ express()
 		auth({
 			issuerBaseURL: 'https://auth.itemize.no',
 			baseURL: BASE_URL || dev ? 'http://localhost:3000' : 'https://itemize.no',
-			clientID: CLIENT_ID,
-			clientSecret: CLIENT_SECRET,
-			secret: SECRET,
+			clientID: FUSION_AUTH_CLIENT_ID,
+			clientSecret: FUSION_AUTH_CLIENT_SECRET,
+			secret: FUSION_AUTH_SECRET,
 			idpLogout: false,
 			idTokenSigningAlg: 'HS256',
 			authRequired: false,
@@ -42,6 +41,9 @@ express()
 		}
 	)
 	.use('/api', ...APIS)
+	.use('/api*', (req, res) => {
+		res.status(404).send({ message: 'API endpoint not found' });
+	})
 	.use(sapper.middleware({
 		session: (req, res) => ({
 			user: req.user?.name ? req.user : undefined
@@ -49,7 +51,12 @@ express()
 	}))
 	.use((err, req, res, next) => {
 		console.error('Error:', err.stack)
-		res.status(500).send({ message: 'Something broke :/' })
+		try {
+			if (!res.headersSent) res.status(500);
+			res.send({ message: 'Something broke :/' })
+		} catch {
+			if (!res.writableEnded) res.end()
+		}
 	})
 	.listen(PORT, err => {
 		if (err) console.error('error', err);

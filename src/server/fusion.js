@@ -5,8 +5,9 @@ import fetch from "node-fetch"
 import { inspect } from 'util'
 
 const _fetch = async (path, options) => {
+	options = options || {};
 	options.headers = options.headers || {}
-	options.headers.Authorization = process.env.AUTH_API_TOKEN
+	options.headers.Authorization = process.env.FUSION_AUTH_API_TOKEN
 	const host = 'https://auth.itemize.no'
 	const res = await fetchResource(path, { fetch, host, ...options })
 	if (res.error) {
@@ -30,4 +31,16 @@ export const createUser = async user => {
 	return await _fetch('/api/user', { method: 'POST', json: user })
 }
 
-export default { createUser }
+export const updateUser = async (id, user) => {
+	return await _fetch(`/api/user/${id}`, { method: 'PATCH', json: { user: user } });
+}
+
+export const getUser = async id => {
+	const res = await _fetch(`/api/user/${id}`);
+	if (res.json?.user) {
+		res.json = res.json.user;
+	}
+	return res;
+}
+
+export default { createUser, updateUser, getUser }

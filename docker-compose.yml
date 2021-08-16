@@ -3,8 +3,9 @@ services:
   web:
     build: .
     environment:
-      CLIENT_ID:
-      SECRET:
+      FUSION_AUTH_CLIENT_ID:
+      FUSION_AUTH_CLIENT_SECRET:
+      FUSION_AUTH_SECRET:
       BASE_URL:
       MONGO_DB_URL: ${MONGO_DB_URL:-mongodb://mongo/website}
     ports:
