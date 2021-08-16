@@ -2,16 +2,14 @@ version: '3.8'
 services:
   web:
     build: .
+    env_file: 
+      - .env
     environment:
-      FUSION_AUTH_CLIENT_ID:
-      FUSION_AUTH_CLIENT_SECRET:
-      FUSION_AUTH_SECRET:
-      BASE_URL:
       MONGO_DB_URL: ${MONGO_DB_URL:-mongodb://mongo/website}
     ports:
-      - '3000:3000'
+      - '${LISTEN:-3000}:3000'
     restart: unless-stopped
 
   mongo:
-    image: mongo
+    image: mongo:4.4.8
     restart: unless-stopped
