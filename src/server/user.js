@@ -58,7 +58,7 @@ router.get('/user/:id', async (req, res) => {
 	const discordUsername = discord?.username;
 
 	let self = undefined;
-	if (req.user.id == id) {
+	if (req.user?.id == id) {
 		self = { isDiscordMember: discord?.isMember };
 	}
 

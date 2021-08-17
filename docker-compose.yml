@@ -2,7 +2,7 @@ version: '3.8'
 services:
   web:
     build: .
-    env_file: 
+    env_file:
       - .env
     environment:
       MONGO_DB_URL: ${MONGO_DB_URL:-mongodb://mongo/website}
@@ -14,4 +14,4 @@ services:
     image: mongo:4.4.8
     restart: unless-stopped
     volumes:
-        - './data/mongodb:/data'
+      - './data/mongodb:/data'

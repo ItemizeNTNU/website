@@ -28,7 +28,7 @@ router.get('/events', async (req, res) => {
 	const page = Math.max((req.query.page || 1) - 1, 0);
 	const count = 100;
 	const search = { date: { $gt: Date.now() - 1000 * 60 * 60 * 6 } };
-	if (!req.user.roles.includes('Styret')) {
+	if (!req.user?.roles?.includes('Styret')) {
 		search.hidden = 0;
 	}
 	res.send(
