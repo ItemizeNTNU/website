@@ -1,5 +1,6 @@
 <script>
 	import People from '../components/People.svelte';
+
 	const board = [
 		{
 			name: 'Aleksander Styrmoe',

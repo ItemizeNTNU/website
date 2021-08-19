@@ -64,26 +64,6 @@ a {
 a:active {
 	color: var(--green-3);
 }
-button {
-	margin:0.5em;
-	padding: 0.5em;
-	background-color: var(--green-1);
-	border-radius: 0.5em;
-	border-color: var(--green-1);
-}
-button:hover{
-	background-color: var(--green-2);
-	border-color: var(--green-2);
-}
-button:active{
-	background-color: var(--green-3);
-	border-color: var(--green-3);
-}
-a button{
-	font-size: 1.7em;
-	text-decoration: none;
-	color: var(--text);
-}
 
 li {
 	list-style-type: 'ᐉ ';
