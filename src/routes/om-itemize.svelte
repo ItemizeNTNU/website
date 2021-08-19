@@ -53,7 +53,7 @@
 	<p>Itemize NTNU er tilknyttet Institutt for informasjonssikkerhet og kommunikasjonsteknologi og får store deler av støtten til driften derifra.</p>
 	<p>Vi har også en alumniordning for tidligere medlemmer, slik at de kan være med videre på å hjelpe fremtidens sikkerhetsinteresserte.</p>
 	<p>
-		For medlemmer bruker vi <a href="https://discord.gg/Et9cCKnyg9" target="_blank" rel="noopener noreferrer">Discord</a> som hovedkommunikasjonskanal.
+		For medlemmer bruker vi <a href="https://discord.com/invite/gWJdXbW8Sg" target="_blank" rel="noopener noreferrer">Discord</a> som hovedkommunikasjonskanal.
 	</p>
 
 	<h2>Kontakt</h2>

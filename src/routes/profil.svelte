@@ -64,7 +64,7 @@
 						icon={FaTrashAlt} />
 					{#if !user.self.isDiscordMember}
 						<br />
-						Du har ikke blitt med i Discord-serveren enda. Trykk <a target="_blank" rel="noopener noreferrer" href="https://discord.gg/Et9cCKnyg9">her</a> for å bli med. Trykk så
+						Du har ikke blitt med i Discord-serveren enda. Trykk <a target="_blank" rel="noopener noreferrer" href="https://discord.gg/gWJdXbW8Sg">her</a> for å bli med. Trykk så
 						på <code>Sync</code> knappen ovenfor for å oppdatere og få tilgang inne på serveren.
 					{/if}
 				</p>
@@ -72,7 +72,7 @@
 				<p>
 					<b>Discord:</b> <i>Mangler</i>
 					<Button href="/api/discord/link" icon={FaDiscord} /> <br /> Du kan bli med på Discord serveren vår
-					<a target="_blank" rel="noopener noreferrer" href="https://discord.gg/Et9cCKnyg9">her</a>.
+					<a target="_blank" rel="noopener noreferrer" href="https://discord.gg/gWJdXbW8Sg">her</a>.
 					<br />
 					Det krever derimot at du kobler sammen din brukerprofil her med din Discord profil for å få lese tilgang inne på serveren.
 				</p>
