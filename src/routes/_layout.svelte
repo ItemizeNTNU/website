@@ -1,7 +1,16 @@
-<script>
-  import Nav from "../components/Nav.svelte";
+<script context="module">
+	export async function preload(page, session) {
+		return { userData: session?.user };
+	}
+</script>
 
-  export let segment;
+<script>
+	import Nav from '../components/Nav.svelte';
+	import { user } from '../utils/stores';
+
+	export let segment;
+	export let userData;
+	$user = userData;
 </script>
 
 <Nav {segment} />

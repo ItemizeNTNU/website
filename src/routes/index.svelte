@@ -1,15 +1,10 @@
 <script>
 	import Logo from '../components/Logo.svelte';
 	import { onMount } from 'svelte';
-
 	const ctf_info =
 		'Capture The Flag er konkurranser som omhandler forskjellige aspekter av IT-sikkerhet, og er en god måte å lære seg noen av de praktiske skilza man bruker som «etisk hacker» 😎\nTrykk for mer info.';
 	const ctf_info_url = 'https://ctftime.org/ctf-wtf/';
-
-	const info = (e) => {};
-
 	let brainfuck = '';
-
 	let chars =
 		'++++++++[->++++++++<]>+++++++++.<++++++[->++++++<]>+++++++.<+++[->---<]>------.++++++++.----.<++++[->++++<]>+.<++++[->----<]>-----.<++++++++[->--------<]>-----.<++++++[->++++++<]>++++++++++.++++++.------.+++++++.<++++++++[->--------<]>--------.---.>';
 	chars = chars.repeat(4);
@@ -20,7 +15,6 @@
 		i = (i + 1) % chars.length;
 		if (brainfuck.length < 3000) {
 			setTimeout(writeNext, (30 + Math.pow(Math.random(), 2) * 100 + Math.pow(Math.random(), 6) * 500) * 0.3);
-			// setTimeout(writeNext, 1);
 		}
 	};
 	onMount(() => {
@@ -54,18 +48,16 @@
 		?
 		<br />
 		Vil du være med på NTNU Trondheim's CTF lag?
-		<span class="heavy">
-			
-			<a href="https://discord.gg/Et9cCKnyg9" target="_blank" rel="noopener noreferrer" style=""><button>Bli med på Discorden her!</button></a>
-		</span>
 	</p>
+	<a href="/registrer"><button>Bli medlem her!</button></a>
 	<p>
 		Du kan finne en liste over fremtidige arrangementer
-		<a href="/registrering">her</a>.
-		<br/>
-		Følg oss også gjerne på 
+		<a href="/arrangementer">her</a>.
+		<br />
+		Følg oss også gjerne på
 		<a target="_blank" rel="noopener noreferrer" href="https://www.facebook.com/ItemizeNTNU">facebook</a>.
 	</p>
+	<div class="space" />
 </div>
 
 <style>
@@ -77,28 +69,21 @@
 		font-size: 1em;
 		padding: 0 1em 0em;
 	}
-
 	p {
 		text-align: center;
 		margin-top: 1em;
 		margin-bottom: 1em;
 		font-size: 1em;
 	}
-
-	.heavy {
-		font-weight: 900;
-		margin: 0.3em;
-		display: block;
+	button {
+		font-size: 1.5em;
 	}
-
 	.content * {
 		max-width: 30em;
 	}
-
 	.logo {
 		padding: 15vw 5vw 10vw;
 	}
-
 	.background {
 		opacity: 0.1;
 		position: absolute;
@@ -111,7 +96,6 @@
 		line-break: anywhere;
 		font-size: 4vw;
 	}
-
 	.background::after {
 		background: linear-gradient(to bottom, transparent, var(--background) 60%);
 		content: '';
@@ -122,7 +106,28 @@
 		width: 100%;
 		height: 22em;
 	}
-
+	.space {
+		height: 1.5em;
+	}
+	button {
+		padding: 0.5em;
+		background-color: var(--green-1);
+		border-radius: 0.5em;
+		border-color: var(--green-1);
+	}
+	button:hover {
+		background-color: var(--green-2);
+		border-color: var(--green-2);
+	}
+	button:active {
+		background-color: var(--green-3);
+		border-color: var(--green-3);
+	}
+	a button {
+		text-decoration: none;
+		color: var(--text);
+		cursor: pointer;
+	}
 	@media (min-width: 700px) {
 		.content {
 			font-size: 1.3em;

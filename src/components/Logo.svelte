@@ -1,3 +1,9 @@
+<div class="wrapper">
+	<img alt="Logo" class="red" src="logo.png" />
+	<img alt="Logo" src="logo.png" />
+	<img alt="Logo" class="blue" src="logo.png" />
+</div>
+
 <style>
 	img {
 		width: 100%;
@@ -173,9 +179,3 @@
 		}
 	}
 </style>
-
-<div class="wrapper">
-	<img alt="Logo" class="red" src="logo.png" />
-	<img alt="Logo" src="logo.png" />
-	<img alt="Logo" class="blue" src="logo.png" />
-</div>
