@@ -1,13 +1,7 @@
 <script>
-	import { user } from "../utils/stores";
-	import FaFacebookSquare from 'svelte-icons/fa/FaFacebookSquare.svelte'
-	import FaInstagram from 'svelte-icons/fa/FaInstagram.svelte'
-	import FaDiscord from 'svelte-icons/fa/FaDiscord.svelte'
-	import FaSlack from 'svelte-icons/fa/FaSlack.svelte'
-	import Icon from "./Icon.svelte";
-
-	const sider = ["hjem", "om-itemize", "historie", "for-bedrifter", "arrangementer", "ressurser"];
-	const home = sider.shift();
+	import FaFacebookSquare from "svelte-icons/fa/FaFacebookSquare.svelte";
+	import FaInstagram from "svelte-icons/fa/FaInstagram.svelte";
+	import FaDiscord from "svelte-icons/fa/FaDiscord.svelte";
 </script>
 
 <footer>
@@ -62,37 +56,30 @@
 					Itemize NTNU
 				</a>
 			</div>
-			<div>
-				<a href="https://itemize-ntnu.slack.com/">
-					<span>
-						<FaSlack />
-					</span>
-					itemize
-				</a>
-			</div>
 		</div>
 	</div>
 </footer>
 
 <style>
 	footer {
-		background-color: #1E1E1E;
+		background-color: #1e1e1e;
 		padding: 40px 10px;
 		margin-top: 100px;
 		color: #e7e7e7;
 	}
 	.footer-div {
 		display: grid;
-		grid-template-areas: "contact logo socials"
-                       		 "contact logo socials"
-                       		 "contact logo socials";
+		grid-template-areas:
+			"contact logo socials"
+			"contact logo socials"
+			"contact logo socials";
 		grid-template-columns: repeat(3, minmax(33%, 1fr));
 		width: 90%;
 		margin: 0 auto;
 	}
 	.logo {
 		width: 30%;
-    	min-width: 240px;
+		min-width: 270px;
 		max-width: 320px;
 		margin: 0 auto;
 		grid-row-start: 2;
@@ -139,7 +126,7 @@
 	}
 	.socials > div {
 		display: flex;
-    	align-items: center;
+		align-items: center;
 	}
 	.socials > div > a {
 		display: flex;
