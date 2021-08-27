@@ -126,14 +126,17 @@
 		border-radius: 0.5em;
 		border-color: var(--green-1);
 	}
+
 	button:hover {
 		background-color: var(--green-2);
 		border-color: var(--green-2);
 	}
+
 	button:active {
 		background-color: var(--green-3);
 		border-color: var(--green-3);
 	}
+
 	a button {
 		text-decoration: none;
 		color: var(--text);
