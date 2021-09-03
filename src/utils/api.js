@@ -64,4 +64,8 @@ export const getUser = async (id, options) => {
 	return await fetchResource(`/api/user/${id}`, options);
 };
 
-export default { registerUser, getUser };
+export const getEvents = async (old, options) => {
+	return await fetchResource(`/api/events?old=${old}`, options);
+}
+
+export default { registerUser, getUser, getEvents };

@@ -1,7 +1,7 @@
 <script context="module">
+	import api from '../utils/api';
 	export async function preload() {
-		const res = await this.fetch('/api/events');
-		const events = await res.json();
+		let events = (await api.getEvents(false, { fetch: this.fetch })).json;
 		return { events };
 	}
 </script>
@@ -12,10 +12,14 @@
 	import { slide } from 'svelte/transition';
 	import FaCog from 'svelte-icons/fa/FaCog.svelte';
 	import FaEyeSlash from 'svelte-icons/fa/FaEyeSlash.svelte';
+	import FaCalendarCheck from 'svelte-icons/fa/FaCalendarCheck.svelte';
 	import Button from '../components/Button.svelte';
+	import { DateTime } from 'luxon';
+	import TimePicker from '../components/TimePicker.svelte';
 	export let events;
 	let error;
 	let showNew = false;
+	let showOld = false;
 	const newEventDefault = {
 		name: '',
 		location: {
@@ -24,6 +28,7 @@
 		},
 		register_url: '',
 		date: '',
+		duration: 5.0,
 		ctf: {
 			name: '',
 			url: ''
@@ -31,7 +36,13 @@
 		info: '',
 		hidden: false
 	};
-	let newEvent = JSON.parse(JSON.stringify(newEventDefault));
+	let newEvent;
+	const resetNewEvent = (data = newEventDefault, show) => {
+		newEvent = JSON.parse(JSON.stringify(data));
+		newEvent.date = data.date ? new Date(data.date) : new Date();
+		if (show) showNew = true;
+	};
+	resetNewEvent();
 	const notEmpty = (name, value) => {
 		if (!value) {
 			throw name + ' kan ikke være tomt';
@@ -74,6 +85,30 @@
 			throw dateError;
 		}
 	};
+	const refresh = async () => {
+		events = (await api.getEvents(showOld)).json;
+	};
+
+	const smartFormat = (date) => {
+		if (['number', 'string'].includes(typeof date)) {
+			date = new Date(date);
+		}
+		if (date instanceof Date) {
+			date = DateTime.fromJSDate(date);
+		}
+
+		date = date.setZone('Europe/Oslo').setLocale('no');
+		const now = DateTime.now().setZone('Europe/Oslo');
+		let format = "'I dag kl' HH:mm";
+		if (date.month != now.month || date.day != now.day) {
+			format = "EEEE d. MMMM 'kl' HH:mm";
+		}
+		if (date.year != now.year) {
+			format = "EEEE d. MMMM y 'kl' HH:mm";
+		}
+		return date.toFormat(format);
+	};
+
 	const addNew = async () => {
 		try {
 			validate();
@@ -82,7 +117,6 @@
 			return;
 		}
 		error = '';
-		newEvent.date = new Date(newEvent.date);
 		const res = await fetch('/api/events', {
 			method: 'POST',
 			headers: {
@@ -91,9 +125,8 @@
 			body: JSON.stringify(newEvent)
 		});
 		if (res.status == 200) {
-			newEvent = { ...newEventDefault };
-			const data = await fetch('/api/events');
-			events = await data.json();
+			resetNewEvent();
+			refresh();
 		} else {
 			error = 'Unable to save event: ' + res.statusText;
 		}
@@ -118,6 +151,9 @@
 	{#if $user?.roles?.includes('Styret')}
 		<div class="center">
 			<ToggleIcon bind:value={showNew} />
+			<span class="right">
+				<ToggleIcon bind:value={showOld} onToggle={refresh} iconOff={FaCalendarCheck} colorOff="#888" rotate="0" />
+			</span>
 		</div>
 		{#if error}
 			<p class="error">{error}</p>
@@ -128,7 +164,11 @@
 				<label><span class="col">Hvor:</span> <input type="text" bind:value={newEvent.location.name} /></label>
 				<label><span class="col">Hvor link:</span> <input type="text" bind:value={newEvent.location.url} /> (e.g. mazemap link)</label>
 				<label><span class="col">Registrer link:</span> <input type="text" bind:value={newEvent.register_url} /> (link for registrering ved fysisk oppmøte)</label>
-				<label><span class="col">Når: </span> <input type="text" bind:value={newEvent.date} /> {parseDate(newEvent.date)}</label>
+				<span><span class="col">Når: </span> <TimePicker bind:date={newEvent.date} /> {smartFormat(newEvent.date)}</span>
+				<label
+					><span class="col">Varighet:</span> <input type="number" bind:value={newEvent.duration} min="0" /> (lengde i timer, slutter {smartFormat(
+						DateTime.fromJSDate(newEvent.date).plus({ hours: newEvent.duration })
+					)})</label>
 				<label><span class="col">CTF Navn:</span> <input type="text" bind:value={newEvent.ctf.name} /></label>
 				<label><span class="col">CTF Link:</span> <input type="text" bind:value={newEvent.ctf.url} /></label>
 				<label><span class="col">Info:</span> <textarea rows="3" bind:value={newEvent.info} /></label>
@@ -136,16 +176,20 @@
 				<span class="col" /> <button on:click|preventDefault={addNew}>{newEvent._id ? 'Oppdater' : 'Legg til'}</button>
 			</form>
 		{/if}
+	{:else}
+		<div class="center right">
+			<ToggleIcon bind:value={showOld} onToggle={refresh} iconOff={FaCalendarCheck} colorOff="#888" rotate="0" />
+		</div>
 	{/if}
 	<ul>
 		{#each events as event}
-			<li class="card">
+			<li class="card" class:old={new Date(event.date) < new Date()}>
 				{#if $user?.roles?.includes('Styret')}
 					<div class="buttons">
 						{#if event.hidden}
 							<Button disabled icon={FaEyeSlash} />
 						{/if}
-						<Button submit={() => (newEvent = event) && (showNew = true)} icon={FaCog} />
+						<Button submit={() => resetNewEvent(event, true)} icon={FaCog} />
 					</div>
 				{/if}
 				<h3>{event.name}</h3>
@@ -161,7 +205,7 @@
 						</tr>
 						<tr>
 							<td>Når:</td>
-							<td>{parseDate(event.date, false)}</td>
+							<td>{smartFormat(event.date)}</td>
 						</tr>
 						{#if event.register_url}
 							<tr>
@@ -199,11 +243,17 @@
 <style>
 	li {
 		list-style-type: none;
-		background-color: rgba(255, 255, 255, 0.1);
+		background: rgba(255, 255, 255, 0.1);
 		padding: 0.5em;
 		margin-bottom: 1em;
 		border: 2px solid rgba(0, 0, 0, 0);
 		transition: border 0.2s;
+	}
+	.old {
+		--A: #ffffff06;
+		--B: #ffffff10;
+		--width: 3em;
+		background: repeating-linear-gradient(-45deg, var(--A), var(--A) var(--width), var(--B) var(--width), var(--B) calc(var(--width) * 2));
 	}
 
 	li:hover {
@@ -225,9 +275,18 @@
 		vertical-align: top;
 	}
 	.center {
+		min-height: 2em;
+		position: relative;
 		display: flex;
 		flex-direction: row;
 		justify-content: center;
+	}
+	.center .right {
+		position: absolute;
+		right: 0;
+	}
+	.center.right {
+		justify-content: end;
 	}
 	label {
 		display: block;
@@ -243,7 +302,7 @@
 	input:not([type='checkbox']),
 	textarea,
 	button {
-		width: 15em;
+		width: 17.3em;
 	}
 
 	.card {

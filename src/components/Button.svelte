@@ -14,9 +14,10 @@
 		}
 	};
 	let content;
+	export let title = undefined;
 </script>
 
-<button on:click|preventDefault={submitWrapper} class:clear={icon && !content?.textContent} class:disabled={disabled || running}>
+<button on:click|preventDefault={submitWrapper} class:clear={icon && !content?.textContent} class:disabled={disabled || running} {title}>
 	{#if icon}
 		<Icon><svelte:component this={icon} /></Icon>
 	{/if}
