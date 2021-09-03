@@ -5,7 +5,7 @@
 <style>
 	span {
 		display: inline-block;
-		height: 1em;
-		vertical-align: sub;
+		height: 0.9em;
+		vertical-align: text-top;
 	}
 </style>

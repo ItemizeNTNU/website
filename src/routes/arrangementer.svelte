@@ -14,9 +14,11 @@
 	import FaEyeSlash from 'svelte-icons/fa/FaEyeSlash.svelte';
 	import FaCalendarCheck from 'svelte-icons/fa/FaCalendarCheck.svelte';
 	import FaTrash from 'svelte-icons/fa/FaTrash.svelte';
+	import FaExternalLinkAlt from 'svelte-icons/fa/FaExternalLinkAlt.svelte';
 	import Button from '../components/Button.svelte';
 	import { DateTime } from 'luxon';
 	import TimePicker from '../components/TimePicker.svelte';
+	import Icon from '../components/Icon.svelte';
 	export let events;
 	let error;
 	let showNew = false;
@@ -98,7 +100,12 @@
 	<title>Arrangementer</title>
 </svelte:head>
 <main>
-	<h1>Arrangementer</h1>
+	<h1 class="title">
+		Arrangementer
+		<span class="right small">
+			<a href="/api/events/ical" title="iCal feed"><Icon><FaExternalLinkAlt /></Icon></a>
+		</span>
+	</h1>
 	<p>Her finner du oversikt over våre fremtidige arrangementer.</p>
 	<p>
 		<b>NB Fysiske arrangementer:</b>
@@ -239,6 +246,12 @@
 		text-align: left;
 		vertical-align: top;
 	}
+	.title {
+		position: relative;
+	}
+	.small {
+		font-size: 0.7em;
+	}
 	.center {
 		min-height: 2em;
 		position: relative;
@@ -246,7 +259,7 @@
 		flex-direction: row;
 		justify-content: center;
 	}
-	.center .right {
+	:is(.title, .center) .right {
 		position: absolute;
 		right: 0;
 	}
