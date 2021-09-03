@@ -13,6 +13,7 @@
 	import FaCog from 'svelte-icons/fa/FaCog.svelte';
 	import FaEyeSlash from 'svelte-icons/fa/FaEyeSlash.svelte';
 	import FaCalendarCheck from 'svelte-icons/fa/FaCalendarCheck.svelte';
+	import FaTrash from 'svelte-icons/fa/FaTrash.svelte';
 	import Button from '../components/Button.svelte';
 	import { DateTime } from 'luxon';
 	import TimePicker from '../components/TimePicker.svelte';
@@ -43,48 +44,7 @@
 		if (show) showNew = true;
 	};
 	resetNewEvent();
-	const notEmpty = (name, value) => {
-		if (!value) {
-			throw name + ' kan ikke være tomt';
-		}
-	};
-	const notURL = (name, value) => {
-		if (value && !value.startsWith('https://')) {
-			throw name + " må starte med 'https://'";
-		}
-	};
-	const zfill = (value, digits = 2) => {
-		value = String(value);
-		while (value.length < digits) value = '0' + value;
-		return value;
-	};
-	const parseDate = (value, strict = true) => {
-		let date = new Date(value);
-		if (isNaN(date.getTime())) {
-			return 'Ugyldig dato';
-		}
-		const day = ['Søndag', 'Mandag', 'Tirsdag', 'Onsdag', 'Torsdag', 'Fredag', 'Lørdag'][date.getDay()];
-		if (strict) {
-			return `${day} ${date.getFullYear()}-${zfill(date.getMonth() + 1)}-${zfill(date.getDate())} ${zfill(date.getHours())}:${zfill(date.getMinutes())}`;
-		} else {
-			const year = new Date().getFullYear() != date.getFullYear() ? date.getFullYear() : '';
-			const month = ['januar', 'februar', 'mars', 'april', 'mai', 'juni', 'juli', 'august', 'september', 'oktober', 'november', 'desember'][date.getMonth()];
-			return `${day} ${date.getDate()}. ${month} ${year} kl ${zfill(date.getHours())}:${zfill(date.getMinutes())}`;
-		}
-	};
-	const validate = () => {
-		notEmpty('Navn', newEvent.name);
-		notEmpty('Hvor', newEvent.location.name);
-		notEmpty('Info', newEvent.info);
-		if (newEvent.ctf.url) notEmpty('CTF Navn', newEvent.ctf.name);
-		notURL('Hvor link', newEvent.location.url);
-		notURL('Registrer link', newEvent.register_url);
-		notURL('CTF link', newEvent.ctf.url);
-		const dateError = parseDate(newEvent.date);
-		if (dateError.includes('Ugyldig')) {
-			throw dateError;
-		}
-	};
+
 	const refresh = async () => {
 		events = (await api.getEvents(showOld)).json;
 	};
@@ -109,26 +69,27 @@
 		return date.toFormat(format);
 	};
 
-	const addNew = async () => {
-		try {
-			validate();
-		} catch (err) {
-			error = err;
+	const postEvent = async () => {
+		error = '';
+		const res = await api.postEvent(newEvent);
+		if (res.error) {
+			error = res.error;
 			return;
 		}
-		error = '';
-		const res = await fetch('/api/events', {
-			method: 'POST',
-			headers: {
-				'Content-Type': 'application/json'
-			},
-			body: JSON.stringify(newEvent)
-		});
-		if (res.status == 200) {
+		resetNewEvent();
+		refresh();
+	};
+
+	const deleteEvent = async () => {
+		if (confirm('Er du sikker på at du vil slette dette arrangementet?\nDette kan ikke angres.')) {
+			error = '';
+			const res = await api.deleteEvent(newEvent._id);
+			if (res.error) {
+				error = res.error;
+				return;
+			}
 			resetNewEvent();
 			refresh();
-		} else {
-			error = 'Unable to save event: ' + res.statusText;
 		}
 	};
 </script>
@@ -173,7 +134,8 @@
 				<label><span class="col">CTF Link:</span> <input type="text" bind:value={newEvent.ctf.url} /></label>
 				<label><span class="col">Info:</span> <textarea rows="3" bind:value={newEvent.info} /></label>
 				<label><span class="col">Skjult:</span> <input type="checkbox" bind:value={newEvent.hidden} bind:checked={newEvent.hidden} /></label>
-				<span class="col" /> <button on:click|preventDefault={addNew}>{newEvent._id ? 'Oppdater' : 'Legg til'}</button>
+				<span class="col" /> <button on:click|preventDefault={postEvent}>{newEvent._id ? 'Oppdater' : 'Legg til'}</button>
+				<Button icon={FaTrash} title="Delete Event" disabled={!newEvent._id} submit={deleteEvent} />
 			</form>
 		{/if}
 	{:else}
@@ -183,7 +145,7 @@
 	{/if}
 	<ul>
 		{#each events as event}
-			<li class="card" class:old={new Date(event.date) < new Date()}>
+			<li class="card" class:old={new Date(event.end) < new Date()}>
 				{#if $user?.roles?.includes('Styret')}
 					<div class="buttons">
 						{#if event.hidden}
@@ -192,7 +154,7 @@
 						<Button submit={() => resetNewEvent(event, true)} icon={FaCog} />
 					</div>
 				{/if}
-				<h3>{event.name}</h3>
+				<h3>{event.name} <span class="done">{new Date(event.end) < new Date() ? '[Ferdig]' : ''}</span></h3>
 				<table>
 					<tbody>
 						<tr>
@@ -254,6 +216,9 @@
 		--B: #ffffff10;
 		--width: 3em;
 		background: repeating-linear-gradient(-45deg, var(--A), var(--A) var(--width), var(--B) var(--width), var(--B) calc(var(--width) * 2));
+	}
+	.done {
+		color: var(--gray-2);
 	}
 
 	li:hover {
