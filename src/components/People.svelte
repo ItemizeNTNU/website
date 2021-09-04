@@ -33,4 +33,10 @@
 	.right {
 		float: right;
 	}
+	@media only screen and (max-width: 700px) {
+		.right {
+			float: initial;
+			display: block;
+		}
+	}
 </style>
