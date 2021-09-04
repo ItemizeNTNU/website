@@ -1,7 +1,7 @@
 <script>
-	import FaFacebookSquare from "svelte-icons/fa/FaFacebookSquare.svelte";
-	import FaInstagram from "svelte-icons/fa/FaInstagram.svelte";
-	import FaDiscord from "svelte-icons/fa/FaDiscord.svelte";
+	import FaFacebookSquare from 'svelte-icons/fa/FaFacebookSquare.svelte';
+	import FaInstagram from 'svelte-icons/fa/FaInstagram.svelte';
+	import FaDiscord from 'svelte-icons/fa/FaDiscord.svelte';
 </script>
 
 <footer>
@@ -64,23 +64,22 @@
 	footer {
 		background-color: #1e1e1e;
 		padding: 40px 10px;
-		margin-top: 100px;
 		color: #e7e7e7;
 	}
 	.footer-div {
 		display: grid;
 		grid-template-areas:
-			"contact logo socials"
-			"contact logo socials"
-			"contact logo socials";
+			'contact logo socials'
+			'contact logo socials'
+			'contact logo socials';
 		grid-template-columns: repeat(3, minmax(33%, 1fr));
 		width: 90%;
 		margin: 0 auto;
 	}
 	.logo {
-		width: 30%;
-		min-width: 270px;
-		max-width: 320px;
+		width: 100%;
+		min-width: 250px;
+		max-width: 340px;
 		margin: 0 auto;
 		grid-row-start: 2;
 	}
@@ -142,5 +141,35 @@
 	}
 	.socials > div > a:hover > span {
 		color: var(--green-2);
+	}
+	@media only screen and (max-width: 820px) {
+		.footer-div {
+			display: flex;
+			justify-content: space-between;
+			width: 90%;
+			margin: 0 auto;
+			flex-wrap: wrap;
+		}
+		.logo {
+			width: 100%;
+			display: block;
+			min-width: auto;
+			max-width: 100%;
+			margin: 0 auto 20px auto;
+		}
+		.logo img {
+			width: 100%;
+			min-width: 200px;
+			max-width: 250px;
+			margin: 0 auto;
+		}
+		.socials {
+			align-self: flex-start;
+		}
+	}
+	@media only screen and (max-width: 360px) {
+		footer {
+			font-size: 3.5vw;
+		}
 	}
 </style>
