@@ -40,6 +40,7 @@ body {
 	color: var(--text);
 	background-color: var(--background);
 	box-sizing: border-box;
+	overflow-x: hidden;
 }
 
 h1,
@@ -77,6 +78,7 @@ main {
 	padding: 2em;
 	margin: 0 auto;
 	box-sizing: border-box;
+	min-height: calc(100vh - 55px - 200px);
 }
 
 img {
