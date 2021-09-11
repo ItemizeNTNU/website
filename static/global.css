@@ -31,7 +31,9 @@
 *::before {
 	box-sizing: inherit;
 }
-
+html {
+	overflow-x: hidden;
+}
 body {
 	margin: 0;
 	font-family: Roboto, -apple-system, BlinkMacSystemFont, Segoe UI, Oxygen, Ubuntu, Cantarell, Fira Sans, Droid Sans, Helvetica Neue, sans-serif;
@@ -40,6 +42,8 @@ body {
 	color: var(--text);
 	background-color: var(--background);
 	box-sizing: border-box;
+	position: relative;
+	overflow-x: hidden;
 }
 
 h1,
@@ -77,6 +81,7 @@ main {
 	padding: 2em;
 	margin: 0 auto;
 	box-sizing: border-box;
+	min-height: calc(100vh - 55px - 200px);
 }
 
 img {
@@ -179,6 +184,11 @@ select {
 
 .full {
 	width: 100%;
+}
+.sapper {
+	position: relative;
+	width: 100%;
+	overflow-x: hidden;
 }
 
 @media (min-width: 400px) {

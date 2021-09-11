@@ -29,41 +29,49 @@
 	<title>Itemize NTNU</title>
 </svelte:head>
 
-<div class="logo">
-	<Logo />
-</div>
+<main>
+	<div class="logo">
+		<Logo />
+	</div>
 
-<div class="background">{brainfuck}</div>
+	<div class="background">{brainfuck}</div>
 
-<div class="content">
-	<!-- Info -->
-	<p>
-		Vi er en studentorganisasjon ved NTNU Trondheim som digger informasjonssikkerhet og CTFer.
-		<!-- Vi har drop-in med pizza og hacking hver <span class="highlight">onsdag 16:00</span> og ut kvelden. -->
-	</p>
-	<p>
-		Er du interessert i informasjonssikkerhet?
-		<br />
-		Vil du lære mer om snill hacking?
-		<br />
-		Liker du å holde på med
-		<a target="_blank" rel="noopener noreferrer" href={ctf_info_url} title={ctf_info}>CTFer</a>
-		?
-		<br />
-		Vil du være med på NTNU Trondheim's CTF lag?
-	</p>
-	<a href="/registrer"><button>Bli medlem her!</button></a>
-	<p>
-		Du kan finne en liste over fremtidige arrangementer
-		<a href="/arrangementer">her</a>.
-		<br />
-		Følg oss også gjerne på
-		<a target="_blank" rel="noopener noreferrer" href="https://www.facebook.com/ItemizeNTNU">facebook</a>.
-	</p>
-	<div class="space" />
-</div>
+	<div class="content">
+		<!-- Info -->
+		<p>
+			Vi er en studentorganisasjon ved NTNU Trondheim som digger informasjonssikkerhet og CTFer.
+			<!-- Vi har drop-in med pizza og hacking hver <span class="highlight">onsdag 16:00</span> og ut kvelden. -->
+		</p>
+		<p>
+			Er du interessert i informasjonssikkerhet?
+			<br />
+			Vil du lære mer om snill hacking?
+			<br />
+			Liker du å holde på med
+			<a target="_blank" rel="noopener noreferrer" href={ctf_info_url} title={ctf_info}>CTFer</a>
+			?
+			<br />
+			Vil du være med på NTNU Trondheim's CTF lag?
+		</p>
+		<a href="/registrer"><button>Bli medlem her!</button></a>
+		<p>
+			Du kan finne en liste over fremtidige arrangementer
+			<a href="/arrangementer">her</a>.
+			<br />
+			Følg oss også gjerne på
+			<a target="_blank" rel="noopener noreferrer" href="https://www.facebook.com/ItemizeNTNU">facebook</a>.
+		</p>
+		<div class="space" />
+	</div>
+</main>
 
 <style>
+	main {
+		padding: 0;
+		min-height: calc(100vh - 55px - 100px);
+		max-width: 100%;
+		margin-bottom: 0 !important;
+	}
 	.content {
 		display: flex;
 		align-content: center;
@@ -95,7 +103,7 @@
 	.background {
 		opacity: 0.1;
 		position: absolute;
-		top: 60px;
+		top: 0;
 		left: 0;
 		width: 100%;
 		height: 20em;
@@ -152,7 +160,6 @@
 		}
 		.background {
 			font-size: 3vw;
-			top: 50px;
 		}
 		.background::after {
 			background: linear-gradient(to bottom, transparent, var(--background) 50%);
@@ -167,7 +174,6 @@
 		}
 		.background {
 			font-size: 2.4vw;
-			top: 50px;
 		}
 	}
 </style>
