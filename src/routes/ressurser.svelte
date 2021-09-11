@@ -18,6 +18,7 @@
 		<li><a href="{path}#ctfer">CTFer</a></li>
 		<li><a href="{path}#youtube-kalaer">YouTube Kanaler</a></li>
 		<li><a href="{path}#verktøy">Verktøy</a></li>
+		<li><a href="{path}#misc-it">Misc. IT</a></li>
 	</ul>
 	<h2 id="ctfer">CTFer:</h2>
 	<ul>
@@ -144,6 +145,14 @@
 		<li>
 			<a href="https://ctfs.github.io/resources/" target="_blank" rel="noopener noreferrer">CTF Resources</a>
 			<p>Et open source github wiki prosjekt som samller mange verktøy og teknologier.</p>
+		</li>
+	</ul>
+	<h2 id="misc-it">Misc. IT</h2>
+	<ul>
+		<li>
+			<a href="- https://missing.csail.mit.edu/" target="_blank" rel="noopener noreferrer">MIT missing lecture</a>
+			<p>Praktisk forelesninger om operativ systemer med fokus på UNIX og div. nyttige konsepter og terminal-opplæring</p>
+			<p>Konsepter: vim, git, ssh, bash</p>
 		</li>
 	</ul>
 </main>
