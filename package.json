@@ -7,8 +7,13 @@
 		"build": "sapper build --legacy",
 		"export": "sapper export --legacy",
 		"start": "node __sapper__/build",
-		"lint": "prettier --check --plugin-search-dir=. .; eslint --ignore-path ./.gitignore .; depcheck",
-		"format": "prettier --write --plugin-search-dir=. ."
+		"lint:prettier": "prettier --check --plugin-search-dir=. .",
+		"lint:eslint": "eslint --ignore-path ./.gitignore .",
+		"lint:depcheck": "depcheck --ignores '@babel/*,eslint-*,prettier-*,@sapper/*'",
+		"lint": "echo lint:prettier lint:eslint lint:depcheck | xargs -n 1 npm run --silent",
+		"format:prettier": "prettier --write --plugin-search-dir=. .",
+		"format:eslint": "eslint --fix --ignore-path ./.gitignore .",
+		"format": "echo format:prettier format:eslint | xargs -n 1 npm run --silent"
 	},
 	"dependencies": {
 		"body-parser": "^1.19.0",
