@@ -1,0 +1,21 @@
+name: 'Check Linters'
+on:
+  - push
+  - pull_request
+
+jobs:
+  lint:
+    runs-on: ubuntu-latest
+    strategy:
+      matrix:
+        linter: [prettier, eslint, depcheck]
+
+    steps:
+      - name: Git checkout
+        uses: actions/checkout@v2
+
+      - name: NPM install
+        run: npm install
+
+      - name: Check ${{ matrix.linter }} linter
+        uses: npm run lint:${{ matrix.linter }}
