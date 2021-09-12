@@ -1,0 +1,27 @@
+name: Docker Build and Publish
+
+on:
+  push:
+    branch: [main]
+  pull_request:
+    branch: [main]
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    needs: lint
+    permissions:
+      contents: read
+      packages: write
+
+    steps:
+      - name: Git checkout
+        uses: actions/checkout@v2
+
+      - name: Docker build and publish to ghcr.io
+        uses: elgohr/Publish-Docker-Github-Action@master
+        with:
+          name: ${{ github.repository }}
+          username: ${{ github.actor }}
+          password: ${{ secrets.GITHUB_TOKEN }}
+          registry: ghcr.io
