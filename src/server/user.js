@@ -82,7 +82,7 @@ router.put('/user', async (req, res) => {
 });
 
 router.get('/discord/link', permission(), (req, res) => {
-	res.redirect(discord.getOAuthLink(req));
+	res.redirect(discord.getOAuthLink());
 });
 
 router.get('/discord/callback', permission(), async (req, res) => {

@@ -8,7 +8,7 @@ const _fetch = async (path, options) => {
 	options = options || {};
 	options.headers = options.headers || {};
 	options.headers.Authorization = process.env.FUSION_AUTH_API_TOKEN;
-	const host = 'https://auth.itemize.no';
+	const host = process.env.FUSION_AUTH_HOST;
 	const res = await fetchResource(path, { fetch, host, ...options });
 	if (res.error) {
 		res.error = { status: res.status, json: res.json, message: `An error occured while communicating with ${host}` };
