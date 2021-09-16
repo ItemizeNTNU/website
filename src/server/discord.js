@@ -23,16 +23,16 @@ const discordFetch = async (path, options) => {
 	return await fetchResource(path, options);
 };
 
-export const getCallback = (req) => (req.headers['host'] == 'localhost:3000' ? 'http://localhost:3000' : 'https://itemize.no') + '/api/discord/callback';
+export const getCallback = () => `${process.env.BASE_URL}/api/discord/callback`;
 
-export const getOAuthLink = (req) => {
+export const getOAuthLink = () => {
 	// https://discord.com/developers/docs/topics/oauth2#oauth2
 
 	const DISCORD_API = `${API_BASE}/oauth2/authorize`;
 	const RESPONSE_TYPE = 'code';
 	const STATE = '123'; // TODO: implement and validate state to prevent CSRF (though risk is quite low)
 	const SCOPE = encodeURIComponent(['identify'].join(' '));
-	const CALLBACK = getCallback(req);
+	const CALLBACK = getCallback();
 	const PROMPT = 'consent';
 	return `${DISCORD_API}?response_type=${RESPONSE_TYPE}&client_id=${CLIENT_ID}&scope=${SCOPE}&state=${STATE}&redirect_uri=${CALLBACK}&prompt=${PROMPT}`;
 };
@@ -45,7 +45,7 @@ export const getDiscordId = async (req, res, bearerCode) => {
 		return false;
 	}
 
-	const CALLBACK = getCallback(req);
+	const CALLBACK = getCallback();
 	const reqAccessData = {
 		client_id: CLIENT_ID,
 		client_secret: CLIENT_SECRET,

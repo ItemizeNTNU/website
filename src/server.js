@@ -12,7 +12,7 @@ import { router as user } from './server/user';
 
 const APIS = [calender, user];
 
-const { PORT, NODE_ENV, FUSION_AUTH_CLIENT_ID, FUSION_AUTH_CLIENT_SECRET, FUSION_AUTH_SECRET, BASE_URL, MONGO_DB_URL } = process.env;
+const { PORT, NODE_ENV, FUSION_AUTH_CLIENT_ID, FUSION_AUTH_CLIENT_SECRET, FUSION_AUTH_HOST, FUSION_AUTH_SECRET, BASE_URL, MONGO_DB_URL } = process.env;
 const dev = NODE_ENV === 'development';
 
 mongoose.connection.on('error', console.log);
@@ -25,8 +25,8 @@ express()
 		sirv('static', { dev }),
 		jsonParser(),
 		auth({
-			issuerBaseURL: 'https://auth.itemize.no',
-			baseURL: BASE_URL || dev ? 'http://localhost:3000' : 'https://itemize.no',
+			issuerBaseURL: FUSION_AUTH_HOST,
+			baseURL: BASE_URL,
 			clientID: FUSION_AUTH_CLIENT_ID,
 			clientSecret: FUSION_AUTH_CLIENT_SECRET,
 			secret: FUSION_AUTH_SECRET,
