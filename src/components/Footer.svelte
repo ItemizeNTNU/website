@@ -2,6 +2,7 @@
 	import FaFacebookSquare from 'svelte-icons/fa/FaFacebookSquare.svelte';
 	import FaInstagram from 'svelte-icons/fa/FaInstagram.svelte';
 	import FaDiscord from 'svelte-icons/fa/FaDiscord.svelte';
+	import FaGithub from 'svelte-icons/fa/FaGithub.svelte';
 </script>
 
 <footer>
@@ -54,6 +55,14 @@
 						<FaDiscord />
 					</span>
 					Itemize NTNU
+				</a>
+			</div>
+			<div>
+				<a href="https://github.com/ItemizeNTNU/website">
+					<span>
+						<FaGithub />
+					</span>
+					ItemizeNTNU
 				</a>
 			</div>
 		</div>
