@@ -1,6 +1,17 @@
+<script context="module">
+	export async function preload(_, session) {
+		const loggedIn = session.user ? true : false;
+		return { loggedIn };
+	}
+</script>
+
 <script>
 	import Logo from '../components/Logo.svelte';
+	import DiscordInfoPopup from '../components/DiscordInfoPopup.svelte';
 	import { onMount } from 'svelte';
+
+	export let loggedIn;
+	loggedIn = false;
 
 	const ctf_info =
 		'Capture The Flag er konkurranser som omhandler forskjellige aspekter av IT-sikkerhet, og er en god måte å lære seg noen av de praktiske skilza man bruker som «etisk hacker» 😎\nTrykk for mer info.';
@@ -20,6 +31,7 @@
 			setTimeout(writeNext, (30 + Math.pow(Math.random(), 2) * 100 + Math.pow(Math.random(), 6) * 500) * 0.3);
 		}
 	};
+
 	onMount(() => {
 		writeNext();
 	});
@@ -63,6 +75,7 @@
 		</p>
 		<div class="space" />
 	</div>
+	<DiscordInfoPopup loggedIn />
 </main>
 
 <style>
