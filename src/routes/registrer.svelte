@@ -37,17 +37,22 @@
 	</p>
 
 	{#if showHelp}
-		<div class="help" transition:fade on:click={() => (expandHelp = !expandHelp)} title="Help?">
-			{#if !expandHelp}
-				<div class="icon">?</div>
-			{:else}
-				<div class="text">
-					De fleste nettlesere støtter å inspisere kildekoden til nettsider ved å høyre-klikke på siden og velg <code>Inspiser Element</code> eller lignende. Sjekk gjerne ut
-					<a target="_blank" rel="noopener noreferrer" href="https://ddg.co?q=how+to+inspect+element+in+BROWSER">her</a> for hjelp med din spesifike nettleser.
-					<br />
-					Hvis du er på mobil kan det være greit å prøve igjen når en har en PC tilgjengelig.
-				</div>
-			{/if}
+		<div
+			class={`help ${expandHelp ? 'expanded' : ''}`}
+			transition:fade
+			on:click={() => {
+				if (!expandHelp) expandHelp = !expandHelp;
+			}}
+			title="Help?">
+			<div class="icon">?</div>
+
+			<div class="text">
+				De fleste nettlesere støtter å inspisere kildekoden til nettsider ved å høyre-klikke på siden og velg <code>Inspiser Element</code> eller lignende. Sjekk gjerne ut
+				<a target="_blank" rel="noopener noreferrer" href="https://ddg.co?q=how+to+inspect+element+in+BROWSER">her</a> for hjelp med din spesifike nettleser.
+				<br />
+				Hvis du er på mobil kan det være greit å prøve igjen når en har en PC tilgjengelig.
+				<button on:click={() => setTimeout(() => (expandHelp = !expandHelp), 0)}>Lukk hintet</button>
+			</div>
 		</div>
 	{/if}
 
@@ -55,21 +60,62 @@
 </main>
 
 <style>
+	main {
+		position: relative;
+		padding-bottom: 70px;
+	}
 	.help {
-		position: fixed;
+		position: absolute;
 		padding: 0.25em;
-		min-width: 2em;
-		min-height: 2em;
-		bottom: 0;
-		right: 0;
+		min-width: 4em;
+		min-height: 4em;
+		bottom: -10px;
+		right: -10px;
 		margin: 2em;
 		background: #555;
 		border: 2px solid #888;
 		cursor: pointer;
-		font-size: 0.9em;
+		font-size: 0.95em;
 		max-width: min(40ch, 50vw);
+		display: flex;
+		border-radius: 50%;
+		align-items: center;
+		justify-content: center;
+	}
+	.help div {
+		transition: transform 0.5s ease;
+	}
+	.help .text {
+		width: 400px;
+		position: absolute;
+		bottom: 0;
+		opacity: 0;
+		pointer-events: none;
+		/* transform: scale(0.4); */
+	}
+	.help.expanded {
+		border-radius: 0;
+	}
+	.help.expanded .icon {
+		display: none;
+	}
+	.help.expanded .text {
+		position: relative;
+		opacity: 1;
+		pointer-events: all;
+		/* transform: scale(1); */
+		left: 0;
 	}
 	.icon {
 		text-align: center;
+		font-size: 2.5em;
+		line-height: 1;
+	}
+	.text {
+		padding: 10px;
+	}
+	button {
+		margin: 10px auto 0 auto;
+		width: 100%;
 	}
 </style>
