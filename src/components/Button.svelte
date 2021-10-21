@@ -38,7 +38,7 @@
 		color: #aaa;
 	}
 	.clear {
-		background: none;
+		background: rgba(255, 255, 255, 0.07);
 		width: auto;
 		min-height: 2.325em;
 		min-width: 2.325em;
