@@ -13,10 +13,12 @@
 	const html = '<' + '!-- Hysj. Registreringsskjemaet er blitt flyttet hit: https://itemize.no/den-ekte-registreringssiden -->'; // issue https://github.com/sveltejs/prettier-plugin-svelte/issues/244
 
 	let showHelp = true;
-	onMount(() => {
-		setTimeout(() => (showHelp = true), 0 * 1000);
-	});
+	onMount(() => setTimeout(() => (showHelp = true), 0 * 1000));
 	let expandHelp = false;
+	const toggleHelp = (e) => {
+		if (e.target.tagName === 'BUTTON') expandHelp = false;
+		else expandHelp = true;
+	};
 </script>
 
 <svelte:head>
@@ -37,13 +39,7 @@
 	</p>
 
 	{#if showHelp}
-		<div
-			class={`help ${expandHelp ? 'expanded' : ''}`}
-			transition:fade
-			on:click={() => {
-				if (!expandHelp) expandHelp = !expandHelp;
-			}}
-			title="Help?">
+		<div class="help" class:expanded={expandHelp} transition:fade on:click={toggleHelp} title="Help?">
 			<div class="icon">?</div>
 
 			<div class="text">
@@ -51,7 +47,7 @@
 				<a target="_blank" rel="noopener noreferrer" href="https://ddg.co?q=how+to+inspect+element+in+BROWSER">her</a> for hjelp med din spesifike nettleser.
 				<br />
 				Hvis du er på mobil kan det være greit å prøve igjen når en har en PC tilgjengelig.
-				<button on:click={() => setTimeout(() => (expandHelp = !expandHelp), 0)}>Lukk hintet</button>
+				<button on:click={toggleHelp}>Lukk hintet</button>
 			</div>
 		</div>
 	{/if}
@@ -95,6 +91,7 @@
 	}
 	.help.expanded {
 		border-radius: 0;
+		cursor: auto;
 	}
 	.help.expanded .icon {
 		display: none;

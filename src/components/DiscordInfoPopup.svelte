@@ -1,43 +1,38 @@
 <script>
 	import { onMount } from 'svelte';
-	export let loggedIn;
+	import { user } from '../utils/stores';
+	import { fly } from 'svelte/transition';
 
-	let discordInfoPopup, discordInfoButton;
 	let infoChecked = false;
-	const hidePopup = (bool) => {
-		discordInfoPopup.classList.remove('visible');
+	let visible = false;
+	const hidePopup = () => {
+		visible = false;
 		sessionStorage['hideInfoOnSession'] = true;
-		if (bool) localStorage['hideInfoOnSession'] = true;
+		if (infoChecked) localStorage['hideInfoOnSession'] = true;
 	};
-	const initDiscordPopup = () => {
-		console.log(loggedIn);
-		if (!sessionStorage['hideInfoOnSession'] && !localStorage['hideInfoOnSession'] && loggedIn) {
-			discordInfoPopup.classList.add('visible');
-			setTimeout(() => {
-				hidePopup(infoChecked);
-			}, 25000);
+	onMount(() => {
+		if (!sessionStorage['hideInfoOnSession'] && !localStorage['hideInfoOnSession'] && $user) {
+			setTimeout(() => (visible = true), 1000);
+			setTimeout(() => hidePopup(), 25000);
 		}
-		discordInfoButton.onclick = (e) => {
-			e.preventDefault();
-			hidePopup(infoChecked);
-		};
-	};
-	onMount(() => initDiscordPopup());
+	});
 </script>
 
-<div class="discordInfoPopup" bind:this={discordInfoPopup}>
-	<p>Heisann!</p>
-	<p>Velkommen som ny medlem i Itemize!</p>
-	<p>
-		For medlemmer bruker vi Discord server som hovedkommunikasjonnkanal. Bli med her: <a href="https://discord.com/invite/gWJdXbW8Sg">https://discord.com/invite/gWJdXbW8Sg</a>
-	</p>
-	<p>Du kan linke Discord brukeren din med Itemize sin på profil siden: <a href="https://itemize.no/profil">https://itemize.no/profil</a></p>
-	<p>
-		<input type="checkbox" id="discordChkbox" bind:checked={infoChecked} />
-		<label for="discordChkbox"> Ikke vis denne meldingen igjen </label>
-	</p>
-	<button bind:this={discordInfoButton}>Lukk meldingen</button>
-</div>
+{#if visible}
+	<div class="discordInfoPopup" transition:fly={{ x: -500, duration: 1000 }}>
+		<p>Heisann!</p>
+		<p>Velkommen som nytt medlem i Itemize!</p>
+		<p>
+			For medlemmer bruker vi Discord server som hovedkommunikasjonnkanal. Bli med her: <a href="https://discord.com/invite/gWJdXbW8Sg">https://discord.com/invite/gWJdXbW8Sg</a>
+		</p>
+		<p>Du kan linke Discord brukeren din med Itemize sin på profil siden: <a href="https://itemize.no/profil">https://itemize.no/profil</a></p>
+		<p>
+			<input type="checkbox" id="discordChkbox" bind:checked={infoChecked} />
+			<label for="discordChkbox"> Ikke vis denne meldingen igjen </label>
+		</p>
+		<button on:click={hidePopup}>Lukk meldingen</button>
+	</div>
+{/if}
 
 <style>
 	input[type='checkbox'] {
@@ -60,14 +55,10 @@
 		width: calc(100% - 60px);
 		max-width: 400px;
 		transition: 1s all;
-		transform: translateX(-110%);
 		padding: 1em;
 		background: #262626;
 		border: 2px solid #444;
 		font-size: 0.95em;
-	}
-	:global(.discordInfoPopup.visible) {
-		transform: translateX(0) !important;
 	}
 	.discordInfoPopup > p {
 		margin: 2px 0;
