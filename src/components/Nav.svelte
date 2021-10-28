@@ -96,7 +96,7 @@
 	.hamburger {
 		display: none;
 	}
-	@media only screen and (max-width: 640px) {
+	@media only screen and (max-width: 700px) {
 		nav {
 			justify-content: flex-end;
 			padding-right: 75px;
