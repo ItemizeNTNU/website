@@ -1,5 +1,6 @@
 <script>
 	import Logo from '../components/Logo.svelte';
+	import DiscordInfoPopup from '../components/DiscordInfoPopup.svelte';
 	import { onMount } from 'svelte';
 
 	const ctf_info =
@@ -20,6 +21,7 @@
 			setTimeout(writeNext, (30 + Math.pow(Math.random(), 2) * 100 + Math.pow(Math.random(), 6) * 500) * 0.3);
 		}
 	};
+
 	onMount(() => {
 		writeNext();
 	});
@@ -63,6 +65,7 @@
 		</p>
 		<div class="space" />
 	</div>
+	<DiscordInfoPopup />
 </main>
 
 <style>
