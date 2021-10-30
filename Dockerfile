@@ -5,6 +5,6 @@ COPY . .
 RUN npm install
 RUN npm run build
 
-CMD ["node", "__sapper__/build"]
+CMD ["npm", "start"]
 
 EXPOSE 3000

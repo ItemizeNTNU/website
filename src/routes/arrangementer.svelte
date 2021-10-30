@@ -99,6 +99,7 @@
 <svelte:head>
 	<title>Arrangementer</title>
 </svelte:head>
+
 <main>
 	<h1 class="title">
 		Arrangementer
@@ -107,15 +108,6 @@
 		</span>
 	</h1>
 	<p>Her finner du oversikt over våre fremtidige arrangementer.</p>
-	<p>
-		<b>NB Fysiske arrangementer:</b>
-		<br />
-		På grunn av smittesporing trenger vi å registrere alle som ønsker å delta på fysiske arrangementer.
-		<br />
-		Vennligst meld deg på registreringslenken før du møter opp til et arrangement. Det er ingen tidsfrist for påmelding, så lenge du melder deg på før du fysisk møter opp.
-		<br />
-		All data blir slettet 2 uker etter arrangement.
-	</p>
 	{#if $user?.roles?.includes('Styret')}
 		<div class="center">
 			<ToggleIcon bind:value={showNew} />
@@ -251,6 +243,7 @@
 	}
 	.small {
 		font-size: 0.7em;
+		top: 10px;
 	}
 	.center {
 		min-height: 2em;
