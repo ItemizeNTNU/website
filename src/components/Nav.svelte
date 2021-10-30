@@ -19,7 +19,7 @@
 		<span />
 		<span />
 	</button>
-	<ul>
+	<ul class="navlinks">
 		<li><a aria-current={segment === undefined ? 'page' : undefined} href="."> {home} </a></li>
 		{#each sider as side}
 			<li>
@@ -27,9 +27,9 @@
 			</li>
 		{/each}
 	</ul>
-	<ul>
+	<ul class="navicons">
 		{#if $user}
-			<li><a title="Profil" href="/profil"><Icon><FaUser /></Icon></a></li>
+			<li><a aria-current={segment === 'profil' ? 'page' : undefined} title="Profil" href="/profil"><Icon><FaUser /></Icon></a></li>
 			<li><a title="Logg ut" href="/logout"><Icon><FaSignOutAlt /></Icon></a></li>
 		{:else}
 			<li><a title="Logg inn" href="/login"><Icon><FaLock /></Icon></a></li>
@@ -57,6 +57,18 @@
 		display: block;
 		clear: both;
 	}
+	ul.navicons {
+		display: flex;
+	}
+	ul.navicons > li > a {
+		padding-left: 0.8em;
+		padding-right: 0.8em;
+	}
+	ul.navicons > li > a[aria-current]::after {
+		left: 50%;
+		transform: translateX(-50%);
+		bottom: 1px;
+	}
 	li {
 		display: block;
 		float: left;
@@ -83,10 +95,13 @@
 	.hamburger {
 		display: none;
 	}
-	@media only screen and (max-width: 640px) {
+	@media only screen and (max-width: 700px) {
 		nav {
 			justify-content: flex-end;
 			padding-right: 75px;
+		}
+		ul.navlinks a {
+			padding: 0.7em 0.5em;
 		}
 		ul:first-of-type {
 			display: block;
@@ -113,7 +128,7 @@
 			height: 50px;
 			background-color: #1e1e1e;
 			z-index: 6;
-			transition: 1s all;
+			transition: 0.4s all;
 		}
 
 		.hamburger span {
