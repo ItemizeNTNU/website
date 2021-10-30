@@ -25,7 +25,7 @@
 		<p>
 			For medlemmer bruker vi Discord server som hovedkommunikasjonnkanal. Bli med her: <a href="https://discord.com/invite/gWJdXbW8Sg">https://discord.com/invite/gWJdXbW8Sg</a>
 		</p>
-		<p>Du kan linke Discord brukeren din med Itemize sin på profil siden: <a href="https://itemize.no/profil">https://itemize.no/profil</a></p>
+		<p>Du kan linke Discord brukeren din med Itemize sin på profil siden: <a href="/profil">https://itemize.no/profil</a></p>
 		<p>
 			<input type="checkbox" id="discordChkbox" bind:checked={infoChecked} />
 			<label for="discordChkbox"> Ikke vis denne meldingen igjen </label>
