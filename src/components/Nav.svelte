@@ -11,7 +11,6 @@
 
 	let activatedBurger = false;
 	const toggleBurger = () => (activatedBurger = !activatedBurger);
-	console.log(segment);
 </script>
 
 <nav>
