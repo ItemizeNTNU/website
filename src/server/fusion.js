@@ -43,4 +43,12 @@ export const getUser = async (id) => {
 	return res;
 };
 
-export default { createUser, updateUser, getUser };
+export const searchUsers = async (queryString) => {
+	const res = await _fetch(`/api/user/search?${queryString}`);
+	if (res.json?.users) {
+		res.json = res.json.users;
+	}
+	return res;
+};
+
+export default { createUser, updateUser, getUser, searchUsers };

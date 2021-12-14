@@ -64,6 +64,10 @@ export const getUser = async (id, options) => {
 	return await fetchResource(`/api/user/${id}`, options);
 };
 
+export const searchUsers = async (query, options) => {
+	return await fetchResource(`/api/user/search?${query}`,options);
+};
+
 export const getEvents = async (old, options) => {
 	return await fetchResource(`/api/events?old=${old}`, options);
 };
@@ -76,4 +80,4 @@ export const deleteEvent = async (eventId) => {
 	return await fetchResource(`/api/events/${eventId}`, { method: 'DELETE', errorText: 'ERROR' });
 };
 
-export default { registerUser, getUser, getEvents, postEvent, deleteEvent };
+export default { registerUser, getUser, searchUsers, getEvents, postEvent, deleteEvent };

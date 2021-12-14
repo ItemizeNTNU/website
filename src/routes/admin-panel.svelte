@@ -1,5 +1,5 @@
 <script context="module">
-	import api, { fetchResource } from '../utils/api';
+	import api from '../utils/api';
 
 
 	export async function preload(page, session) {
@@ -8,17 +8,16 @@
 		}else if(!session.user?.roles.includes('Styret')){
 			this.redirect(401, '/')
 		}
-		
-		const dbUser = await api.getUser(session.user.id, { fetch: this.fetch });
-		return { user: dbUser.json };
+		const query = 'queryString=*'
+		const dbUser = await api.searchUsers(query,{ fetch: this.fetch });
+		return { users: dbUser.json };
 	}
 </script>
 
 <script>
-	export let user;
-	let error;
+	export let users;
 	console.log("ikke sess")
-	console.log(user)
+	console.log(users)
 </script>
 
 <svelte:head>
