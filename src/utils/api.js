@@ -65,7 +65,7 @@ export const getUser = async (id, options) => {
 };
 
 export const searchUsers = async (query, options) => {
-	return await fetchResource(`/api/user/search?${query}`,options);
+	return await fetchResource(`/api/user/search?${query}`, options);
 };
 
 export const getEvents = async (old, options) => {

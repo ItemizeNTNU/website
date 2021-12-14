@@ -48,21 +48,38 @@ router.get('/user/search?:query', async (req, res) => {
 		return res.status(400).send({ message: 'Error fetching user' });
 	}
 	let users = [];
-	for(let i=0; i<result.json.length; i++){
-		let user = result.json[i]
-		let { id, email, data, registrations, memberships , fullName, imageUrl, insertInstant, lastLoginInstant } = user;
+	for (let i = 0; i < result.json.length; i++) {
+		let user = result.json[i];
+		let { id, email, data, registrations, memberships, fullName, imageUrl, insertInstant, lastLoginInstant } = user;
 		let { displayName, type, study, alumni, employee, discord } = data || {};
-		let groupIds = memberships?.map(element => element.groupId);
-		let applicationIds = registrations?.map(element => element.applicationId)
-		let roles = registrations?.flatMap(element => {
-			if(element.roles) return element.roles
-		})
+		let groupIds = memberships?.map((element) => element.groupId);
+		let applicationIds = registrations?.map((element) => element.applicationId);
+		let roles = registrations?.flatMap((element) => {
+			if (element.roles) return element.roles;
+		});
 		fullName = fullName || displayName;
 		displayName = displayName || fullName;
 		imageUrl = imageUrl || DEFAULT_PROFILE_IMAGE;
-		users.push({ id, email, fullName, name: displayName, imageUrl, type, study, alumni, employee, discordUsername: discord?.username, isDiscordMember: discord?.isMember, insertInstant, lastLoginInstant, groupIds, applicationIds, roles });
+		users.push({
+			id,
+			email,
+			fullName,
+			name: displayName,
+			imageUrl,
+			type,
+			study,
+			alumni,
+			employee,
+			discordUsername: discord?.username,
+			isDiscordMember: discord?.isMember,
+			insertInstant,
+			lastLoginInstant,
+			groupIds,
+			applicationIds,
+			roles
+		});
 	}
-	return res.send({users})
+	return res.send({ users });
 });
 
 router.get('/user/:id', async (req, res) => {

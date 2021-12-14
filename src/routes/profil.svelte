@@ -61,7 +61,8 @@
 				<p>
 					<b>Discord:</b> <code class:error={!user.self.isDiscordMember}>{user.discord}</code><Button submit={discordRefresh} icon={FaSync} /><Button
 						submit={discordDelete}
-						icon={FaTrashAlt} />
+						icon={FaTrashAlt}
+					/>
 					{#if !user.self.isDiscordMember}
 						<br />
 						Du har ikke blitt med i Discord-serveren enda. Trykk <a target="_blank" rel="noopener noreferrer" href="https://discord.gg/gWJdXbW8Sg">her</a> for å bli med. Trykk så

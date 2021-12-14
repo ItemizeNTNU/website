@@ -28,7 +28,7 @@
 		{/each}
 		{#if $user?.roles?.includes('Styret')}
 			<li>
-				<a aria-current={segment === 'admin-panel' ? 'page' : undefined} title="Admin panel" href="/admin-panel"> {"/admin-panel/".replace(/-|_/g, '_')} </a>
+				<a aria-current={segment === 'admin-panel' ? 'page' : undefined} title="Admin panel" href="/admin-panel"> {'/admin-panel/'.replace(/-|_/g, '_')} </a>
 			</li>
 		{/if}
 	</ul>
