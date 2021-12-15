@@ -112,6 +112,7 @@
 
 <script>
 	import AdminPanelTable from '../components/AdminPanelTable.svelte';
+	import date from '../utils/date'
 	export let users;
 	let selectedCols = ['fullName', 'discordName', 'email', 'type', 'roles'];
 	let selection = { fullName: "", discordName: "", email: "" };
@@ -170,7 +171,7 @@
 <main>
 	<div class="container">
 		<div class="row">
-			<h2>Expand row example 2</h2>
+			<h2>Admin panel</h2>
 
 			<p>
 				Only 1 row can be expanded at a time<br />
@@ -191,11 +192,39 @@
 				on:clickExpand={handleExpand}
 				bind:filterSelections={selection}
 			>
-				<div slot="expanded" let:row class="text-center">
-					{row.county}, {row.state}<br />
-					{row.country}
+				<div slot="expanded" let:row class="user-info">
+					<p><b>Fullt Navn:  </b>{row.fullName}</p>
+					<p><b>Visningsnavn:  </b>{row.name}</p>
+					<p><b>E-post:  </b>{row.email}</p>
+					<p><b>Medlemstype:  </b>{row.type}</p>
+					{#if row.type == 'student' || row.type == 'alumni'}
+						<p><b>Studieretning:  </b>{row.study.program}</p>
+						{#if row.type == 'student'}
+							<p><b>Årstrinn:  </b>{row.study.year}</p>
+						{:else}
+							<p><b>Medlemsår:  </b>{row.alumni.joinYear}</p>
+						{/if}
+					{:else if row.type == 'employee'}
+						<p><b>Title:  </b>{row.employee.title}</p>
+						<p></p>
+					{/if}
+					<p><b>Bruker opprettet:  </b>{date.nicePrintDate(new Date(row.insertInstant))}</p>
+					<p><b>Sist logget in:  </b>{date.nicePrintDate(new Date(row.lastLoginInstant))}</p>
 				</div>
 			</AdminPanelTable>
 		</div>
 	</div>
 </main>
+<style>
+.user-info {
+	display: grid;
+	grid-template-columns: 50% 50%;
+	align-items: center;
+	padding: 0.6em;
+}.user-info * {
+		margin: 0.1em 0;
+	}
+	.user-info p {
+		width: 100%;
+	}
+</style>
