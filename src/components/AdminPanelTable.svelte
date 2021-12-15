@@ -1,7 +1,7 @@
 <!-- ORIGINAL SOURCE: https://github.com/dasDaniel/svelte-table/blob/develop/src/SvelteTable.svelte -->
 <script>
 	import { createEventDispatcher } from 'svelte';
-	import MultiSelect from 'svelte-multiselect'
+	import MultiSelect from 'svelte-multiselect';
 
 	/** @type {Array<Object>} */
 	export let columns;
@@ -83,7 +83,7 @@
 	const dispatch = createEventDispatcher();
 
 	let sortFunction = () => '';
-	let searchValue = ""
+	let searchValue = '';
 	// Validation
 	if (!Array.isArray(expanded)) throw "'expanded' needs to be an array";
 
@@ -93,7 +93,7 @@
 	});
 	let filterValues = {};
 	let filterOptionValues = {};
-	Object.keys(filterOptions).forEach(key=>filterOptionValues[key]=[])
+	Object.keys(filterOptions).forEach((key) => (filterOptionValues[key] = []));
 
 	let columnByKey = {};
 	$: {
@@ -102,19 +102,21 @@
 			columnByKey[col.key] = col;
 		});
 	}
-	
+
 	$: colspan = (showExpandIcon ? 1 : 0) + columns.length;
 
 	$: c_rows = rows
 		.filter((r) => {
 			// get search and filter results/matches
-			let resSearch = '' || columns.find(col=>col.searchValue && (col.searchValue(r)+'').toLocaleLowerCase().indexOf(searchValue.toLocaleLowerCase())>=0 );
-			let res = resSearch && Object.keys(filterOptionValues).every((f)=>{
-				if(filterOptionValues[f].length==0) return true;
-				if(!r[f])return false
-				return filterOptionValues[f].includes(r[f].toLocaleLowerCase())
-			})
-			return res
+			let resSearch = '' || columns.find((col) => col.searchValue && (col.searchValue(r) + '').toLocaleLowerCase().indexOf(searchValue.toLocaleLowerCase()) >= 0);
+			let res =
+				resSearch &&
+				Object.keys(filterOptionValues).every((f) => {
+					if (filterOptionValues[f].length == 0) return true;
+					if (!r[f]) return false;
+					return filterOptionValues[f].includes(r[f].toLocaleLowerCase());
+				});
+			return res;
 		})
 		.map((r) =>
 			Object.assign({}, r, {
@@ -204,24 +206,24 @@
 		dispatch('clickCell', { event, row, key });
 	};
 </script>
+
 <div class="filterOptions" style="margin:10px;">
-{#if searchable}
+	{#if searchable}
 		<div style="padding:2px;display:block">
 			<p>Søk etter brukere:</p>
-			<input bind:value={searchValue}>
+			<input bind:value={searchValue} />
 		</div>
-		{/if}
-		{#each Object.keys(filterOptions) as key}
+	{/if}
+	{#each Object.keys(filterOptions) as key}
 		<div style="display:block; padding: 2px; margin-left:10px;">
 			<p>Filtrer på {key}</p>
 			<MultiSelect --sms-options-bg="#666" bind:selected={filterOptionValues[key]} options={filterOptions[key]} placeholder={key} />
 		</div>
-		{/each}
-	<p >Avansert søk</p>
-	</div>
+	{/each}
+	<p>Avansert søk</p>
+</div>
 <table class={asStringArray(classNameTable)}>
 	<thead class={asStringArray(classNameThead)}>
-		
 		{#if showFilterHeader}
 			<tr>
 				{#each columns as col}
@@ -244,13 +246,7 @@
 		<slot name="header" {sortOrder} {sortBy}>
 			<tr>
 				{#each columns as col}
-					<th
-						on:click={(e) => handleClickCol(e, col)}
-						class={asStringArray([
-							col.sortable ? 'isSortable' : '',
-							col.headerClass,
-						])}
-					>
+					<th on:click={(e) => handleClickCol(e, col)} class={asStringArray([col.sortable ? 'isSortable' : '', col.headerClass])}>
 						{col.title}
 						{#if sortBy === col.key}
 							{@html sortOrder === 1 ? iconAsc : iconDesc}
@@ -304,6 +300,7 @@
 		{/each}
 	</tbody>
 </table>
+
 <style>
 	.filterOptions {
 		display: inline-flex;
@@ -338,26 +335,26 @@
 	input {
 		width: 250px;
 		display: block;
-		padding:2px;
+		padding: 2px;
 	}
 	p {
 		display: block;
-		padding:2px;
+		padding: 2px;
 	}
 
 	:global(.multiselect ul.tokens > li button),
-:global(.multiselect button.remove-all) {
-  /* buttons to remove a single or all selected options at once */
-  width: 1.5em;
-  display: inline-flex;
-}
-:global(.multiselect ul input) {
-  width: 2em;
-  display: inline-flex;
-}
-:global(.multiselect){
-	display:inline-flex;
-	margin: 0px;
-	min-width: 250px;
-}
+	:global(.multiselect button.remove-all) {
+		/* buttons to remove a single or all selected options at once */
+		width: 1.5em;
+		display: inline-flex;
+	}
+	:global(.multiselect ul input) {
+		width: 2em;
+		display: inline-flex;
+	}
+	:global(.multiselect) {
+		display: inline-flex;
+		margin: 0px;
+		min-width: 250px;
+	}
 </style>
