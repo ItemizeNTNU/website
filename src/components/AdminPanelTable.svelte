@@ -1,6 +1,7 @@
 <!-- ORIGINAL SOURCE: https://github.com/dasDaniel/svelte-table/blob/develop/src/SvelteTable.svelte -->
 <script>
 	import { createEventDispatcher } from 'svelte';
+	import MultiSelect from 'svelte-multiselect'
 
 	/** @type {Array<Object>} */
 	export let columns;
@@ -23,6 +24,9 @@
 	/** @type {Array.<string|number>} */
 	export let expanded = [];
 
+	/** @type {Object} */
+	export let filterOptions = [];
+
 	// READ ONLY
 
 	/** @type {string} */
@@ -30,6 +34,9 @@
 
 	/** @type {string} */
 	export let expandSingle = false;
+
+	/** @type {string} */
+	export let searchable = true;
 
 	/** @type {string} */
 	export let iconAsc = '▲';
@@ -76,7 +83,7 @@
 	const dispatch = createEventDispatcher();
 
 	let sortFunction = () => '';
-
+	let searchValue = ""
 	// Validation
 	if (!Array.isArray(expanded)) throw "'expanded' needs to be an array";
 
@@ -85,33 +92,29 @@
 		return c.filterOptions !== undefined || c.searchValue !== undefined;
 	});
 	let filterValues = {};
-	let columnByKey;
+	let filterOptionValues = {};
+	Object.keys(filterOptions).forEach(key=>filterOptionValues[key]=[])
+
+	let columnByKey = {};
 	$: {
 		columnByKey = {};
 		columns.forEach((col) => {
 			columnByKey[col.key] = col;
 		});
 	}
-
+	
 	$: colspan = (showExpandIcon ? 1 : 0) + columns.length;
 
 	$: c_rows = rows
 		.filter((r) => {
 			// get search and filter results/matches
-			return Object.keys(filterSelections).every((f) => {
-				// check search (text input) matches
-				let resSearch =
-					filterSelections[f] === '' ||
-					(columnByKey[f].searchValue && (columnByKey[f].searchValue(r) + '').toLocaleLowerCase().indexOf((filterSelections[f] + '').toLocaleLowerCase()) >= 0);
-
-				// check filter (dropdown) matches
-				let resFilter =
-					resSearch ||
-					filterSelections[f] === undefined ||
-					// default to value() if filterValue() not provided in col
-					filterSelections[f] === (typeof columnByKey[f].filterValue === 'function' ? columnByKey[f].filterValue(r) : columnByKey[f].value(r));
-				return resFilter;
-			});
+			let resSearch = '' || columns.find(col=>col.searchValue && (col.searchValue(r)+'').toLocaleLowerCase().indexOf(searchValue.toLocaleLowerCase())>=0 );
+			let res = resSearch && Object.keys(filterOptionValues).every((f)=>{
+				if(filterOptionValues[f].length==0) return true;
+				if(!r[f])return false
+				return filterOptionValues[f].includes(r[f].toLocaleLowerCase())
+			})
+			return res
 		})
 		.map((r) =>
 			Object.assign({}, r, {
@@ -201,16 +204,29 @@
 		dispatch('clickCell', { event, row, key });
 	};
 </script>
-
+<div class="filterOptions" style="margin:10px;">
+{#if searchable}
+		<div style="padding:2px;display:block">
+			<p>Søk etter brukere:</p>
+			<input bind:value={searchValue}>
+		</div>
+		{/if}
+		{#each Object.keys(filterOptions) as key}
+		<div style="display:block; padding: 2px; margin-left:10px;">
+			<p>Filtrer på {key}</p>
+			<MultiSelect --sms-options-bg="#666" bind:selected={filterOptionValues[key]} options={filterOptions[key]} placeholder={key} />
+		</div>
+		{/each}
+	<p >Avansert søk</p>
+	</div>
 <table class={asStringArray(classNameTable)}>
 	<thead class={asStringArray(classNameThead)}>
+		
 		{#if showFilterHeader}
 			<tr>
 				{#each columns as col}
 					<th>
-						{#if col.searchValue !== undefined}
-							<input bind:value={filterSelections[col.key]} />
-						{:else if filterValues[col.key] !== undefined}
+						{#if filterValues[col.key] !== undefined}
 							<select bind:value={filterSelections[col.key]} class={asStringArray(classNameSelect)}>
 								<option value={undefined} />
 								{#each filterValues[col.key] as option}
@@ -231,8 +247,8 @@
 					<th
 						on:click={(e) => handleClickCol(e, col)}
 						class={asStringArray([
-							col.sortable ? 'isSortable' : ''
-							//col.headerClass,
+							col.sortable ? 'isSortable' : '',
+							col.headerClass,
 						])}
 					>
 						{col.title}
@@ -288,8 +304,10 @@
 		{/each}
 	</tbody>
 </table>
-
 <style>
+	.filterOptions {
+		display: inline-flex;
+	}
 	table {
 		width: 100%;
 	}
@@ -299,10 +317,6 @@
 
 	.isClickable {
 		cursor: pointer;
-	}
-
-	tr th select {
-		width: 100%;
 	}
 	tbody,
 	td,
@@ -321,4 +335,29 @@
 		caption-side: bottom;
 		border-collapse: collapse;
 	}
+	input {
+		width: 250px;
+		display: block;
+		padding:2px;
+	}
+	p {
+		display: block;
+		padding:2px;
+	}
+
+	:global(.multiselect ul.tokens > li button),
+:global(.multiselect button.remove-all) {
+  /* buttons to remove a single or all selected options at once */
+  width: 1.5em;
+  display: inline-flex;
+}
+:global(.multiselect ul input) {
+  width: 2em;
+  display: inline-flex;
+}
+:global(.multiselect){
+	display:inline-flex;
+	margin: 0px;
+	min-width: 250px;
+}
 </style>
