@@ -26,7 +26,8 @@
 		"luxon": "^2.0.2",
 		"mongoose": "^5.12.9",
 		"node-fetch": "^2.6.1",
-		"sirv": "^1.0.0"
+		"sirv": "^1.0.0",
+		"svelte-icons": "^2.1.0"
 	},
 	"devDependencies": {
 		"@babel/core": "^7.0.0",
