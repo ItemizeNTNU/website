@@ -21,10 +21,8 @@
 	export let users;
 	export let applications;
 	export let groups;
-	console.log(users);
-	console.log(applications);
-	console.log(groups);
-	let selectedCols = ['fullName', 'discordName', 'email', 'type', 'roles'];
+
+	let selectedCols = ['fullName', 'discordName', 'email', 'type'];
 	let selection = { fullName: '', discordName: '', email: '' };
 	const COLUMNS = {
 		fullName: {
@@ -53,12 +51,6 @@
 			title: 'Medlemstype',
 			value: (v) => v.type || '',
 			sortable: true
-		},
-		roles: {
-			key: 'roles',
-			title: 'Roller',
-			value: (v) => v.roles,
-			sortable: true
 		}
 	};
 	const filterOptions = {
@@ -81,13 +73,13 @@
 <main>
 	<div class="container">
 		<div class="row">
-			<h2>Admin panel</h2>
-
-			<p>
-				Only 1 row can be expanded at a time<br />
-				Console logs selection change
-			</p>
-
+			<div class="main-info">
+				<h2>Totalt antall medlemmer: {users.length}</h2>
+				<span>Studenter: {users.filter((e) => e.type == 'student').length}</span>
+				<span>Alumni: {users.filter((e) => e.type == 'alumni').length}</span>
+				<span>Ansatte: {users.filter((e) => e.type == 'employee').length}</span>
+			</div>
+			<br />
 			<AdminPanelTable
 				columns={cols}
 				rows={users}
@@ -118,6 +110,41 @@
 						<p><b>Title: </b>{row.employee.title}</p>
 						<p />
 					{/if}
+					<div class="user-roles">
+						<h4><b>Grupper</b></h4>
+						<hr />
+						{#if row?.groupIds}
+							<div class="role-info">
+								<p><b>Navn:</b></p>
+								<p><b>Tilgang til applikasjoner:</b></p>
+								{#each row.groupIds as id}
+									<p>{groups[id]?.name}</p>
+									<p>
+										{Object.keys(groups[id]?.roles)
+											.map((e) => applications[e].name)
+											.join(', ')}
+									</p>
+								{/each}
+							</div>
+						{:else}
+							<p><i>Ikke medlem av noen grupper</i></p>
+						{/if}
+					</div>
+					<div class="user-roles">
+						<h4><b>Applikasjoner</b></h4>
+						<hr />
+						{#if row?.applicationRoles}
+							<div class="role-info">
+								<span><b>Navn:</b></span><span><b>Registrert med roller:</b></span>
+								{#each row.applicationRoles as application}
+									<p>{applications[application.applicationId]?.name}</p>
+									<p>{application.roles.join(', ')}</p>
+								{/each}
+							</div>
+						{:else}
+							<p><i>Ikke tilgang til noen applikasjoner</i></p>
+						{/if}
+					</div>
 					<p><b>Bruker opprettet: </b>{date.nicePrintDate(new Date(row.insertInstant))}</p>
 					<p><b>Sist logget in: </b>{date.nicePrintDate(new Date(row.lastLoginInstant))}</p>
 				</div>
@@ -127,16 +154,50 @@
 </main>
 
 <style>
+	.main-info {
+		display: grid;
+		grid-template-columns: 40% 20% 20% 20%;
+		align-items: top;
+		padding: 0.6em;
+	}
 	.user-info {
 		display: grid;
 		grid-template-columns: 50% 50%;
-		align-items: center;
+		align-items: top;
 		padding: 0.6em;
 	}
 	.user-info * {
 		margin: 0.1em 0;
 	}
-	.user-info p {
+	.user-info p,
+	div {
 		width: 100%;
+	}
+	hr {
+		display: block;
+		height: 1px;
+		border: 0;
+		width: 70%;
+		border-top: 1px solid #ccc;
+		margin: 1em 0;
+		padding: 0;
+	}
+	.user-roles {
+		padding: 5px;
+	}
+	.user-roles p {
+		padding: 5px;
+	}
+	.role-info {
+		display: grid;
+		grid-template-columns: 30% 70%;
+		align-items: top;
+		margin: 0;
+		padding: 0;
+	}
+	.role-info p {
+		width: 100%;
+		padding: 0px;
+		padding-left: 5px;
 	}
 </style>

@@ -1,7 +1,7 @@
 <!-- ORIGINAL SOURCE: https://github.com/dasDaniel/svelte-table/blob/develop/src/SvelteTable.svelte -->
 <script>
 	import { createEventDispatcher } from 'svelte';
-	import MultiSelect from '../components/MultiSelect.svelte';
+	//import MultiSelect from '../components/MultiSelect.svelte';
 
 	/** @type {Array<Object>} */
 	export let columns;
@@ -207,20 +207,18 @@
 	};
 </script>
 
-<div class="filterOptions" style="margin:10px;">
+<div class="filterOptions" style="padding:5px;display:flex;width:100%">
 	{#if searchable}
-		<div style="padding:2px;display:block">
-			<p>Søk etter brukere:</p>
-			<input bind:value={searchValue} />
-		</div>
+		<p style="display: inline;margin:0;margin-right: 10px;">Søk etter brukere (navn, discord-navn og epost):</p>
+		<input style="display: inline" bind:value={searchValue} />
 	{/if}
-	{#each Object.keys(filterOptions) as key}
+	<!--{#each Object.keys(filterOptions) as key}
 		<div style="display:block; padding: 2px; margin-left:10px;">
 			<p>Filtrer på {key}</p>
 			<MultiSelect --sms-options-bg="#666" bind:selected={filterOptionValues[key]} options={filterOptions[key]} placeholder={key} />
 		</div>
-	{/each}
-	<p>Avansert søk</p>
+	{/each}-->
+	<button style="margin:0;margin-left:auto;margin-top:auto;font-size:smaller;width:auto">Avansert søk</button>
 </div>
 <table class={asStringArray(classNameTable)}>
 	<thead class={asStringArray(classNameThead)}>
@@ -331,15 +329,6 @@
 	table {
 		caption-side: bottom;
 		border-collapse: collapse;
-	}
-	input {
-		width: 250px;
-		display: block;
-		padding: 2px;
-	}
-	p {
-		display: block;
-		padding: 2px;
 	}
 
 	:global(.multiselect ul.tokens > li button),

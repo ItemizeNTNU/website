@@ -10,7 +10,7 @@ router.get('/application', async (req, res) => {
 		return res.status(400).send({ message: 'Error fetching applications' });
 	}
 	let jsonResult = result.json;
-	let applications = [];
+	let applications = {};
 	for (let i = 0; i < jsonResult.length; i++) {
 		let application = jsonResult[i];
 		let { id, name, roles } = application;
@@ -24,7 +24,7 @@ router.get('/application', async (req, res) => {
 						id: r.id
 					})
 			) || [];
-		applications.push({ id, name, roles });
+		applications[id] = { name, roles };
 	}
 	return res.send({ applications });
 });

@@ -10,7 +10,7 @@ router.get('/group', async (req, res) => {
 		return res.status(400).send({ message: 'Error fetching groups' });
 	}
 	let jsonResult = result.json;
-	let groups = [];
+	let groups = {};
 	for (let i = 0; i < jsonResult.length; i++) {
 		let group = jsonResult[i];
 		let { id, name, roles } = group;
@@ -21,7 +21,7 @@ router.get('/group', async (req, res) => {
 		});
 		roles = newRoles;
 
-		groups.push({ id, name, roles });
+		groups[id] = { name, roles };
 	}
 	return res.send({ groups });
 });

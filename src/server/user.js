@@ -53,9 +53,9 @@ router.get('/user/search?:query', async (req, res) => {
 		let { id, email, data, registrations, memberships, fullName, imageUrl, insertInstant, lastLoginInstant } = user;
 		let { displayName, type, study, alumni, employee, discord } = data || {};
 		let groupIds = memberships?.map((element) => element.groupId);
-		let applicationIds = registrations?.map((element) => element.applicationId);
-		let roles = registrations?.flatMap((element) => {
-			if (element.roles) return element.roles;
+
+		let applicationRoles = registrations?.map((element) => {
+			return { applicationId: element.applicationId, roles: element.roles || [] };
 		});
 		fullName = fullName || displayName;
 		displayName = displayName || fullName;
@@ -75,8 +75,7 @@ router.get('/user/search?:query', async (req, res) => {
 			insertInstant,
 			lastLoginInstant,
 			groupIds,
-			applicationIds,
-			roles
+			applicationRoles
 		});
 	}
 	return res.send({ users });
