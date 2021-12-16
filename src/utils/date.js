@@ -4,8 +4,6 @@ export const nicePrintDate = (date) => {
 	let dateString = date.getDate() + '. ';
 	dateString += months[date.getMonth()] + ' ';
 	dateString += date.getFullYear();
-
-	console.log(dateString);
 	return dateString;
 };
 

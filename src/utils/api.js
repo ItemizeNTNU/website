@@ -80,4 +80,12 @@ export const deleteEvent = async (eventId) => {
 	return await fetchResource(`/api/events/${eventId}`, { method: 'DELETE', errorText: 'ERROR' });
 };
 
-export default { registerUser, getUser, searchUsers, getEvents, postEvent, deleteEvent };
+export const getAllApplications = async (options) => {
+	return await fetchResource(`/api/application`, options);
+};
+
+export const getAllGroups = async (options) => {
+	return await fetchResource(`/api/group`, options);
+};
+
+export default { registerUser, getUser, searchUsers, getEvents, postEvent, deleteEvent, getAllApplications, getAllGroups };

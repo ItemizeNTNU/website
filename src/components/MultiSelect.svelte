@@ -1,0 +1,313 @@
+<!-- imported due to error when in node modules-->
+<script>
+	import { createEventDispatcher } from 'svelte';
+	import { fly } from 'svelte/transition';
+
+	import { CrossIcon, ExpandIcon, ReadOnlyIcon } from '../icons/Index';
+
+	export let selected;
+	export let maxSelect = null; // null means any number of options are selectable
+	export let readonly = false;
+	export let placeholder = ``;
+	export let options;
+	export let disabledOptions = [];
+	export let input = null;
+	export let name = ``;
+	export let noOptionsMsg = `No matching options`;
+
+	export let outerDivClass = ``;
+	export let ulTokensClass = ``;
+	export let liTokenClass = ``;
+	export let ulOptionsClass = ``;
+	export let liOptionClass = ``;
+
+	export let removeBtnTitle = `Remove`;
+	export let removeAllTitle = `Remove all`;
+
+	if (maxSelect !== null && maxSelect < 0) {
+		throw new TypeError(`maxSelect must be null or positive integer, got ${maxSelect}`);
+	}
+	$: single = maxSelect === 1;
+	if (!selected) selected = single ? `` : [];
+
+	if (!(options?.length > 0)) console.error(`MultiSelect missing options`);
+
+	$: invalidDisabledOptions = disabledOptions.filter((opt) => !options.includes(opt));
+
+	$: if (invalidDisabledOptions.length > 0) {
+		console.error(`Some disabledOptions are invalid as they do not appear in the options list: ${invalidDisabledOptions}`);
+	}
+
+	const dispatch = createEventDispatcher();
+	let activeOption, searchText;
+	let showOptions = false;
+
+	$: filteredOptions = searchText ? options.filter((option) => option.toLowerCase().includes(searchText.toLowerCase())) : options;
+	$: if ((activeOption && !filteredOptions.includes(activeOption)) || (!activeOption && searchText)) activeOption = filteredOptions[0];
+
+	function add(token) {
+		if (
+			!readonly &&
+			!selected.includes(token) &&
+			// (... || single) because in single mode, we always replace current token with new selection
+			(maxSelect === null || selected.length < maxSelect || single)
+		) {
+			searchText = ``; // reset search string on selection
+			selected = single ? token : [token, ...selected];
+			if ((Array.isArray(selected) && selected.length === maxSelect) || typeof selected === `string`) {
+				setOptionsVisible(false);
+				input?.blur();
+			}
+			dispatch(`add`, { token });
+			dispatch(`change`, { token, type: `add` });
+		}
+	}
+
+	function remove(token) {
+		if (readonly || typeof selected === `string`) return;
+		selected = selected.filter((item) => item !== token);
+		dispatch(`remove`, { token });
+		dispatch(`change`, { token, type: `remove` });
+	}
+
+	function setOptionsVisible(show) {
+		// nothing to do if visibility is already as intended
+		if (readonly || show === showOptions) return;
+		showOptions = show;
+		if (show) input?.focus();
+	}
+
+	function handleKeydown(event) {
+		if (event.key === `Escape`) {
+			setOptionsVisible(false);
+			searchText = ``;
+		} else if (event.key === `Enter`) {
+			if (activeOption) {
+				if (isDisabled(activeOption)) return;
+
+				selected.includes(activeOption) ? remove(activeOption) : add(activeOption);
+				searchText = ``;
+			} // no active option means the options are closed in which case enter means open
+			else setOptionsVisible(true);
+		} else if ([`ArrowDown`, `ArrowUp`].includes(event.key)) {
+			const increment = event.key === `ArrowUp` ? -1 : 1;
+			const newActiveIdx = filteredOptions.indexOf(activeOption) + increment;
+
+			if (newActiveIdx < 0) {
+				activeOption = filteredOptions[filteredOptions.length - 1];
+			} else {
+				if (newActiveIdx === filteredOptions.length) activeOption = filteredOptions[0];
+				else activeOption = filteredOptions[newActiveIdx];
+			}
+		} else if (event.key === `Backspace`) {
+			// only remove selected tags on backspace if if there are any and no searchText characters remain
+			if (selected.length > 0 && searchText.length === 0) {
+				selected = selected.slice(0, selected.length - 1);
+			}
+		}
+	}
+
+	const removeAll = () => {
+		dispatch(`remove`, { token: selected });
+		dispatch(`change`, { token: selected, type: `remove` });
+		selected = single ? `` : [];
+		searchText = ``;
+	};
+
+	const isDisabled = (option) => disabledOptions.includes(option);
+
+	$: isSelected = (option) => {
+		if (!(selected?.length > 0)) return false; // nothing is selected if `selected` is the empty array or string
+		if (single) return selected === option;
+		else return selected.includes(option);
+	};
+
+	const handleEnterAndSpaceKeys = (handler) => (event) => {
+		if ([`Enter`, `Space`].includes(event.code)) {
+			event.preventDefault();
+			handler();
+		}
+	};
+</script>
+
+<!-- https://github.com/janosh/svelte-multiselect/blob/main/src/lib/MultiSelect.svelte -->
+
+<!-- z-index: 2 when showOptions is true ensures the ul.tokens of one <MultiSelect /> display above those of another following shortly after it -->
+<div class="multiselect {outerDivClass}" class:readonly class:single style={showOptions ? `z-index: 2;` : ``} on:mouseup|stopPropagation={() => setOptionsVisible(true)}>
+	<ExpandIcon height="14pt" style="padding-left: 1pt;" />
+	<ul class="tokens {ulTokensClass}">
+		{#if single}
+			<span on:mouseup|self|stopPropagation={() => setOptionsVisible(true)}>
+				{selected}
+			</span>
+		{:else if selected?.length > 0}
+			{#each selected as tag}
+				<li class={liTokenClass} on:mouseup|self|stopPropagation={() => setOptionsVisible(true)}>
+					{tag}
+					{#if !readonly}
+						<button on:mouseup|stopPropagation={() => remove(tag)} on:keydown={handleEnterAndSpaceKeys(() => remove(tag))} type="button" title="{removeBtnTitle} {tag}">
+							<CrossIcon height="12pt" />
+						</button>
+					{/if}
+				</li>
+			{/each}
+		{/if}
+		<input
+			autocomplete="off"
+			bind:value={searchText}
+			on:mouseup|self|stopPropagation={() => setOptionsVisible(true)}
+			on:keydown={handleKeydown}
+			on:focus={() => setOptionsVisible(true)}
+			on:blur={() => dispatch(`blur`)}
+			on:blur={() => setOptionsVisible(false)}
+			{name}
+			placeholder={selected.length ? `` : placeholder}
+		/>
+	</ul>
+	{#if readonly}
+		<ReadOnlyIcon height="14pt" />
+	{:else}
+		<button
+			type="button"
+			class="remove-all"
+			title={removeAllTitle}
+			on:mouseup|stopPropagation={removeAll}
+			on:keydown={handleEnterAndSpaceKeys(removeAll)}
+			style={selected.length === 0 ? `display: none;` : ``}
+		>
+			<CrossIcon height="14pt" />
+		</button>
+	{/if}
+
+	{#key showOptions}
+		<ul class="options {ulOptionsClass}" class:hidden={!showOptions} transition:fly|local={{ duration: 300, y: 40 }}>
+			{#each filteredOptions as option}
+				<li
+					on:mouseup|preventDefault|stopPropagation
+					on:mousedown|preventDefault|stopPropagation={() => {
+						if (isDisabled(option)) return;
+
+						isSelected(option) ? remove(option) : add(option);
+					}}
+					class:selected={isSelected(option)}
+					class:active={activeOption === option}
+					class:disabled={isDisabled(option)}
+					class={liOptionClass}
+				>
+					{option}
+				</li>
+			{:else}
+				{noOptionsMsg}
+			{/each}
+		</ul>
+	{/key}
+</div>
+
+<style>
+	:where(.multiselect) {
+		position: relative;
+		margin: 1em 0;
+		border: var(--sms-border, 1pt solid lightgray);
+		border-radius: var(--sms-border-radius, 5pt);
+		align-items: center;
+		min-height: 18pt;
+		display: flex;
+		cursor: text;
+	}
+	:where(.multiselect:focus-within) {
+		border: var(--sms-focus-border, 1pt solid var(--sms-active-color, cornflowerblue));
+	}
+	:where(.multiselect.readonly) {
+		background: var(--sms-readonly-bg, lightgray);
+	}
+
+	:where(ul.tokens > li) {
+		background: var(--sms-token-bg, var(--sms-active-color, cornflowerblue));
+		align-items: center;
+		border-radius: 4pt;
+		display: flex;
+		margin: 2pt;
+		padding: 0 0 0 1ex;
+		transition: 0.3s;
+		white-space: nowrap;
+		height: 16pt;
+	}
+	:where(ul.tokens > li button, button.remove-all) {
+		align-items: center;
+		border-radius: 50%;
+		display: flex;
+		cursor: pointer;
+		transition: 0.2s;
+	}
+	:where(button) {
+		color: inherit;
+		background: transparent;
+		border: none;
+		cursor: pointer;
+		outline: none;
+		padding: 0 2pt;
+	}
+	:where(ul.tokens > li button:hover, button.remove-all:hover) {
+		color: var(--sms-remove-x-hover-focus-color, lightskyblue);
+	}
+	:where(button:focus) {
+		color: var(--sms-remove-x-hover-focus-color, lightskyblue);
+		transform: scale(1.04);
+	}
+
+	:where(.multiselect input) {
+		border: none;
+		outline: none;
+		background: none;
+		color: var(--sms-text-color, inherit);
+		flex: 1; /* this + next line fix issue #12 https://git.io/JiDe3 */
+		min-width: 2em;
+	}
+
+	:where(ul.tokens) {
+		display: flex;
+		padding: 0;
+		margin: 0;
+		flex-wrap: wrap;
+		flex: 1;
+	}
+
+	:where(ul.options) {
+		list-style: none;
+		max-height: 50vh;
+		padding: 0;
+		top: 100%;
+		width: 100%;
+		position: absolute;
+		border-radius: 1ex;
+		overflow: auto;
+		background: var(--sms-options-bg, white);
+	}
+	:where(ul.options.hidden) {
+		visibility: hidden;
+	}
+	:where(ul.options li) {
+		padding: 3pt 2ex;
+		cursor: pointer;
+	}
+	:where(ul.options li.selected) {
+		border-left: var(--sms-li-selected-border-left, 3pt solid var(--sms-selected-color, green));
+		background: var(--sms-li-selected-bg, inherit);
+		color: var(--sms-li-selected-color, inherit);
+	}
+	:where(ul.options li:not(.selected):hover) {
+		border-left: var(--sms-li-not-selected-hover-border-left, 3pt solid var(--sms-active-color, cornflowerblue));
+		border-left: 3pt solid var(--blue);
+	}
+	:where(ul.options li.active) {
+		background: var(--sms-li-active-bg, var(--sms-active-color, cornflowerblue));
+	}
+	:where(ul.options li.disabled) {
+		background: var(--sms-li-disabled-bg, #f5f5f6);
+		color: var(--sms-li-disabled-text, #b8b8b8);
+		cursor: not-allowed;
+	}
+	:where(ul.options li.disabled:hover) {
+		border-left: unset;
+	}
+</style>

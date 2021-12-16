@@ -9,8 +9,10 @@ import { json as jsonParser } from 'body-parser';
 import './server/load_envs';
 import { router as calender } from './server/calender';
 import { router as user } from './server/user';
+import { router as application } from './server/application';
+import { router as group } from './server/group';
 
-const APIS = [calender, user];
+const APIS = [calender, user, application, group];
 
 const { PORT, NODE_ENV, FUSION_AUTH_CLIENT_ID, FUSION_AUTH_CLIENT_SECRET, FUSION_AUTH_HOST, FUSION_AUTH_SECRET, BASE_URL, MONGO_DB_URL } = process.env;
 const dev = NODE_ENV === 'development';

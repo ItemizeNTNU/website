@@ -51,4 +51,20 @@ export const searchUsers = async (queryString) => {
 	return res;
 };
 
-export default { createUser, updateUser, getUser, searchUsers };
+export const getAllApplications = async () => {
+	const res = await _fetch(`/api/application`);
+	if (res.json?.applications) {
+		res.json = res.json.applications;
+	}
+	return res;
+};
+
+export const getAllGroups = async () => {
+	const res = await _fetch(`/api/group`);
+	if (res.json?.groups) {
+		res.json = res.json.groups;
+	}
+	return res;
+};
+
+export default { createUser, updateUser, getUser, searchUsers, getAllApplications, getAllGroups };

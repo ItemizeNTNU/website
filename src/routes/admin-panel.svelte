@@ -9,7 +9,9 @@
 		}
 		const query = 'queryString=*';
 		const dbUsers = await api.searchUsers(query, { fetch: this.fetch });
-		return { users: dbUsers.json.users };
+		const dbApplications = await api.getAllApplications({ fetch: this.fetch });
+		const dbGroups = await api.getAllGroups({ fetch: this.fetch });
+		return { users: dbUsers.json.users, applications: dbApplications.json.applications, groups: dbGroups.json.groups };
 	}
 </script>
 
@@ -17,6 +19,11 @@
 	import AdminPanelTable from '../components/AdminPanelTable.svelte';
 	import date from '../utils/date';
 	export let users;
+	export let applications;
+	export let groups;
+	console.log(users);
+	console.log(applications);
+	console.log(groups);
 	let selectedCols = ['fullName', 'discordName', 'email', 'type', 'roles'];
 	let selection = { fullName: '', discordName: '', email: '' };
 	const COLUMNS = {

@@ -1,7 +1,7 @@
 <!-- ORIGINAL SOURCE: https://github.com/dasDaniel/svelte-table/blob/develop/src/SvelteTable.svelte -->
 <script>
 	import { createEventDispatcher } from 'svelte';
-	import MultiSelect from 'svelte-multiselect';
+	import MultiSelect from '../components/MultiSelect.svelte';
 
 	/** @type {Array<Object>} */
 	export let columns;
