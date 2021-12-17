@@ -1,5 +1,4 @@
-<!-- imported due to error when in node modules-->
-<!-- https://github.com/janosh/svelte-multiselect/blob/main/src/lib/MultiSelect.svelte -->
+<!-- original code https://github.com/janosh/svelte-multiselect/blob/main/src/lib/MultiSelect.svelte -->
 <script>
 	import { createEventDispatcher } from 'svelte';
 	import { fly } from 'svelte/transition';
@@ -130,8 +129,6 @@
 		}
 	};
 </script>
-
-
 
 <!-- z-index: 2 when showOptions is true ensures the ul.tokens of one <MultiSelect /> display above those of another following shortly after it -->
 <div class="multiselect {outerDivClass}" class:readonly class:single style={showOptions ? `z-index: 2;` : ``} on:mouseup|stopPropagation={() => setOptionsVisible(true)}>

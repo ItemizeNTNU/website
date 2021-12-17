@@ -35,12 +35,12 @@
 	let sortFunction = () => '';
 	let searchValue = '';
 
-	const increasePage = ()=> {
-		page+= page*maxPerPage>=c_rows.length ? 0 : 1;
-	}
-	const decreasePage = ()=>{
-		page-= page==1 ? 0 : 1;
-	}
+	const increasePage = () => {
+		page += page * maxPerPage >= c_rows.length ? 0 : 1;
+	};
+	const decreasePage = () => {
+		page -= page == 1 ? 0 : 1;
+	};
 
 	// Validation
 	if (!Array.isArray(expanded)) throw "'expanded' needs to be an array";
@@ -146,7 +146,7 @@
 	</thead>
 
 	<tbody>
-		{#each c_rows.slice((page-1)*maxPerPage, page*maxPerPage) as row, n}
+		{#each c_rows.slice((page - 1) * maxPerPage, page * maxPerPage) as row, n}
 			<tr on:click={(e) => handleClickExpand(e, row)} class="expand pointer">
 				{#each columns as col}
 					<td>{col.value(row)}</td>
@@ -163,8 +163,8 @@
 </table>
 <div class="pageination" style="display:grid;grid-template-columns: 33% 33% 34% ">
 	<p style="text-align:left" on:click={decreasePage}>←</p>
-	<p style="text-align:center">{(page-1)*maxPerPage+(c_rows.length!=0 ? 1 :0)}-{Math.min(page*maxPerPage, c_rows.length)} av {c_rows.length}</p>
-	
+	<p style="text-align:center">{(page - 1) * maxPerPage + (c_rows.length != 0 ? 1 : 0)}-{Math.min(page * maxPerPage, c_rows.length)} av {c_rows.length}</p>
+
 	<p style="text-align:right " on:click={increasePage}>→</p>
 	<span>
 		<p>Resultater per side:</p>
@@ -177,7 +177,8 @@
 </div>
 
 <style>
-	.pageination p, select{
+	.pageination p,
+	select {
 		margin: 0px;
 		margin-top: 15px;
 	}
