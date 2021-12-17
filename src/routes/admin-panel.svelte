@@ -23,28 +23,24 @@
 	export let groups;
 
 	let selectedCols = ['fullName', 'discordName', 'email', 'type'];
-	let selection = { fullName: '', discordName: '', email: '' };
 	const COLUMNS = {
 		fullName: {
 			key: 'fullName',
 			title: 'Navn',
 			value: (v) => v.fullName,
-			sortable: true,
-			searchValue: (v) => v.fullName
+			sortable: true
 		},
 		discordName: {
 			key: 'discordName',
 			title: 'Discord-navn',
 			value: (v) => v.discordUsername || '',
-			sortable: true,
-			searchValue: (v) => v.discordUsername
+			sortable: true
 		},
 		email: {
 			key: 'email',
 			title: 'E-post',
 			value: (v) => v.email,
-			sortable: true,
-			searchValue: (v) => v.email
+			sortable: true
 		},
 		type: {
 			key: 'type',
@@ -53,17 +49,33 @@
 			sortable: true
 		}
 	};
-	const filterOptions = {
-		type: ['alumni', 'ansatt', 'student']
+	const simpleFilter = {
+		title: 'Søk etter brukere (navn, discord-navn og epost): ',
+		filter: (r, v) => [r.name, r.discordUsername, r.email].find((e) => e?.toLocaleLowerCase().indexOf(v.toLocaleLowerCase()) >= 0)
 	};
+	const advancedFilter = [
+		{ name: 'Navn: ', default: '', filter: (r, v) => r.fullName.toLocaleLowerCase().indexOf(v?.toLocaleLowerCase()) >= 0 },
+		{ name: 'Visningsnavn: ', default: '', filter: (r, v) => r.displayName.toLocaleLowerCase().indexOf(v?.toLocaleLowerCase()) >= 0 },
+		{ name: 'Discord-navn: ', default: '', filter: (r, v) => (r.discordUsername || '').toLocaleLowerCase().indexOf(v?.toLocaleLowerCase()) >= 0 },
+		{ name: 'E-post: ', default: '', filter: (r, v) => r.email.toLocaleLowerCase().indexOf(v?.toLocaleLowerCase()) >= 0 },
+		{ name: 'Registrert før: ', default: '', isDate: true, filter: (r, v) => r.insertInstant <= (new Date(v).getTime() || r.insertInstant) },
+		{ name: 'Registrert etter: ', default: '', isDate: true, filter: (r, v) => r.insertInstant >= (new Date(v).getTime() || 0) },
+		{ name: 'Medlemstype: ', default: [], values: ['alumni', 'employee', 'student'], filter: (r, v) => v?.includes(r.type) || v?.length == 0 },
+		{
+			name: 'Gruppe: ',
+			default: [],
+			values: Object.keys(groups).map((id) => groups[id].name),
+			filter: (r, v) => r.groupIds?.find((id) => v?.includes(groups[id].name)) || v?.length == 0
+		},
+		{
+			name: 'Applikasjon: ',
+			default: [],
+			values: Object.keys(applications).map((id) => applications[id].name),
+			filter: (r, v) => r.applicationRoles?.find((app) => v.includes(applications[app.id].name)) || v?.length == 0
+		}
+	];
 
 	$: cols = selectedCols.map((key) => COLUMNS[key]);
-
-	function handleExpand(event) {
-		const row = event.detail.row;
-		console.log(row);
-		//const operation = row.$expanded ? "open" : "close";
-	}
 </script>
 
 <svelte:head>
@@ -90,13 +102,12 @@
 				expandRowKey="fullName"
 				iconExpand="⌄"
 				iconExpanded="⌃"
-				{filterOptions}
-				on:clickExpand={handleExpand}
-				bind:filterSelections={selection}
+				simpleFilterOptions={simpleFilter}
+				advancedFilterOptions={advancedFilter}
 			>
 				<div slot="expanded" let:row class="user-info">
 					<p><b>Fullt Navn: </b>{row.fullName}</p>
-					<p><b>Visningsnavn: </b>{row.name}</p>
+					<p><b>Visningsnavn: </b>{row.displayName}</p>
 					<p><b>E-post: </b>{row.email}</p>
 					<p><b>Medlemstype: </b>{row.type}</p>
 					{#if row.type == 'student' || row.type == 'alumni'}
@@ -137,7 +148,7 @@
 							<div class="role-info">
 								<span><b>Navn:</b></span><span><b>Registrert med roller:</b></span>
 								{#each row.applicationRoles as application}
-									<p>{applications[application.applicationId]?.name}</p>
+									<p>{applications[application.id]?.name}</p>
 									<p>{application.roles.join(', ')}</p>
 								{/each}
 							</div>

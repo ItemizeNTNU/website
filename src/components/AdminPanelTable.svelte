@@ -1,7 +1,7 @@
 <!-- ORIGINAL SOURCE: https://github.com/dasDaniel/svelte-table/blob/develop/src/SvelteTable.svelte -->
 <script>
 	import { createEventDispatcher } from 'svelte';
-	//import MultiSelect from '../components/MultiSelect.svelte';
+	import MultiSelect from '../components/MultiSelect.svelte';
 
 	/** @type {Array<Object>} */
 	export let columns;
@@ -17,15 +17,15 @@
 	/** @type {number} */
 	export let sortOrder = 1;
 
-	/** @type {Object} */
-	export let filterSelections = {};
-
 	// expand
 	/** @type {Array.<string|number>} */
 	export let expanded = [];
 
+	/** @type {Array<Object>} */
+	export let advancedFilterOptions = [];
+
 	/** @type {Object} */
-	export let filterOptions = [];
+	export let simpleFilterOptions = {};
 
 	// READ ONLY
 
@@ -72,7 +72,7 @@
 	export let classNameCell = '';
 
 	/** @type {string} class added to the expanded row*/
-	export let classNameRowExpanded = '';
+	export let classNameRowExpanded = 'expanded';
 
 	/** @type {string} class added to the expanded row*/
 	export let classNameExpandedContent = '';
@@ -81,19 +81,14 @@
 	export let classNameCellExpand = '';
 
 	const dispatch = createEventDispatcher();
-
+	let advancedSearch = false;
 	let sortFunction = () => '';
 	let searchValue = '';
 	// Validation
 	if (!Array.isArray(expanded)) throw "'expanded' needs to be an array";
 
-	let showFilterHeader = columns.some((c) => {
-		// check if there are any filter or search headers
-		return c.filterOptions !== undefined || c.searchValue !== undefined;
-	});
-	let filterValues = {};
 	let filterOptionValues = {};
-	Object.keys(filterOptions).forEach((key) => (filterOptionValues[key] = []));
+	advancedFilterOptions.forEach((el) => (filterOptionValues[el.name] = el.default));
 
 	let columnByKey = {};
 	$: {
@@ -105,19 +100,14 @@
 
 	$: colspan = (showExpandIcon ? 1 : 0) + columns.length;
 
-	$: c_rows = rows
-		.filter((r) => {
-			// get search and filter results/matches
-			let resSearch = '' || columns.find((col) => col.searchValue && (col.searchValue(r) + '').toLocaleLowerCase().indexOf(searchValue.toLocaleLowerCase()) >= 0);
-			let res =
-				resSearch &&
-				Object.keys(filterOptionValues).every((f) => {
-					if (filterOptionValues[f].length == 0) return true;
-					if (!r[f]) return false;
-					return filterOptionValues[f].includes(r[f].toLocaleLowerCase());
-				});
-			return res;
-		})
+	const simpleFilter = (rows, searchValue) => {
+		return rows.filter((r) => simpleFilterOptions.filter(r, searchValue));
+	};
+	const advancedFilter = (rows, filters) => {
+		return rows.filter((r) => advancedFilterOptions.every((e) => e.filter(r, filters[e.name])));
+	};
+	// Find rows that match search
+	$: c_rows = (advancedSearch ? advancedFilter(rows, filterOptionValues) : simpleFilter(rows, searchValue))
 		.map((r) =>
 			Object.assign({}, r, {
 				// internal row property for sort order
@@ -138,32 +128,14 @@
 			.filter((v) => typeof v === 'string' && v !== '')
 			.join(' ');
 
-	const calculateFilterValues = () => {
-		filterValues = {};
-		columns.forEach((c) => {
-			if (typeof c.filterOptions === 'function') {
-				filterValues[c.key] = c.filterOptions(rows);
-			} else if (Array.isArray(c.filterOptions)) {
-				// if array of strings is provided, use it for name and value
-				filterValues[c.key] = c.filterOptions.map((val) => ({
-					name: val,
-					value: val
-				}));
-			}
-		});
-	};
-
 	$: {
 		let col = columnByKey[sortBy];
 		if (col !== undefined && col.sortable === true && typeof col.value === 'function') {
-			sortFunction = (r) => col.value(r);
-		}
-	}
-
-	$: {
-		// if filters are enabled, watch rows and columns
-		if (showFilterHeader && columns && rows) {
-			calculateFilterValues();
+			if (typeof col.value(rows[0]) === 'string') {
+				sortFunction = (r) => col.value(r).toLocaleLowerCase();
+			} else {
+				sortFunction = (r) => col.value(r);
+			}
 		}
 	}
 
@@ -183,64 +155,45 @@
 		dispatch('clickCol', { event, col, key: col.key });
 	};
 
-	const handleClickRow = (event, row) => {
-		dispatch('clickRow', { event, row });
-	};
-
 	const handleClickExpand = (event, row) => {
 		row.$expanded = !row.$expanded;
 		const keyVal = row[expandRowKey];
-		if (expandSingle && row.$expanded) {
+		if (row.$expanded) {
 			expanded = [keyVal];
-		} else if (expandSingle) {
-			expanded = [];
-		} else if (!row.$expanded) {
-			expanded = expanded.filter((r) => r != keyVal);
 		} else {
-			expanded = [...expanded, keyVal];
+			expanded = [];
 		}
-		dispatch('clickExpand', { event, row });
-	};
-
-	const handleClickCell = (event, row, key) => {
-		dispatch('clickCell', { event, row, key });
 	};
 </script>
 
-<div class="filterOptions" style="padding:5px;display:flex;width:100%">
-	{#if searchable}
-		<p style="display: inline;margin:0;margin-right: 10px;">Søk etter brukere (navn, discord-navn og epost):</p>
+<div class="filterOptions" style="padding:5px;width:100%; position:relative">
+	{#if !advancedSearch}
+		<p style="display: inline;margin:0;margin-right: 10px;">{simpleFilterOptions.title}</p>
 		<input style="display: inline" bind:value={searchValue} />
-	{/if}
-	<!--{#each Object.keys(filterOptions) as key}
-		<div style="display:block; padding: 2px; margin-left:10px;">
-			<p>Filtrer på {key}</p>
-			<MultiSelect --sms-options-bg="#666" bind:selected={filterOptionValues[key]} options={filterOptions[key]} placeholder={key} />
+	{:else}
+		<div class="advanced-search">
+			{#each advancedFilterOptions as filter}
+				<span>
+					<p>{filter.name}</p>
+					{#if filter.values}
+						<MultiSelect --sms-options-bg="#666" bind:selected={filterOptionValues[filter.name]} options={filter.values} />
+					{:else if filter.isDate}
+						<input onfocus="(this.type='date')" onblur="(this.type='text')" bind:value={filterOptionValues[filter.name]} />
+					{:else}
+						<input bind:value={filterOptionValues[filter.name]} />
+					{/if}
+				</span>
+			{/each}
 		</div>
-	{/each}-->
-	<button style="margin:0;margin-left:auto;margin-top:auto;font-size:smaller;width:auto">Avansert søk</button>
+	{/if}
+	<br />
+
+	<button on:click={() => (advancedSearch = !advancedSearch)} style="position:absolute; right:0; bottom:0;font-size:smaller;width:auto"
+		>{advancedSearch ? 'Skjul a' : 'A'}vansert søk</button
+	>
 </div>
 <table class={asStringArray(classNameTable)}>
 	<thead class={asStringArray(classNameThead)}>
-		{#if showFilterHeader}
-			<tr>
-				{#each columns as col}
-					<th>
-						{#if filterValues[col.key] !== undefined}
-							<select bind:value={filterSelections[col.key]} class={asStringArray(classNameSelect)}>
-								<option value={undefined} />
-								{#each filterValues[col.key] as option}
-									<option value={option.value}>{option.name}</option>
-								{/each}
-							</select>
-						{/if}
-					</th>
-				{/each}
-				{#if showExpandIcon}
-					<th />
-				{/if}
-			</tr>
-		{/if}
 		<slot name="header" {sortOrder} {sortBy}>
 			<tr>
 				{#each columns as col}
@@ -261,38 +214,24 @@
 	<tbody class={asStringArray(classNameTbody)}>
 		{#each c_rows as row, n}
 			<slot name="row" {row} {n}>
-				<tr
-					on:click={(e) => {
-						handleClickRow(e, row);
-					}}
-					class={asStringArray([classNameRow, row.$expanded && classNameRowExpanded])}
-				>
+				<tr on:click={(e) => handleClickExpand(e, row)} class={asStringArray([classNameRow, row.$expanded && 'expanded'])}>
 					{#each columns as col}
-						<td
-							on:click={(e) => {
-								handleClickCell(e, row, col.key);
-							}}
-							class={asStringArray([col.class, classNameCell])}
-						>
-							{#if col.renderComponent}
-								<svelte:component this={col.renderComponent.component || col.renderComponent} {...col.renderComponent.props || {}} {row} {col} />
-							{:else}
-								{@html col.renderValue ? col.renderValue(row) : col.value(row)}
-							{/if}
+						<td class={asStringArray([col.class, classNameCell])}>
+							{col.value(row)}
 						</td>
 					{/each}
 					{#if showExpandIcon}
-						<td on:click={(e) => handleClickExpand(e, row)} class={asStringArray(['isClickable', classNameCellExpand])}>
+						<td class={asStringArray(['isClickable', classNameCellExpand])}>
 							{@html row.$expanded ? iconExpand : iconExpanded}
 						</td>
 					{/if}
 				</tr>
 				{#if row.$expanded}
-					<tr class={asStringArray(classNameExpandedContent)}
-						><td {colspan}>
+					<tr class={asStringArray(classNameExpandedContent)}>
+						<td {colspan}>
 							<slot name="expanded" {row} {n} />
-						</td></tr
-					>
+						</td>
+					</tr>
 				{/if}
 			</slot>
 		{/each}
@@ -300,8 +239,9 @@
 </table>
 
 <style>
-	.filterOptions {
-		display: inline-flex;
+	.filterOptions p,
+	input {
+		display: inline;
 	}
 	table {
 		width: 100%;
@@ -329,6 +269,16 @@
 	table {
 		caption-side: bottom;
 		border-collapse: collapse;
+	}
+
+	.advanced-search {
+		display: grid;
+		grid-template-columns: 50% 50%;
+		align-items: top;
+		padding: 0.6em;
+	}
+	.advanced-search span {
+		padding: 0.4em;
 	}
 
 	:global(.multiselect ul.tokens > li button),

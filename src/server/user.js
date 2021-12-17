@@ -55,7 +55,7 @@ router.get('/user/search?:query', async (req, res) => {
 		let groupIds = memberships?.map((element) => element.groupId);
 
 		let applicationRoles = registrations?.map((element) => {
-			return { applicationId: element.applicationId, roles: element.roles || [] };
+			return { id: element.applicationId, roles: element.roles || [] };
 		});
 		fullName = fullName || displayName;
 		displayName = displayName || fullName;
@@ -64,7 +64,7 @@ router.get('/user/search?:query', async (req, res) => {
 			id,
 			email,
 			fullName,
-			name: displayName,
+			displayName,
 			imageUrl,
 			type,
 			study,
