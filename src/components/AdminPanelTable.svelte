@@ -1,7 +1,9 @@
 <!-- ORIGINAL SOURCE: https://github.com/dasDaniel/svelte-table/blob/develop/src/SvelteTable.svelte -->
 <script>
 	import MultiSelect from '../components/MultiSelect.svelte';
-
+	import FaSortUp from 'svelte-icons/fa/FaSortUp.svelte';
+	import FaSortDown from 'svelte-icons/fa/FaSortDown.svelte';
+	import FaSort from 'svelte-icons/fa/FaSort.svelte';
 	/** @type {Array<Object>} */
 	export let columns;
 
@@ -23,9 +25,6 @@
 	let sortBy = '';
 	let sortOrder = 1;
 	let expanded = [];
-
-	let iconAsc = '▲';
-	let iconDesc = '▼';
 
 	let iconExpand = '⌄';
 	let iconExpanded = '⌃';
@@ -134,10 +133,22 @@
 	<thead>
 		<tr>
 			{#each columns as col}
-				<th on:click={(e) => handleClickCol(e, col)} class="pointer">
+				<th on:click={(e) => handleClickCol(e, col)} class="pointer header">
 					{col.title}
 					{#if sortBy === col.key}
-						{@html sortOrder === 1 ? iconAsc : iconDesc}
+						{#if sortOrder === 1}
+							<span>
+								<FaSortUp />
+							</span>
+						{:else}
+							<span>
+								<FaSortDown />
+							</span>
+						{/if}
+					{:else}
+						<span>
+							<FaSort />
+						</span>
 					{/if}
 				</th>
 			{/each}
@@ -230,6 +241,18 @@
 	table {
 		caption-side: bottom;
 		border-collapse: collapse;
+	}
+
+	.header > span {
+		display: inline-block;
+		height: 0.75em;
+		vertical-align: sub;
+		margin-left: 4px;
+		color: #fff;
+		transition: 0.4s linear;
+	}
+	.header > span:hover {
+		color: var(--green-2);
 	}
 
 	:global(.multiselect ul.tokens > li button),
