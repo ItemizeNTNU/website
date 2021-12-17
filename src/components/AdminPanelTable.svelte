@@ -4,22 +4,11 @@
 	import FaSortUp from 'svelte-icons/fa/FaSortUp.svelte';
 	import FaSortDown from 'svelte-icons/fa/FaSortDown.svelte';
 	import FaSort from 'svelte-icons/fa/FaSort.svelte';
-	/** @type {Array<Object>} */
+
 	export let columns;
-
-	/** @type {Array<Object>} */
 	export let rows;
-
-	// READ AND WRITE
-	/** @type {Array<Object>} */
 	export let advancedFilterOptions = [];
-
-	/** @type {Object} */
 	export let simpleFilterOptions = {};
-
-	// READ ONLY
-
-	/** @type {string} */
 	export let expandRowKey = null;
 
 	let sortBy = '';
@@ -40,9 +29,6 @@
 	const decreasePage = () => {
 		page -= page == 1 ? 0 : 1;
 	};
-
-	// Validation
-	if (!Array.isArray(expanded)) throw "'expanded' needs to be an array";
 
 	let filterValues = {};
 	advancedFilterOptions.forEach((el) => (filterValues[el.name] = el.default));
