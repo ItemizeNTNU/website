@@ -71,7 +71,7 @@
 			name: 'Applikasjon: ',
 			default: [],
 			values: Object.keys(applications).map((id) => applications[id].name),
-			filter: (r, v) => r.applicationRoles?.find((app) => v.includes(applications[app.id].name)) || v?.length == 0
+			filter: (r, v) => r.applicationRoles?.find((app) => v?.includes(applications[app.id].name)) || v?.length == 0
 		}
 	];
 
@@ -95,10 +95,7 @@
 			<AdminPanelTable
 				columns={cols}
 				rows={users}
-				classNameTable="table"
-				classNameThead="table-info"
 				showExpandIcon={true}
-				expandSingle={true}
 				expandRowKey="fullName"
 				iconExpand="⌄"
 				iconExpanded="⌃"
@@ -109,7 +106,7 @@
 					<p><b>Fullt Navn: </b>{row.fullName}</p>
 					<p><b>Visningsnavn: </b>{row.displayName}</p>
 					<p><b>E-post: </b>{row.email}</p>
-					<p><b>Medlemstype: </b>{row.type}</p>
+					<p><b>Medlemstype: </b>{row.type || ''}</p>
 					{#if row.type == 'student' || row.type == 'alumni'}
 						<p><b>Studieretning: </b>{row.study.program}</p>
 						{#if row.type == 'student'}
