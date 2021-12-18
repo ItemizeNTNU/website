@@ -4,7 +4,6 @@
 
 	// 	returns an object for the modal specified by `id`, which contains the API functions (`open` and `close` )
 	export function getModal(id = '') {
-		console.log(modals);
 		return modals[id];
 	}
 </script>

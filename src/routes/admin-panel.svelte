@@ -21,49 +21,82 @@
 	import AdminPanelTable from '../components/AdminPanelTable.svelte';
 	import date from '../utils/date';
 	import FaEdit from 'svelte-icons/fa/FaEdit.svelte';
-	import MdAddBox from 'svelte-icons/md/MdAddBox.svelte';
+	import FaRegPlusSquare from 'svelte-icons/fa/FaRegPlusSquare.svelte';
 	export let users;
 	export let applications;
 	export let groups;
 
 	let attributeToEdit = '';
 	let editType = '';
+	// The selected columns to show in table
 	let selectedCols = ['fullName', 'discordName', 'email', 'type'];
+	// The selected filters to show in advanced filter
+	let selectedFilters = ['fullName', 'displayName', 'discordName', 'email', 'registerd', 'type', 'groups', 'applications'];
 
-	const COLUMNS = {
+	/* Object in DATA
+	{
+		key: identifier of attribute for user in users
+		title: name of the attribute
+		value: function to retrive the value from a user object in users
+		defaultFilterting: default value to filter the attribute on 
+		filter: function that returns if the user matches the filter for that attribute
+		filterValues: list of the possible values this attribute can be filtered on
+		edit: Possible values that this attribute can be set to, '' indicates all strings
+		editConfirm: function to retrive a valid user object to PATCH user after confirmation 
+		isDate: is the attribute a date
+		add: function that returns all valid values that can be added to this user
+	}
+	*/
+	const DATA = {
 		fullName: {
 			key: 'fullName',
 			title: 'Navn',
 			value: (r) => r.fullName,
-			sortable: true
-		},
-		discordName: {
-			key: 'discordName',
-			title: 'Discord-navn',
-			value: (r) => r.discordUsername || '',
-			sortable: true
-		},
-		email: {
-			key: 'email',
-			title: 'E-post',
-			value: (r) => r.email,
-			sortable: true
-		},
-		type: {
-			key: 'type',
-			title: 'Medlemstype',
-			value: (r) => r.type || '',
-			sortable: true
+			defaultFiltering: '',
+			filter: (r, v) => r.fullName.toLocaleLowerCase().indexOf(v?.toLocaleLowerCase()) >= 0
 		},
 		displayName: {
 			key: 'displayName',
 			title: 'Visningsnavn',
 			value: (r) => r.displayName || '',
+			defaultFiltering: '',
+			filter: (r, v) => r.displayName.toLocaleLowerCase().indexOf(v?.toLocaleLowerCase()) >= 0,
 			edit: '',
 			editConfirm: (v) => {
 				return { data: { displayName: v } };
 			}
 		},
+		discordName: {
+			key: 'discordName',
+			title: 'Discord-navn',
+			value: (r) => r.discordUsername || '',
+			defaultFiltering: '',
+			filter: (r, v) => (r.discordUsername || '').toLocaleLowerCase().indexOf(v?.toLocaleLowerCase()) >= 0
+		},
+		email: {
+			key: 'email',
+			title: 'E-post',
+			value: (r) => r.email,
+			defaultFiltering: '',
+			filter: (r, v) => r.email.toLocaleLowerCase().indexOf(v?.toLocaleLowerCase()) >= 0
+		},
+		registerd: {
+			key: 'insertInstant',
+			title: 'Registrert',
+			value: (r) => r.insertInstant,
+			defaultFiltering: ['', ''],
+			filter: (r, v) => r.insertInstant <= (new Date(v[0]).getTime() || r.insertInstant) && r.insertInstant >= (new Date(v[1]).getTime() || 0),
+			isDate: true
+		},
+		type: {
+			key: 'type',
+			title: 'Medlemstype',
+			value: (r) => r.type || '',
+			defaultFiltering: [],
+			filterValues: ['alumni', 'employee', 'student'],
+			filter: (r, v) => v?.includes(r.type) || v?.length == 0
+		},
+
 		study_program: {
 			key: 'program',
 			title: 'Studieretning',
@@ -90,7 +123,10 @@
 			add: (r) =>
 				Object.keys(groups)
 					.filter((id) => !r.groupIds?.includes(id))
-					?.map((id) => groups[id].name)
+					?.map((id) => groups[id].name),
+			defaultFiltering: [],
+			filterValues: Object.keys(groups).map((id) => groups[id].name),
+			filter: (r, v) => r.groupIds?.find((id) => v?.includes(groups[id].name)) || v?.length == 0
 		},
 		applications: {
 			key: 'applicationRoles',
@@ -100,36 +136,19 @@
 			add: (r) =>
 				Object.keys(applications)
 					.filter((id) => !r.applicationRoles?.find((a) => a.id == id))
-					?.map((id) => applications[id].name)
+					?.map((id) => applications[id].name),
+			defaultFiltering: [],
+			filterValues: Object.keys(applications).map((id) => applications[id].name),
+			filter: (r, v) => r.applicationRoles?.find((app) => v?.includes(applications[app.id].name)) || v?.length == 0
 		}
 	};
 	const simpleFilter = {
 		title: 'Søk etter brukere (navn, discord-navn og epost): ',
 		filter: (r, v) => [r.name, r.discordUsername, r.email].find((e) => e?.toLocaleLowerCase().indexOf(v.toLocaleLowerCase()) >= 0)
 	};
-	const advancedFilter = [
-		{ name: 'Navn: ', default: '', filter: (r, v) => r.fullName.toLocaleLowerCase().indexOf(v?.toLocaleLowerCase()) >= 0 },
-		{ name: 'Visningsnavn: ', default: '', filter: (r, v) => r.displayName.toLocaleLowerCase().indexOf(v?.toLocaleLowerCase()) >= 0 },
-		{ name: 'Discord-navn: ', default: '', filter: (r, v) => (r.discordUsername || '').toLocaleLowerCase().indexOf(v?.toLocaleLowerCase()) >= 0 },
-		{ name: 'E-post: ', default: '', filter: (r, v) => r.email.toLocaleLowerCase().indexOf(v?.toLocaleLowerCase()) >= 0 },
-		{ name: 'Registrert før: ', default: '', isDate: true, filter: (r, v) => r.insertInstant <= (new Date(v).getTime() || r.insertInstant) },
-		{ name: 'Registrert etter: ', default: '', isDate: true, filter: (r, v) => r.insertInstant >= (new Date(v).getTime() || 0) },
-		{ name: 'Medlemstype: ', default: [], values: ['alumni', 'employee', 'student'], filter: (r, v) => v?.includes(r.type) || v?.length == 0 },
-		{
-			name: 'Gruppe: ',
-			default: [],
-			values: Object.keys(groups).map((id) => groups[id].name),
-			filter: (r, v) => r.groupIds?.find((id) => v?.includes(groups[id].name)) || v?.length == 0
-		},
-		{
-			name: 'Applikasjon: ',
-			default: [],
-			values: Object.keys(applications).map((id) => applications[id].name),
-			filter: (r, v) => r.applicationRoles?.find((app) => v?.includes(applications[app.id].name)) || v?.length == 0
-		}
-	];
 
-	$: cols = selectedCols.map((key) => COLUMNS[key]);
+	$: filters = selectedFilters.map((key) => DATA[key]);
+	$: cols = selectedCols.map((key) => DATA[key]);
 
 	const editUser = (type, active) => {
 		attributeToEdit = active;
@@ -162,25 +181,16 @@
 				<span>Ansatte: {users.filter((e) => e.type == 'employee').length}</span>
 			</div>
 			<br />
-			<AdminPanelTable
-				columns={cols}
-				rows={users}
-				showExpandIcon={true}
-				expandRowKey="fullName"
-				iconExpand="⌄"
-				iconExpanded="⌃"
-				simpleFilterOptions={simpleFilter}
-				advancedFilterOptions={advancedFilter}
-			>
+			<AdminPanelTable columns={cols} rows={users} {filters} showExpandIcon={true} expandRowKey="fullName" simpleFilterOptions={simpleFilter}>
 				<div slot="expanded" let:row class="user-info">
 					<p><b>Fullt Navn: </b>{row.fullName}</p>
-					<p><b>Visningsnavn: </b>{row.displayName} <span on:click={() => editUser('edit', COLUMNS['displayName'])}><FaEdit /></span></p>
+					<p><b>Visningsnavn: </b>{row.displayName} <span on:click={() => editUser('edit', DATA['displayName'])}><FaEdit /></span></p>
 					<p><b>E-post: </b>{row.email}</p>
 					<p><b>Medlemstype: </b>{row.type || ''}</p>
 					{#if row.type == 'student' || row.type == 'alumni'}
-						<p><b>Studieretning: </b>{row.study.program} <span on:click={() => editUser('edit', COLUMNS['study_program'])}><FaEdit /></span></p>
+						<p><b>Studieretning: </b>{row.study.program} <span on:click={() => editUser('edit', DATA['study_program'])}><FaEdit /></span></p>
 						{#if row.type == 'student'}
-							<p><b>Årstrinn: </b>{row.study.year} <span on:click={() => editUser('edit', COLUMNS['study_year'])}><FaEdit /></span></p>
+							<p><b>Årstrinn: </b>{row.study.year} <span on:click={() => editUser('edit', DATA['study_year'])}><FaEdit /></span></p>
 						{:else}
 							<p><b>Medlemsår: </b>{row.alumni.joinYear}</p>
 						{/if}
@@ -189,7 +199,7 @@
 						<p />
 					{/if}
 					<div class="user-roles">
-						<h4><b>Grupper</b><span on:click={() => editUser('add', COLUMNS['groups'])}><MdAddBox /></span></h4>
+						<p><b>Grupper</b><span on:click={() => editUser('add', DATA['groups'])}><FaRegPlusSquare /></span></p>
 						<hr />
 						{#if row?.groupIds}
 							<div class="role-info">
@@ -209,7 +219,7 @@
 						{/if}
 					</div>
 					<div class="user-roles">
-						<h4><b>Applikasjoner</b><span on:click={() => editUser('add', COLUMNS['applications'])}><MdAddBox /></span></h4>
+						<p><b>Applikasjoner</b><span on:click={() => editUser('add', DATA['applications'])}><FaRegPlusSquare /></span></p>
 						<hr />
 						{#if row?.applicationRoles}
 							<div class="role-info">
@@ -280,7 +290,7 @@
 		padding-left: 5px;
 	}
 	.user-info > p > span,
-	.user-roles > h4 > span {
+	.user-roles > p > span {
 		display: inline-block;
 		height: 0.75em;
 		vertical-align: sub;
@@ -289,7 +299,7 @@
 		transition: 0.4s linear;
 	}
 	.user-info > p > span:hover,
-	.user-roles > h4 > span:hover {
+	.user-roles > p > span:hover {
 		color: var(--green-2);
 	}
 </style>

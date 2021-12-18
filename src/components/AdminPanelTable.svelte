@@ -7,9 +7,9 @@
 
 	export let columns;
 	export let rows;
-	export let advancedFilterOptions = [];
 	export let simpleFilterOptions = {};
 	export let expandRowKey = null;
+	export let filters = [];
 
 	let sortBy = '';
 	let sortOrder = 1;
@@ -31,8 +31,7 @@
 	};
 
 	let filterValues = {};
-	advancedFilterOptions.forEach((el) => (filterValues[el.name] = el.default));
-
+	filters.forEach((el) => (filterValues[el.title] = el.defaultFiltering));
 	let columnByKey = {};
 	$: {
 		columnByKey = {};
@@ -47,9 +46,9 @@
 		page = 1;
 		return rows.filter((r) => simpleFilterOptions.filter(r, searchValue));
 	};
-	const advancedFilter = (rows, filters) => {
+	const advancedFilter = (rows, filterValues) => {
 		page = 1;
-		return rows.filter((r) => advancedFilterOptions.every((e) => e.filter(r, filters[e.name])));
+		return rows.filter((r) => filters.every((e) => e.filter(r, filterValues[e.title])));
 	};
 	// Filter rows
 	$: c_rows = (advancedSearch ? advancedFilter(rows, filterValues) : simpleFilter(rows, searchValue))
@@ -69,7 +68,7 @@
 
 	$: {
 		let col = columnByKey[sortBy];
-		if (col !== undefined && col.sortable === true && typeof col.value === 'function') {
+		if (col !== undefined && typeof col.value === 'function') {
 			if (typeof col.value(rows[0]) === 'string') {
 				sortFunction = (r) => col.value(r).toLocaleLowerCase();
 			} else {
@@ -98,17 +97,26 @@
 		<p>{simpleFilterOptions.title}</p>
 		<input bind:value={searchValue} />
 	{:else}
-		{#each advancedFilterOptions as filter}
-			<span>
-				<p>{filter.name}</p>
-				{#if filter.values}
-					<MultiSelect --sms-options-bg="#666" bind:selected={filterValues[filter.name]} options={filter.values} />
-				{:else if filter.isDate}
-					<input onfocus="(this.type='date')" onblur="(this.type='text')" bind:value={filterValues[filter.name]} />
-				{:else}
-					<input bind:value={filterValues[filter.name]} />
-				{/if}
-			</span>
+		{#each filters as filter}
+			{#if filter.isDate}
+				<span>
+					<p>{filter.title} før:</p>
+					<input onfocus="(this.type='date')" onblur="(this.type='text')" bind:value={filterValues[filter.title][0]} />
+				</span>
+				<span>
+					<p>{filter.title} etter:</p>
+					<input onfocus="(this.type='date')" onblur="(this.type='text')" bind:value={filterValues[filter.title][1]} />
+				</span>
+			{:else}
+				<span>
+					<p>{filter.title}:</p>
+					{#if filter.filterValues}
+						<MultiSelect --sms-options-bg="#666" bind:selected={filterValues[filter.title]} options={filter.filterValues} />
+					{:else}
+						<input bind:value={filterValues[filter.title]} />
+					{/if}
+				</span>
+			{/if}
 		{/each}
 	{/if}
 	<br />
