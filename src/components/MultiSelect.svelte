@@ -6,7 +6,7 @@
 	import { CrossIcon, ExpandIcon } from '../icons/Index';
 
 	export let selected;
-	
+
 	export let placeholder = ``;
 	export let options;
 	export let input = null;
@@ -38,13 +38,13 @@
 			searchText = ``; // reset search string on selection
 			selected = [token, ...selected];
 		}
-		if(selected.length==options.length){
-			setOptionsVisible(false)
+		if (selected.length == options.length) {
+			setOptionsVisible(false);
 		}
 	}
 
 	function remove(token) {
-		if ( typeof selected === `string`) return;
+		if (typeof selected === `string`) return;
 		selected = selected.filter((item) => item !== token);
 	}
 
@@ -61,7 +61,6 @@
 			searchText = ``;
 		} else if (event.key === `Enter`) {
 			if (showOptions && activeOption) {
-
 				selected.includes(activeOption) ? remove(activeOption) : add(activeOption);
 				searchText = ``;
 			} // no active option means the options are closed in which case enter means open
@@ -90,7 +89,8 @@
 	};
 
 	$: isSelected = (option) => {
-		if (!(selected?.length > 0)) return false; // nothing is selected if `selected` is the empty array or string
+		if (!(selected?.length > 0)) return false;
+		// nothing is selected if `selected` is the empty array or string
 		else return selected.includes(option);
 	};
 
@@ -110,36 +110,36 @@
 			{#each selected as tag}
 				<li class={liTokenClass} on:mouseup|self|stopPropagation={() => setOptionsVisible(true)}>
 					{tag}
-						<button on:mouseup|stopPropagation={() => remove(tag)} on:keydown={handleEnterAndSpaceKeys(() => remove(tag))} type="button" title="{removeBtnTitle} {tag}">
-							<CrossIcon height="12pt" />
-						</button>
+					<button on:mouseup|stopPropagation={() => remove(tag)} on:keydown={handleEnterAndSpaceKeys(() => remove(tag))} type="button" title="{removeBtnTitle} {tag}">
+						<CrossIcon height="12pt" />
+					</button>
 				</li>
 			{/each}
 		{/if}
-		{#if selected.length!=options.length}
-		<input
-			autocomplete="off"
-			bind:value={searchText}
-			on:mouseup|self|stopPropagation={() => setOptionsVisible(true)}
-			on:keydown={handleKeydown}
-			on:focus={() => setOptionsVisible(true)}
-			on:blur={() => dispatch(`blur`)}
-			on:blur={() => setOptionsVisible(false)}
-			{name}
-			placeholder={selected.length ? `` : placeholder}
-		/>
+		{#if selected.length != options.length}
+			<input
+				autocomplete="off"
+				bind:value={searchText}
+				on:mouseup|self|stopPropagation={() => setOptionsVisible(true)}
+				on:keydown={handleKeydown}
+				on:focus={() => setOptionsVisible(true)}
+				on:blur={() => dispatch(`blur`)}
+				on:blur={() => setOptionsVisible(false)}
+				{name}
+				placeholder={selected.length ? `` : placeholder}
+			/>
 		{/if}
 	</ul>
-		<button
-			type="button"
-			class="remove-all"
-			title={removeAllTitle}
-			on:mouseup|stopPropagation={removeAll}
-			on:keydown={handleEnterAndSpaceKeys(removeAll)}
-			style={selected.length === 0 ? `display: none;` : ``}
-		>
-			<CrossIcon height="14pt" />
-		</button>
+	<button
+		type="button"
+		class="remove-all"
+		title={removeAllTitle}
+		on:mouseup|stopPropagation={removeAll}
+		on:keydown={handleEnterAndSpaceKeys(removeAll)}
+		style={selected.length === 0 ? `display: none;` : ``}
+	>
+		<CrossIcon height="14pt" />
+	</button>
 
 	{#key showOptions}
 		<ul class="options {ulOptionsClass}" class:hidden={!showOptions} transition:fly|local={{ duration: 300, y: 40 }}>
@@ -167,7 +167,7 @@
 		box-sizing: content-box;
 	}
 	input:focus-visible {
-		outline:  0.1em solid transparent;
+		outline: 0.1em solid transparent;
 		background-color: transparent;
 	}
 	:where(.multiselect) {
@@ -287,5 +287,4 @@
 		width: 1.5em;
 		display: inline-flex;
 	}
-
 </style>

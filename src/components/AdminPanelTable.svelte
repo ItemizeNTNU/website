@@ -240,20 +240,4 @@
 	.header > span:hover {
 		color: var(--green-2);
 	}
-
-	:global(.multiselect ul.tokens > li button),
-	:global(.multiselect button.remove-all) {
-		/* buttons to remove a single or all selected options at once */
-		width: 1.5em;
-		display: inline-flex;
-	}
-	:global(.multiselect ul input) {
-		width: 2em;
-		display: inline-flex;
-	}
-	:global(.multiselect) {
-		display: inline-flex;
-		margin: 0px;
-		min-width: 250px;
-	}
 </style>

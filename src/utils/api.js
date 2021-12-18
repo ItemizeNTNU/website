@@ -64,6 +64,10 @@ export const getUser = async (id, options) => {
 	return await fetchResource(`/api/user/${id}`, options);
 };
 
+export const patchUser = async (id, user, options = {}) => {
+	return await fetchResource(`/api/user/${id}`, { method: 'PATCH', json: user, errorText: 'ERROR', ...options });
+};
+
 export const searchUsers = async (query, options) => {
 	return await fetchResource(`/api/user/search?${query}`, options);
 };
@@ -88,4 +92,4 @@ export const getAllGroups = async (options) => {
 	return await fetchResource(`/api/group`, options);
 };
 
-export default { registerUser, getUser, searchUsers, getEvents, postEvent, deleteEvent, getAllApplications, getAllGroups };
+export default { registerUser, getUser, searchUsers, getEvents, postEvent, deleteEvent, getAllApplications, getAllGroups, patchUser };

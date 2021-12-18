@@ -16,37 +16,91 @@
 </script>
 
 <script>
+	import { getModal } from '../components/PopupModal.svelte';
+	import EditUserPopup from '../components/EditUserPopup.svelte';
 	import AdminPanelTable from '../components/AdminPanelTable.svelte';
 	import date from '../utils/date';
+	import FaEdit from 'svelte-icons/fa/FaEdit.svelte';
+	import MdAddBox from 'svelte-icons/md/MdAddBox.svelte';
 	export let users;
 	export let applications;
 	export let groups;
 
+	let attributeToEdit = '';
+	let editType = '';
 	let selectedCols = ['fullName', 'discordName', 'email', 'type'];
+
 	const COLUMNS = {
 		fullName: {
 			key: 'fullName',
 			title: 'Navn',
-			value: (v) => v.fullName,
+			value: (r) => r.fullName,
 			sortable: true
 		},
 		discordName: {
 			key: 'discordName',
 			title: 'Discord-navn',
-			value: (v) => v.discordUsername || '',
+			value: (r) => r.discordUsername || '',
 			sortable: true
 		},
 		email: {
 			key: 'email',
 			title: 'E-post',
-			value: (v) => v.email,
+			value: (r) => r.email,
 			sortable: true
 		},
 		type: {
 			key: 'type',
 			title: 'Medlemstype',
-			value: (v) => v.type || '',
+			value: (r) => r.type || '',
 			sortable: true
+		},
+		displayName: {
+			key: 'displayName',
+			title: 'Visningsnavn',
+			value: (r) => r.displayName || '',
+			edit: '',
+			editConfirm: (v) => {
+				return { data: { displayName: v } };
+			}
+		},
+		study_program: {
+			key: 'program',
+			title: 'Studieretning',
+			value: (r) => r.study?.program || '',
+			edit: '',
+			editConfirm: (v) => {
+				return { data: { study: { program: v } } };
+			}
+		},
+		study_year: {
+			key: 'year',
+			title: 'Årstrinn',
+			value: (r) => r.study?.year || '',
+			edit: [1, 2, 3, 4, 5, 6, 7, 8],
+			editConfirm: (v) => {
+				return { data: { study: { year: v } } };
+			}
+		},
+		groups: {
+			key: 'groupIds',
+			title: 'Gruppe',
+			title_plural: 'Grupper',
+			value: (r) => r.groupIds?.map((id) => groups[id]?.name),
+			add: (r) =>
+				Object.keys(groups)
+					.filter((id) => !r.groupIds?.includes(id))
+					?.map((id) => groups[id].name)
+		},
+		applications: {
+			key: 'applicationRoles',
+			title: 'Applikasjon',
+			title_plural: 'Applikasjoner',
+			value: (r) => r.applicationRoles?.map((a) => applications[a.id]?.name),
+			add: (r) =>
+				Object.keys(applications)
+					.filter((id) => !r.applicationRoles?.find((a) => a.id == id))
+					?.map((id) => applications[id].name)
 		}
 	};
 	const simpleFilter = {
@@ -76,6 +130,22 @@
 	];
 
 	$: cols = selectedCols.map((key) => COLUMNS[key]);
+
+	const editUser = (type, active) => {
+		attributeToEdit = active;
+		editType = type == 'edit' ? 'Endre' : 'Legg til';
+		getModal('first').open();
+	};
+	async function updateValue(event) {
+		let row = event.detail.row;
+		if (event.detail.type == 'Endre') {
+			const updatedUser = await api.patchUser(row.id, event.detail.user, { fetch: this.fetch });
+			// update rows with updated user
+			users = users.map((u) => (u.id == row.id ? updatedUser.json.user : u));
+		}
+
+		// TODO: Add confirmation of edit or error
+	}
 </script>
 
 <svelte:head>
@@ -104,13 +174,13 @@
 			>
 				<div slot="expanded" let:row class="user-info">
 					<p><b>Fullt Navn: </b>{row.fullName}</p>
-					<p><b>Visningsnavn: </b>{row.displayName}</p>
+					<p><b>Visningsnavn: </b>{row.displayName} <span on:click={() => editUser('edit', COLUMNS['displayName'])}><FaEdit /></span></p>
 					<p><b>E-post: </b>{row.email}</p>
 					<p><b>Medlemstype: </b>{row.type || ''}</p>
 					{#if row.type == 'student' || row.type == 'alumni'}
-						<p><b>Studieretning: </b>{row.study.program}</p>
+						<p><b>Studieretning: </b>{row.study.program} <span on:click={() => editUser('edit', COLUMNS['study_program'])}><FaEdit /></span></p>
 						{#if row.type == 'student'}
-							<p><b>Årstrinn: </b>{row.study.year}</p>
+							<p><b>Årstrinn: </b>{row.study.year} <span on:click={() => editUser('edit', COLUMNS['study_year'])}><FaEdit /></span></p>
 						{:else}
 							<p><b>Medlemsår: </b>{row.alumni.joinYear}</p>
 						{/if}
@@ -119,7 +189,7 @@
 						<p />
 					{/if}
 					<div class="user-roles">
-						<h4><b>Grupper</b></h4>
+						<h4><b>Grupper</b><span on:click={() => editUser('add', COLUMNS['groups'])}><MdAddBox /></span></h4>
 						<hr />
 						{#if row?.groupIds}
 							<div class="role-info">
@@ -139,7 +209,7 @@
 						{/if}
 					</div>
 					<div class="user-roles">
-						<h4><b>Applikasjoner</b></h4>
+						<h4><b>Applikasjoner</b><span on:click={() => editUser('add', COLUMNS['applications'])}><MdAddBox /></span></h4>
 						<hr />
 						{#if row?.applicationRoles}
 							<div class="role-info">
@@ -155,6 +225,7 @@
 					</div>
 					<p><b>Bruker opprettet: </b>{date.nicePrintDate(new Date(row.insertInstant))}</p>
 					<p><b>Sist logget in: </b>{date.nicePrintDate(new Date(row.lastLoginInstant))}</p>
+					<EditUserPopup {attributeToEdit} {row} type={editType} on:confirm={updateValue} />
 				</div>
 			</AdminPanelTable>
 		</div>
@@ -207,5 +278,18 @@
 		width: 100%;
 		padding: 0px;
 		padding-left: 5px;
+	}
+	.user-info > p > span,
+	.user-roles > h4 > span {
+		display: inline-block;
+		height: 0.75em;
+		vertical-align: sub;
+		margin-left: 4px;
+		color: #fff;
+		transition: 0.4s linear;
+	}
+	.user-info > p > span:hover,
+	.user-roles > h4 > span:hover {
+		color: var(--green-2);
 	}
 </style>
