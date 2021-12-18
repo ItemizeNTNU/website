@@ -198,7 +198,7 @@
 	}
 	.role-info {
 		display: grid;
-		grid-template-columns: 30% 70%;
+		grid-template-columns: 25% 75%;
 		align-items: top;
 		margin: 0;
 		padding: 0;
