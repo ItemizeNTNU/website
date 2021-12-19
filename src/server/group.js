@@ -25,3 +25,19 @@ router.get('/group', async (req, res) => {
 	}
 	return res.send({ groups });
 });
+
+router.post('/group/member', async (req, res) => {
+	const result = await fusion.addUsersToGroup(req.body.members);
+	if (result.error) {
+		return res.status(400).send({ message: 'Error adding user to group' });
+	}
+	return res.send({ result });
+});
+
+router.delete('/group/member', async (req, res) => {
+	const result = await fusion.removeUsersFromGroup(req.body.members);
+	if (result.error) {
+		return res.status(400).send({ message: 'Error removing user from group' });
+	}
+	return res.send({ result });
+});

@@ -1,36 +1,46 @@
 <script>
 	import Modal, { getModal } from './PopupModal.svelte';
 	import { createEventDispatcher } from 'svelte';
-	export let type = '';
+	export let editType = '';
 	export let row = {};
 	export let attributeToEdit = undefined;
 
+	$: typeText = () => {
+		if (editType == 'edit') return 'Endre';
+		else if (editType == 'add') return 'Legg til';
+		else if (editType == 'delete') return 'Fjern';
+	};
+
 	let changeValue = '';
 	const dispatch = createEventDispatcher();
-	const getValueForUpdateQuery = () => {
-		let user = '';
-		if (type == 'Endre') {
-			user = attributeToEdit.editConfirm(changeValue);
-		} else if (type == 'Legg til') {
-			user = null;
-		}
-		return { user };
-	};
-	function confirmedUpdate() {
+
+	function confirm() {
 		getModal('second').close();
 		getModal('first').close();
-		dispatch('confirm', {
-			user: getValueForUpdateQuery(),
-			row: row,
-			type: type
-		});
+		if (editType == 'edit') {
+			dispatch('edit', {
+				edit: attributeToEdit.editConfirm(changeValue),
+				row: row
+			});
+		} else if (editType == 'add') {
+			dispatch('add', {
+				add: attributeToEdit.addConfirm(row.id, changeValue),
+				row: row
+			});
+		} else if (editType == 'delete') {
+			dispatch('delete', {
+				delete: attributeToEdit.deleteConfirm(row.id, changeValue),
+				row: row
+			});
+		}
 		changeValue = '';
 	}
+	$: isDisabled = (editType == 'add' && attributeToEdit?.add(row)?.length == 0) || (editType == 'delete' && attributeToEdit?.delete(row)?.length == 0);
 </script>
 
 <Modal id="first">
-	<h3>{type} {attributeToEdit?.title?.toLocaleLowerCase()} for {row?.fullName}</h3>
-	{#if type == 'Endre'}
+	<h3>{typeText()} {attributeToEdit?.title?.toLocaleLowerCase()} for {row?.fullName}</h3>
+	{#if editType == 'edit'}
 		<p>Eksisterende verdi: {attributeToEdit?.value(row)}</p>
 		{#if Array.isArray(attributeToEdit?.edit)}
 			<select bind:value={changeValue}>
@@ -39,9 +49,9 @@
 				{/each}
 			</select>
 		{:else}
-			<input bind:value={changeValue} style="display:block;margin:10px;" />
+			<input bind:value={changeValue} />
 		{/if}
-	{:else if type == 'Legg til'}
+	{:else if editType == 'add' || editType == 'delete'}
 		{#if attributeToEdit?.value(row)}
 			<span>Med i følgende {attributeToEdit?.title_plural}:</span>
 			<ul style="margin-top:0">
@@ -52,24 +62,33 @@
 		{:else}
 			<p><i>Ikke medlem av noen {attributeToEdit?.title_plural}</i></p>
 		{/if}
-		<select>
-			{#each attributeToEdit?.add(row) as v}
-				<option value={v}>{v}</option>
-			{/each}
-			{#if attributeToEdit?.add(row).length == 0}
-				<option value="" disabled selected>Allerede med i alle {attributeToEdit?.title_plural}</option>
+		<select bind:value={changeValue}>
+			{#if editType == 'add'}
+				{#each attributeToEdit?.add(row) as option}
+					<option value={option.id}>{option.name}</option>
+				{/each}
+				{#if attributeToEdit?.add(row).length == 0}
+					<option value="" disabled>Allerede med i alle {attributeToEdit?.title_plural}</option>
+				{/if}
+			{:else}
+				{#each attributeToEdit?.delete(row) as option}
+					<option value={option.id}>{option.name}</option>
+				{/each}
+				{#if attributeToEdit?.delete(row).length == 0}
+					<option value="" disabled>Ikke med i noen {attributeToEdit?.title_plural}</option>
+				{/if}
 			{/if}
 		</select>
 	{/if}
-	<button on:click={() => getModal('second').open()}>
-		{type}
+	<button disabled={isDisabled} on:click={() => getModal('second').open()}>
+		{typeText()}
 	</button>
 </Modal>
 <Modal id="second">
 	<h3>Er du sikker på at du vil endre denne verdien?</h3>
 	<!-- Passing a value back to the callback function	 -->
 	<div class="verification">
-		<button on:click={() => confirmedUpdate()}> Bekreft </button>
+		<button on:click={() => confirm()}> Bekreft </button>
 		<button on:click={() => getModal('second').close()}> Avbryt </button>
 	</div>
 </Modal>
@@ -81,5 +100,11 @@
 	.verification > button {
 		display: inline;
 		width: fit-content;
+	}
+	button:disabled,
+	button:disabled:hover {
+		border: inherit;
+		background-color: #999;
+		color: #666666;
 	}
 </style>

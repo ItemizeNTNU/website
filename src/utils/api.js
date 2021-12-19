@@ -92,4 +92,12 @@ export const getAllGroups = async (options) => {
 	return await fetchResource(`/api/group`, options);
 };
 
-export default { registerUser, getUser, searchUsers, getEvents, postEvent, deleteEvent, getAllApplications, getAllGroups, patchUser };
+export const addUsersToGroup = async (members, options) => {
+	return await fetchResource(`/api/group/member`, { method: 'POST', json: members, errorText: 'ERROR', ...options });
+};
+
+export const removeUsersFromGroup = async (members, options) => {
+	return await fetchResource(`/api/group/member`, { method: 'DELETE', json: members, errorText: 'ERROR', ...options });
+};
+
+export default { registerUser, getUser, searchUsers, getEvents, postEvent, deleteEvent, getAllApplications, getAllGroups, patchUser, addUsersToGroup, removeUsersFromGroup };

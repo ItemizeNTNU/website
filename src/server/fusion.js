@@ -67,4 +67,17 @@ export const getAllGroups = async () => {
 	return res;
 };
 
-export default { createUser, updateUser, getUser, searchUsers, getAllApplications, getAllGroups };
+export const addUsersToGroup = async (members) => {
+	const res = await _fetch(`/api/group/member`, { method: 'POST', json: { members } });
+	if (res.json?.members) {
+		res.json = res.json.members;
+	}
+	return res;
+};
+
+export const removeUsersFromGroup = async (members) => {
+	const res = await _fetch(`/api/group/member`, { method: 'DELETE', json: { members } });
+	return res;
+};
+
+export default { createUser, updateUser, getUser, searchUsers, getAllApplications, getAllGroups, addUsersToGroup, removeUsersFromGroup };

@@ -22,6 +22,7 @@
 	import date from '../utils/date';
 	import FaEdit from 'svelte-icons/fa/FaEdit.svelte';
 	import FaRegPlusSquare from 'svelte-icons/fa/FaRegPlusSquare.svelte';
+	import FaRegMinusSquare from 'svelte-icons/fa/FaRegMinusSquare.svelte';
 	export let users;
 	export let applications;
 	export let groups;
@@ -63,7 +64,7 @@
 			filter: (r, v) => r.displayName.toLocaleLowerCase().indexOf(v?.toLocaleLowerCase()) >= 0,
 			edit: '',
 			editConfirm: (v) => {
-				return { data: { displayName: v } };
+				return { user: { data: { displayName: v } } };
 			}
 		},
 		discordName: {
@@ -103,7 +104,7 @@
 			value: (r) => r.study?.program || '',
 			edit: '',
 			editConfirm: (v) => {
-				return { data: { study: { program: v } } };
+				return { user: { data: { study: { program: v } } } };
 			}
 		},
 		study_year: {
@@ -112,7 +113,7 @@
 			value: (r) => r.study?.year || '',
 			edit: [1, 2, 3, 4, 5, 6, 7, 8],
 			editConfirm: (v) => {
-				return { data: { study: { year: v } } };
+				return { user: { data: { study: { year: v } } } };
 			}
 		},
 		groups: {
@@ -123,7 +124,24 @@
 			add: (r) =>
 				Object.keys(groups)
 					.filter((id) => !r.groupIds?.includes(id))
-					?.map((id) => groups[id].name),
+					?.map((id) => {
+						let name = groups[id].name;
+						return { id, name };
+					}),
+			addConfirm: (userId, groupId) => {
+				let members = {};
+				members[groupId] = [{ userId: userId }];
+				return { members };
+			},
+			delete: (r) =>
+				r?.groupIds?.map((g) => {
+					return { id: g, name: groups[g].name };
+				}) || [],
+			deleteConfirm: (userId, groupId) => {
+				let members = {};
+				members[groupId] = [userId];
+				return { members };
+			},
 			defaultFiltering: [],
 			filterValues: Object.keys(groups).map((id) => groups[id].name),
 			filter: (r, v) => r.groupIds?.find((id) => v?.includes(groups[id].name)) || v?.length == 0
@@ -152,18 +170,41 @@
 
 	const editUser = (type, active) => {
 		attributeToEdit = active;
-		editType = type == 'edit' ? 'Endre' : 'Legg til';
+		editType = type;
 		getModal('first').open();
 	};
-	async function updateValue(event) {
+	async function editValue(event) {
 		let row = event.detail.row;
-		if (event.detail.type == 'Endre') {
-			const updatedUser = await api.patchUser(row.id, event.detail.user, { fetch: this.fetch });
-			// update rows with updated user
-			users = users.map((u) => (u.id == row.id ? updatedUser.json.user : u));
-		}
-
+		const updatedUser = await api.patchUser(row.id, event.detail.edit, { fetch: this.fetch });
+		// update rows with updated user
+		if (updatedUser) users = users.map((u) => (u.id == row.id ? updatedUser.json.user : u));
 		// TODO: Add confirmation of edit or error
+	}
+	async function addValue(event) {
+		let row = event.detail.row;
+		const resp = await api.addUsersToGroup(event.detail.add, { fetch: this.fetch });
+		if (resp.ok) {
+			let groupIds = row.groupIds || [];
+			groupIds.push(Object.keys(event.detail.add.members)[0]);
+			users.forEach((u) => {
+				if (u.id == row.id) u.groupIds = groupIds;
+			});
+			// To force update the table
+			users = users;
+		}
+	}
+	async function deleteValue(event) {
+		let row = event.detail.row;
+		const resp = await api.removeUsersFromGroup(event.detail.delete, { fetch: this.fetch });
+		if (resp.ok) {
+			let groupIds = row.groupIds.filter((g) => g != Object.keys(event.detail.delete.members)[0]);
+			if (groupIds.length == 0) groupIds = undefined;
+			users.forEach((u) => {
+				if (u.id == row.id) u.groupIds = groupIds;
+			});
+			// To force update the table
+			users = users;
+		}
 	}
 </script>
 
@@ -181,7 +222,7 @@
 				<span>Ansatte: {users.filter((e) => e.type == 'employee').length}</span>
 			</div>
 			<br />
-			<AdminPanelTable columns={cols} rows={users} {filters} showExpandIcon={true} expandRowKey="fullName" simpleFilterOptions={simpleFilter}>
+			<AdminPanelTable columns={cols} rows={users} {filters} expandRowKey="fullName" simpleFilterOptions={simpleFilter}>
 				<div slot="expanded" let:row class="user-info">
 					<p><b>Fullt Navn: </b>{row.fullName}</p>
 					<p><b>Visningsnavn: </b>{row.displayName} <span on:click={() => editUser('edit', DATA['displayName'])}><FaEdit /></span></p>
@@ -199,7 +240,11 @@
 						<p />
 					{/if}
 					<div class="user-roles">
-						<p><b>Grupper</b><span on:click={() => editUser('add', DATA['groups'])}><FaRegPlusSquare /></span></p>
+						<p>
+							<b>Grupper</b>
+							<span class="green" on:click={() => editUser('add', DATA['groups'])}><FaRegPlusSquare /></span>
+							<span class="red" on:click={() => editUser('delete', DATA['groups'])}><FaRegMinusSquare /></span>
+						</p>
 						<hr />
 						{#if row?.groupIds}
 							<div class="role-info">
@@ -219,7 +264,7 @@
 						{/if}
 					</div>
 					<div class="user-roles">
-						<p><b>Applikasjoner</b><span on:click={() => editUser('add', DATA['applications'])}><FaRegPlusSquare /></span></p>
+						<p><b>Applikasjoner</b><span class="green" on:click={() => editUser('add', DATA['applications'])}><FaRegPlusSquare /></span></p>
 						<hr />
 						{#if row?.applicationRoles}
 							<div class="role-info">
@@ -235,7 +280,7 @@
 					</div>
 					<p><b>Bruker opprettet: </b>{date.nicePrintDate(new Date(row.insertInstant))}</p>
 					<p><b>Sist logget in: </b>{date.nicePrintDate(new Date(row.lastLoginInstant))}</p>
-					<EditUserPopup {attributeToEdit} {row} type={editType} on:confirm={updateValue} />
+					<EditUserPopup {attributeToEdit} {row} {editType} on:edit={editValue} on:add={addValue} on:delete={deleteValue} />
 				</div>
 			</AdminPanelTable>
 		</div>
@@ -293,13 +338,16 @@
 	.user-roles > p > span {
 		display: inline-block;
 		height: 0.75em;
-		vertical-align: sub;
+		vertical-align: baseline;
 		margin-left: 4px;
 		color: #fff;
 		transition: 0.4s linear;
 	}
+	span.red:hover {
+		color: var(--error);
+	}
 	.user-info > p > span:hover,
-	.user-roles > p > span:hover {
+	.user-roles > p > span.green:hover {
 		color: var(--green-2);
 	}
 </style>
