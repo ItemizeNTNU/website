@@ -111,7 +111,7 @@
 				<span>
 					<p>{filter.title}:</p>
 					{#if filter.filterValues}
-						<MultiSelect --sms-options-bg="#666" bind:selected={filterValues[filter.title]} options={filter.filterValues} />
+						<MultiSelect bind:selected={filterValues[filter.title]} options={filter.filterValues} />
 					{:else}
 						<input bind:value={filterValues[filter.title]} />
 					{/if}

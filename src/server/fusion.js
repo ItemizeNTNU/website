@@ -80,4 +80,32 @@ export const removeUsersFromGroup = async (members) => {
 	return res;
 };
 
-export default { createUser, updateUser, getUser, searchUsers, getAllApplications, getAllGroups, addUsersToGroup, removeUsersFromGroup };
+export const addUserRegistration = async (userId, registration) => {
+	const res = await _fetch(`/api/user/registration/${userId}`, { method: 'POST', json: { registration } });
+	if (res.json?.registration) {
+		res.json = res.json.registration;
+	}
+	return res;
+};
+
+export const patchUserRegistration = async (userId, applicationId, registration) => {
+	const res = await _fetch(`/api/user/registration/${userId}/${applicationId}`, { method: 'PATCH', json: { registration } });
+	if (res.json?.registration) {
+		res.json = res.json.registration;
+	}
+	console.log(res);
+	return res;
+};
+
+export default {
+	createUser,
+	updateUser,
+	getUser,
+	searchUsers,
+	getAllApplications,
+	getAllGroups,
+	addUsersToGroup,
+	removeUsersFromGroup,
+	addUserRegistration,
+	patchUserRegistration
+};

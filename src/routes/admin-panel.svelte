@@ -27,6 +27,7 @@
 	export let applications;
 	export let groups;
 
+	console.log(users);
 	let attributeToEdit = '';
 	let editType = '';
 	// The selected columns to show in table
@@ -152,9 +153,14 @@
 			title_plural: 'Applikasjoner',
 			value: (r) => r.applicationRoles?.map((a) => applications[a.id]?.name),
 			add: (r) =>
-				Object.keys(applications)
-					.filter((id) => !r.applicationRoles?.find((a) => a.id == id))
-					?.map((id) => applications[id].name),
+				Object.keys(applications)?.map((id) => {
+					let name = applications[id].name;
+					let roles = applications[id].roles.filter((role) => !r.applicationRoles?.find((a) => a.id == id)?.roles.includes(role.name)).map((r) => r.name);
+					return { id, name, roles };
+				}),
+			addConfirm: (applicationId, roles) => {
+				return { registration: { applicationId: applicationId, roles: roles } };
+			},
 			defaultFiltering: [],
 			filterValues: Object.keys(applications).map((id) => applications[id].name),
 			filter: (r, v) => r.applicationRoles?.find((app) => v?.includes(applications[app.id].name)) || v?.length == 0
@@ -182,15 +188,38 @@
 	}
 	async function addValue(event) {
 		let row = event.detail.row;
-		const resp = await api.addUsersToGroup(event.detail.add, { fetch: this.fetch });
-		if (resp.ok) {
-			let groupIds = row.groupIds || [];
-			groupIds.push(Object.keys(event.detail.add.members)[0]);
-			users.forEach((u) => {
-				if (u.id == row.id) u.groupIds = groupIds;
-			});
-			// To force update the table
-			users = users;
+		if (event.detail.attribute == 'groupIds') {
+			const resp = await api.addUsersToGroup(event.detail.add, { fetch: this.fetch });
+			if (resp.ok) {
+				let groupIds = row.groupIds || [];
+				groupIds.push(Object.keys(event.detail.add.members)[0]);
+				users.forEach((u) => {
+					if (u.id == row.id) u.groupIds = groupIds;
+				});
+				// To force update the table
+				users = users;
+			}
+		} else if (event.detail.attribute == 'applicationRoles') {
+			let resp = '';
+			let info = event.detail.add;
+			let appRoles = row.applicationRoles || [];
+			if ((row.applicationRoles?.map((r) => r.id) || []).includes(info.registration.applicationId)) {
+				resp = await api.patchUserRegistration(row.id, info, { fetch: this.fetch });
+				if (resp.ok) {
+					appRoles = appRoles.map((e) => (e.id == resp.json.applicationId ? { id: e.id, roles: resp.json.roles } : e));
+				}
+			} else {
+				resp = await api.addUserRegistration(row.id, info, { fetch: this.fetch });
+				if (resp.ok) {
+					appRoles.push({ id: resp.json.applicationId, roles: resp.json.roles });
+				}
+			}
+			if (resp.ok) {
+				users.forEach((u) => {
+					if (u.id == row.id) u.applicationRoles = appRoles;
+				});
+				users = users;
+			}
 		}
 	}
 	async function deleteValue(event) {

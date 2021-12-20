@@ -1,7 +1,6 @@
 <!-- original code https://github.com/janosh/svelte-multiselect/blob/main/src/lib/MultiSelect.svelte -->
 <script>
 	import { createEventDispatcher } from 'svelte';
-	import { fly } from 'svelte/transition';
 
 	import { CrossIcon, ExpandIcon } from '../icons/Index';
 
@@ -142,7 +141,7 @@
 	</button>
 
 	{#key showOptions}
-		<ul class="options {ulOptionsClass}" class:hidden={!showOptions} transition:fly|local={{ duration: 300, y: 40 }}>
+		<ul class="options {ulOptionsClass}" class:hidden={!showOptions}>
 			{#each filteredOptions as option}
 				<li
 					on:mouseup|preventDefault|stopPropagation
@@ -177,9 +176,9 @@
 		border-radius: var(--sms-border-radius, 5pt);
 		align-items: center;
 		min-height: 18pt;
-		display: flex;
+		display: inline-flex;
 		cursor: text;
-		margin: 0px;
+		margin: 5px;
 		min-width: 250px;
 	}
 	ul {
@@ -196,7 +195,6 @@
 		display: flex;
 		margin: 2pt;
 		padding: 0 0 0 1ex;
-		transition: 0.3s;
 		white-space: nowrap;
 		height: 16pt;
 	}
@@ -205,7 +203,6 @@
 		border-radius: 50%;
 		display: flex;
 		cursor: pointer;
-		transition: 0.2s;
 	}
 	:where(button) {
 		color: inherit;
@@ -230,7 +227,7 @@
 		display: inline-flex;
 		background: none;
 		color: var(--sms-text-color, inherit);
-		flex: 1; /* this + next line fix issue #12 https://git.io/JiDe3 */
+		flex: 1;
 		min-width: 2em;
 	}
 
@@ -244,14 +241,14 @@
 
 	:where(ul.options) {
 		list-style: none;
-		max-height: 50vh;
+		max-height: 200px;
 		padding: 0;
 		top: 100%;
 		width: 100%;
 		position: absolute;
 		border-radius: 1ex;
 		overflow: auto;
-		background: var(--sms-options-bg, white);
+		background: var(--sms-options-bg, #666);
 	}
 	:where(ul.options.hidden) {
 		visibility: hidden;

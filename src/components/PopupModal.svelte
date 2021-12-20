@@ -111,8 +111,7 @@
 		stroke-width: 2;
 	}
 	#modal-content {
-		max-width: calc(100vw - 20px);
-		max-height: calc(100vh - 20px);
-		overflow: auto;
+		max-width: 30vw;
+		max-height: calc(100vh);
 	}
 </style>
