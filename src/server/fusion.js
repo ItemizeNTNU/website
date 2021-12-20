@@ -103,7 +103,7 @@ export const putUserRegistration = async (userId, applicationId, registration) =
 	return res;
 };
 
-export const deleteUserRegistration = async (userId, applicationId,) => {
+export const deleteUserRegistration = async (userId, applicationId) => {
 	return await _fetch(`/api/user/registration/${userId}/${applicationId}`, { method: 'DELETE' });
 };
 

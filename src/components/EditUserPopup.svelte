@@ -1,3 +1,6 @@
+<script context="module">
+</script>
+
 <script>
 	import Modal, { getModal } from './PopupModal.svelte';
 	import MultiSelect from '../components/MultiSelect.svelte';
@@ -5,6 +8,7 @@
 	export let editType = '';
 	export let row = {};
 	export let attributeToEdit = undefined;
+	export let openEdit;
 
 	$: typeText = () => {
 		if (editType == 'edit') return 'Endre';
@@ -12,9 +16,20 @@
 		else if (editType == 'delete') return 'Fjern';
 	};
 
+	$: {
+		if (openEdit) {
+			getModal('first').open(callback);
+			openEdit = false;
+		}
+	}
+	const callback = () => {
+		changeValue = '';
+		selectedMulti = [];
+	};
+
 	let changeValue = '';
 	let selectedMulti = [];
-	let changeOptions = "";
+	let changeOptions = '';
 	const dispatch = createEventDispatcher();
 
 	function close(id) {
@@ -56,13 +71,13 @@
 		close('second');
 		close('first');
 	}
-	$: isDisabled = (editType == 'add' && changeOptions?.length == 0) || (editType == 'delete' && changeOptions?.length == 0)
+	$: isDisabled = (editType == 'add' && changeOptions?.length == 0) || (editType == 'delete' && changeOptions?.length == 0);
 	$: {
-		changeOptions = attributeToEdit?.[(editType+'Options')]
-		if (typeof changeOptions == 'function'){
-			changeOptions = changeOptions(row)
+		changeOptions = attributeToEdit?.[editType + 'Options'];
+		if (typeof changeOptions == 'function') {
+			changeOptions = changeOptions(row);
 		}
-		console.log(changeOptions)
+		console.log(changeOptions);
 	}
 </script>
 
@@ -97,7 +112,7 @@
 					<option value={option.id}>{option.name}</option>
 				{/each}
 				{#if changeOptions?.length == 0}
-					<option value="" disabled>Kan ikke  {typeText()?.toLocaleLowerCase()}{editType=='delete' ? 'e':''} {attributeToEdit?.title_plural}</option>
+					<option value="" disabled>Kan ikke {typeText()?.toLocaleLowerCase()}{editType == 'delete' ? 'e' : ''} {attributeToEdit?.title_plural}</option>
 				{/if}
 			</select>
 			{#if attributeToEdit?.key == 'applicationRoles'}
@@ -108,9 +123,9 @@
 					options={changeOptions?.find((a) => a.id == changeValue)?.roles || []}
 					noOptionsMsg="Ingen roller tilgjenlig for bruker for applikasjonen"
 				/>
-				{#if editType=='delete'}
-				<br/>
-				<p style="font-size:smaller"><i>Ved å ikke velge noen roller vil brukeren miste tilgang til hele applikasjonen</i></p>
+				{#if editType == 'delete'}
+					<br />
+					<p style="font-size:smaller"><i>Ved å ikke velge noen roller vil brukeren miste tilgang til hele applikasjonen</i></p>
 				{/if}
 			{/if}
 		</div>

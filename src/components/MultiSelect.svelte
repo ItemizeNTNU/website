@@ -1,9 +1,8 @@
 <!-- original code https://github.com/janosh/svelte-multiselect/blob/main/src/lib/MultiSelect.svelte -->
 <script>
 	import { createEventDispatcher } from 'svelte';
-
-	import { CrossIcon, ExpandIcon } from '../icons/Index';
-
+	import IoMdCloseCircleOutline from 'svelte-icons/io/IoMdCloseCircleOutline.svelte';
+	import FaArrowsAltV from 'svelte-icons/fa/FaArrowsAltV.svelte';
 	export let selected;
 
 	export let placeholder = ``;
@@ -11,12 +10,6 @@
 	export let input = null;
 	export let name = ``;
 	export let noOptionsMsg = `No matching options`;
-
-	export let outerDivClass = ``;
-	export let ulTokensClass = ``;
-	export let liTokenClass = ``;
-	export let ulOptionsClass = ``;
-	export let liOptionClass = ``;
 
 	export let removeBtnTitle = `Remove`;
 	export let removeAllTitle = `Remove all`;
@@ -51,6 +44,7 @@
 		// nothing to do if visibility is already as intended
 		if (show === showOptions) return;
 		showOptions = show;
+		activeOption = undefined;
 		if (show) input?.focus();
 	}
 
@@ -101,16 +95,17 @@
 	};
 </script>
 
-<!-- z-index: 2 when showOptions is true ensures the ul.tokens of one <MultiSelect /> display above those of another following shortly after it -->
-<div class="multiselect {outerDivClass}" style={showOptions ? `z-index: 2;` : ``} on:mouseup|stopPropagation={() => setOptionsVisible(!showOptions)}>
-	<ExpandIcon height="14pt" style="padding-left: 1pt;" />
-	<ul class="tokens {ulTokensClass}">
+<div class="multiselect" style={showOptions ? `z-index: 2;` : ``} on:mouseup|stopPropagation={() => setOptionsVisible(!showOptions)}>
+	<span>
+		<FaArrowsAltV />
+	</span>
+	<ul class="tokens">
 		{#if selected?.length > 0}
 			{#each selected as tag}
-				<li class={liTokenClass} on:mouseup|self|stopPropagation={() => setOptionsVisible(true)}>
+				<li on:mouseup|self|stopPropagation={() => setOptionsVisible(true)}>
 					{tag}
 					<button on:mouseup|stopPropagation={() => remove(tag)} on:keydown={handleEnterAndSpaceKeys(() => remove(tag))} type="button" title="{removeBtnTitle} {tag}">
-						<CrossIcon height="12pt" />
+						<IoMdCloseCircleOutline height="12pt" />
 					</button>
 				</li>
 			{/each}
@@ -137,11 +132,11 @@
 		on:keydown={handleEnterAndSpaceKeys(removeAll)}
 		style={selected.length === 0 ? `display: none;` : ``}
 	>
-		<CrossIcon height="14pt" />
+		<IoMdCloseCircleOutline height="14pt" />
 	</button>
 
 	{#key showOptions}
-		<ul class="options {ulOptionsClass}" class:hidden={!showOptions}>
+		<ul class="options" class:hidden={!showOptions}>
 			{#each filteredOptions as option}
 				<li
 					on:mouseup|preventDefault|stopPropagation
@@ -150,7 +145,6 @@
 					}}
 					class:selected={isSelected(option)}
 					class:active={activeOption === option}
-					class={liOptionClass}
 				>
 					{option}
 				</li>
@@ -162,76 +156,65 @@
 </div>
 
 <style>
-	input {
-		box-sizing: content-box;
-	}
-	input:focus-visible {
-		outline: 0.1em solid transparent;
-		background-color: transparent;
-	}
-	:where(.multiselect) {
+	.multiselect {
 		position: relative;
-		margin: 1em 0;
-		border: var(--sms-border, 1pt solid lightgray);
-		border-radius: var(--sms-border-radius, 5pt);
-		align-items: center;
+		margin: 0 0.2em;
+		transition: 200ms linear;
+		background: #fff1;
+		border: 2px solid #fff0;
+		border-radius: 0.25em;
 		min-height: 18pt;
 		display: inline-flex;
 		cursor: text;
-		margin: 5px;
-		min-width: 250px;
+		min-width: 15em;
 	}
-	ul {
-		margin: 0px;
+	.multiselect:hover {
+		border-color: #fff8;
 	}
-	:where(.multiselect:focus-within) {
-		border: var(--sms-focus-border, 1pt solid var(--sms-active-color, cornflowerblue));
+	.multiselect:focus-visible {
+		outline: 0.1em solid var(--green-2);
+	}
+	.multiselect:focus {
+		background-color: var(--green-3);
+		outline: none;
 	}
 
-	:where(ul.tokens > li) {
-		background: var(--sms-token-bg, var(--sms-active-color, cornflowerblue));
+	ul.tokens > li {
+		background: var(--green-2);
 		align-items: center;
 		border-radius: 4pt;
 		display: flex;
 		margin: 2pt;
 		padding: 0 0 0 1ex;
-		white-space: nowrap;
 		height: 16pt;
 	}
-	:where(ul.tokens > li button, button.remove-all) {
-		align-items: center;
-		border-radius: 50%;
+	ul.tokens > li button,
+	button.remove-all,
+	span {
 		display: flex;
 		cursor: pointer;
 	}
-	:where(button) {
+	button {
 		color: inherit;
 		background: transparent;
 		border: none;
-		cursor: pointer;
-		outline: none;
 		padding: 0 2pt;
 	}
-	:where(ul.tokens > li button:hover, button.remove-all:hover) {
-		color: var(--sms-remove-x-hover-focus-color, lightskyblue);
-	}
-	:where(button:focus) {
-		color: var(--sms-remove-x-hover-focus-color, lightskyblue);
-		transform: scale(1.04);
+	ul.tokens > li button:hover,
+	button.remove-all:hover,
+	button:focus {
+		color: var(--error);
 	}
 
-	:where(.multiselect input) {
+	.multiselect input {
 		border: none;
 		outline: none;
 		width: 2em;
-		display: inline-flex;
 		background: none;
-		color: var(--sms-text-color, inherit);
 		flex: 1;
-		min-width: 2em;
 	}
 
-	:where(ul.tokens) {
+	ul.tokens {
 		display: flex;
 		padding: 0;
 		margin: 0;
@@ -239,49 +222,45 @@
 		flex: 1;
 	}
 
-	:where(ul.options) {
+	ul.options {
 		list-style: none;
 		max-height: 200px;
 		padding: 0;
+		margin: 2px;
 		top: 100%;
 		width: 100%;
 		position: absolute;
 		border-radius: 1ex;
 		overflow: auto;
-		background: var(--sms-options-bg, #666);
+		background: #444;
 	}
-	:where(ul.options.hidden) {
+	ul.options.hidden {
 		visibility: hidden;
 	}
-	:where(ul.options li) {
+	ul.options li {
 		padding: 3pt 2ex;
 		cursor: pointer;
 	}
-	:where(ul.options li.selected) {
-		border-left: var(--sms-li-selected-border-left, 3pt solid var(--sms-selected-color, green));
-		background: var(--sms-li-selected-bg, inherit);
-		color: var(--sms-li-selected-color, inherit);
+	ul.options li.selected,
+	ul.options li:not(.selected):hover {
+		border-left: 4pt solid var(--green-2);
 	}
-	:where(ul.options li:not(.selected):hover) {
-		border-left: var(--sms-li-not-selected-hover-border-left, 3pt solid var(--sms-active-color, cornflowerblue));
-		border-left: 3pt solid var(--blue);
-	}
-	:where(ul.options li.active) {
-		background: var(--sms-li-active-bg, var(--sms-active-color, cornflowerblue));
-	}
-	:where(ul.options li.disabled) {
-		background: var(--sms-li-disabled-bg, #f5f5f6);
-		color: var(--sms-li-disabled-text, #b8b8b8);
-		cursor: not-allowed;
-	}
-	:where(ul.options li.disabled:hover) {
-		border-left: unset;
+	ul.options li.active {
+		background: var(--green-2);
 	}
 
 	.multiselect ul.tokens > li button,
 	.multiselect button.remove-all {
 		/* buttons to remove a single or all selected options at once */
 		width: 1.5em;
+	}
+	span {
 		display: inline-flex;
+		height: 0.75em;
+		margin-left: 5px;
+		margin-right: 5px;
+		margin-top: auto;
+		margin-bottom: auto;
+		color: #fff;
 	}
 </style>

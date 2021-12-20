@@ -16,7 +16,6 @@
 </script>
 
 <script>
-	import { getModal } from '../components/PopupModal.svelte';
 	import EditUserPopup from '../components/EditUserPopup.svelte';
 	import AdminPanelTable from '../components/AdminPanelTable.svelte';
 	import date from '../utils/date';
@@ -33,7 +32,7 @@
 	let selectedCols = ['fullName', 'discordName', 'email', 'type'];
 	// The selected filters to show in advanced filter
 	let selectedFilters = ['fullName', 'displayName', 'discordName', 'email', 'registerd', 'type', 'groups', 'applications'];
-
+	let openEdit = false;
 	/* Object in DATA
 	{
 		key: identifier of attribute for user in users
@@ -154,7 +153,7 @@
 			addOptions: (r) =>
 				Object.keys(applications)?.map((id) => {
 					let name = applications[id].name;
-					let roles = applications[id].roles?.filter((role) => !r.applicationRoles?.find((a) => a.id == id)?.roles?.includes(role.name))?.map((r) => r.name)||[];
+					let roles = applications[id].roles?.filter((role) => !r.applicationRoles?.find((a) => a.id == id)?.roles?.includes(role.name))?.map((r) => r.name) || [];
 					return { id, name, roles };
 				}),
 			addConfirm: (applicationId, roles) => {
@@ -166,7 +165,7 @@
 					return { id: a.id, name, roles: a.roles };
 				}) || [],
 			deleteConfirm: (activeRoles, applicationId, rolesToDelete) => {
-				let rolesToKeep = activeRoles.find((r)=>r.id==applicationId)?.roles?.filter((r)=>!rolesToDelete.includes(r))||[]
+				let rolesToKeep = activeRoles.find((r) => r.id == applicationId)?.roles?.filter((r) => !rolesToDelete.includes(r)) || [];
 				return { registration: { applicationId, roles: rolesToKeep } };
 			},
 			defaultFiltering: [],
@@ -185,7 +184,7 @@
 	const editUser = (type, active) => {
 		attributeToEdit = active;
 		editType = type;
-		getModal('first').open();
+		openEdit = true;
 	};
 	async function editValue(event) {
 		let row = event.detail.row;
@@ -198,78 +197,78 @@
 		let info = event.detail.add;
 		let row = event.detail.row;
 		if (event.detail.attribute == 'groupIds') {
-			addUserToGroup(info, row, this.fetch)
+			addUserToGroup(info, row, this.fetch);
 		} else if (event.detail.attribute == 'applicationRoles') {
-			addApplicationRoles(info, row, this.fetch)
+			addApplicationRoles(info, row, this.fetch);
 		}
 	}
-	async function addUserToGroup(info, row, fetch){
+	async function addUserToGroup(info, row, fetch) {
 		const resp = await api.addUsersToGroup(info, { fetch });
-			if (resp.ok) {
-				let groupIds = row.groupIds || [];
-				groupIds.push(Object.keys(info.members)[0]);
-				users.forEach((u) => {
-					if (u.id == row.id) u.groupIds = groupIds;
-				});
-				// To force update the table
-				users = users;
-			}
+		if (resp.ok) {
+			let groupIds = row.groupIds || [];
+			groupIds.push(Object.keys(info.members)[0]);
+			users.forEach((u) => {
+				if (u.id == row.id) u.groupIds = groupIds;
+			});
+			// To force update the table
+			users = users;
+		}
 	}
-	async function addApplicationRoles(info, row, fetch){
+	async function addApplicationRoles(info, row, fetch) {
 		let resp = '';
-			
-			let appRoles = row.applicationRoles || [];
-			if ((row.applicationRoles?.map((r) => r.id) || []).includes(info.registration.applicationId)) {
-				resp = await api.patchUserRegistration(row.id, info, { fetch });
-				if (resp.ok) {
-					appRoles = appRoles.map((e) => (e.id == resp.json.applicationId ? { id: e.id, roles: resp.json.roles } : e));
-				}
-			} else {
-				resp = await api.addUserRegistration(row.id, info, { fetch });
-				if (resp.ok) {
-					appRoles.push({ id: resp.json.applicationId, roles: resp.json.roles });
-				}
-			}
+
+		let appRoles = row.applicationRoles || [];
+		if ((row.applicationRoles?.map((r) => r.id) || []).includes(info.registration.applicationId)) {
+			resp = await api.patchUserRegistration(row.id, info, { fetch });
 			if (resp.ok) {
-				users.forEach((u) => {
-					if (u.id == row.id) u.applicationRoles = appRoles;
-				});
-				users = users;
+				appRoles = appRoles.map((e) => (e.id == resp.json.applicationId ? { id: e.id, roles: resp.json.roles } : e));
 			}
+		} else {
+			resp = await api.addUserRegistration(row.id, info, { fetch });
+			if (resp.ok) {
+				appRoles.push({ id: resp.json.applicationId, roles: resp.json.roles });
+			}
+		}
+		if (resp.ok) {
+			users.forEach((u) => {
+				if (u.id == row.id) u.applicationRoles = appRoles;
+			});
+			users = users;
+		}
 	}
 
 	function deleteValue(event) {
 		let row = event.detail.row;
 		let info = event.detail.delete;
 		if (event.detail.attribute == 'groupIds') {
-			deleteUserMembership(info, row, this.fetch)
+			deleteUserMembership(info, row, this.fetch);
 		} else if (event.detail.attribute == 'applicationRoles') {
-			deleteApplicationRoles(info, row, this.fetch)
+			deleteApplicationRoles(info, row, this.fetch);
 		}
 	}
-	async function deleteApplicationRoles(info, row, fetch){
+	async function deleteApplicationRoles(info, row, fetch) {
 		let resp = '';
-		let appId = info.registration.applicationId
+		let appId = info.registration.applicationId;
 		let appRoles = row.applicationRoles || [];
-		if(info.registration.roles.length==appRoles.find((a)=>a.id==appId).roles.length){
-			resp = await api.deleteUserRegistration(row.id, appId, { fetch});
-			if(resp.ok){
-				appRoles = appRoles.filter((a)=> a.id!=appId)
+		if (info.registration.roles.length == appRoles.find((a) => a.id == appId).roles.length) {
+			resp = await api.deleteUserRegistration(row.id, appId, { fetch });
+			if (resp.ok) {
+				appRoles = appRoles.filter((a) => a.id != appId);
 			}
-		}else {
+		} else {
 			resp = await api.putUserRegistration(row.id, info, { fetch });
 			if (resp.ok) {
 				appRoles = appRoles.map((e) => (e.id == resp.json.applicationId ? { id: e.id, roles: resp.json.roles } : e));
 			}
 		}
-		if(resp.ok){
+		if (resp.ok) {
 			users.forEach((u) => {
 				if (u.id == row.id) u.applicationRoles = appRoles.length ? appRoles : undefined;
 			});
 			users = users;
 		}
 	}
-	async function deleteUserMembership(info, row, fetch){
+	async function deleteUserMembership(info, row, fetch) {
 		const resp = await api.removeUsersFromGroup(info, { fetch });
 		if (resp.ok) {
 			let groupIds = row.groupIds.filter((g) => g != Object.keys(info.members)[0]);
@@ -349,7 +348,7 @@
 								<span><b>Applikasjon:</b></span><span><b>Roller:</b></span>
 								{#each row.applicationRoles as application}
 									<p>{applications[application.id]?.name}</p>
-									<p>{application.roles?.join(', ')||''}</p>
+									<p>{application.roles?.join(', ') || ''}</p>
 								{/each}
 							</div>
 						{:else}
@@ -358,7 +357,7 @@
 					</div>
 					<p><b>Bruker opprettet: </b>{date.nicePrintDate(new Date(row.insertInstant))}</p>
 					<p><b>Sist logget in: </b>{date.nicePrintDate(new Date(row.lastLoginInstant))}</p>
-					<EditUserPopup {attributeToEdit} {row} {editType} on:edit={editValue} on:add={addValue} on:delete={deleteValue} />
+					<EditUserPopup bind:openEdit {attributeToEdit} {row} {editType} on:edit={editValue} on:add={addValue} on:delete={deleteValue} />
 				</div>
 			</AdminPanelTable>
 		</div>
@@ -419,7 +418,7 @@
 		vertical-align: baseline;
 		margin-left: 4px;
 		color: #fff;
-		transition: 0.4s linear;
+		transition: 0.1s linear;
 	}
 	span.red:hover {
 		color: var(--error);
