@@ -44,3 +44,19 @@ router.post('/user/registration/:id', async (req, res) => {
 	}
 	return res.send(result.json);
 });
+
+router.put('/user/registration/:id/:applicationId', async (req, res) => {
+	const result = await fusion.putUserRegistration(req.params.id, req.params.applicationId, req.body.registration);
+	if (result.error) {
+		return res.status(400).send({ message: 'Error adding roles to user' });
+	}
+	return res.send(result.json);
+});
+
+router.delete('/user/registration/:id/:applicationId', async (req, res) => {
+	const result = await fusion.deleteUserRegistration(req.params.id, req.params.applicationId);
+	if (result.error) {
+		return res.status(400).send({ message: 'Error deleting user registration' });
+	}
+	return res.send(result);
+});

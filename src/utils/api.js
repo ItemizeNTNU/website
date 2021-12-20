@@ -113,6 +113,23 @@ export const patchUserRegistration = async (userId, registration, options) => {
 	});
 };
 
+export const putUserRegistration = async (userId, registration, options) => {
+	return await fetchResource(`/api/user/registration/${userId}/${registration.registration.applicationId}`, {
+		method: 'PUT',
+		json: registration,
+		errorText: 'ERROR',
+		...options
+	});
+};
+
+export const deleteUserRegistration = async (userId, applicationId, options) => {
+	return await fetchResource(`/api/user/registration/${userId}/${applicationId}`, {
+		method: 'DELETE',
+		errorText: 'ERROR',
+		...options
+	});
+};
+
 export default {
 	registerUser,
 	getUser,
@@ -126,5 +143,7 @@ export default {
 	addUsersToGroup,
 	removeUsersFromGroup,
 	addUserRegistration,
-	patchUserRegistration
+	patchUserRegistration,
+	deleteUserRegistration,
+	putUserRegistration
 };

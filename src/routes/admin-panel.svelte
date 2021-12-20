@@ -27,7 +27,6 @@
 	export let applications;
 	export let groups;
 
-	console.log(users);
 	let attributeToEdit = '';
 	let editType = '';
 	// The selected columns to show in table
@@ -63,7 +62,7 @@
 			value: (r) => r.displayName || '',
 			defaultFiltering: '',
 			filter: (r, v) => r.displayName.toLocaleLowerCase().indexOf(v?.toLocaleLowerCase()) >= 0,
-			edit: '',
+			editOptions: '',
 			editConfirm: (v) => {
 				return { user: { data: { displayName: v } } };
 			}
@@ -103,7 +102,7 @@
 			key: 'program',
 			title: 'Studieretning',
 			value: (r) => r.study?.program || '',
-			edit: '',
+			editOptions: '',
 			editConfirm: (v) => {
 				return { user: { data: { study: { program: v } } } };
 			}
@@ -112,7 +111,7 @@
 			key: 'year',
 			title: 'Årstrinn',
 			value: (r) => r.study?.year || '',
-			edit: [1, 2, 3, 4, 5, 6, 7, 8],
+			editOptions: [1, 2, 3, 4, 5, 6, 7, 8],
 			editConfirm: (v) => {
 				return { user: { data: { study: { year: v } } } };
 			}
@@ -122,7 +121,7 @@
 			title: 'Gruppe',
 			title_plural: 'Grupper',
 			value: (r) => r.groupIds?.map((id) => groups[id]?.name),
-			add: (r) =>
+			addOptions: (r) =>
 				Object.keys(groups)
 					.filter((id) => !r.groupIds?.includes(id))
 					?.map((id) => {
@@ -134,7 +133,7 @@
 				members[groupId] = [{ userId: userId }];
 				return { members };
 			},
-			delete: (r) =>
+			deleteOptions: (r) =>
 				r?.groupIds?.map((g) => {
 					return { id: g, name: groups[g].name };
 				}) || [],
@@ -152,14 +151,23 @@
 			title: 'Applikasjon',
 			title_plural: 'Applikasjoner',
 			value: (r) => r.applicationRoles?.map((a) => applications[a.id]?.name),
-			add: (r) =>
+			addOptions: (r) =>
 				Object.keys(applications)?.map((id) => {
 					let name = applications[id].name;
-					let roles = applications[id].roles.filter((role) => !r.applicationRoles?.find((a) => a.id == id)?.roles.includes(role.name)).map((r) => r.name);
+					let roles = applications[id].roles?.filter((role) => !r.applicationRoles?.find((a) => a.id == id)?.roles?.includes(role.name))?.map((r) => r.name)||[];
 					return { id, name, roles };
 				}),
 			addConfirm: (applicationId, roles) => {
 				return { registration: { applicationId: applicationId, roles: roles } };
+			},
+			deleteOptions: (r) =>
+				r?.applicationRoles?.map((a) => {
+					let name = applications[a.id].name;
+					return { id: a.id, name, roles: a.roles };
+				}) || [],
+			deleteConfirm: (activeRoles, applicationId, rolesToDelete) => {
+				let rolesToKeep = activeRoles.find((r)=>r.id==applicationId)?.roles?.filter((r)=>!rolesToDelete.includes(r))||[]
+				return { registration: { applicationId, roles: rolesToKeep } };
 			},
 			defaultFiltering: [],
 			filterValues: Object.keys(applications).map((id) => applications[id].name),
@@ -187,29 +195,37 @@
 		// TODO: Add confirmation of edit or error
 	}
 	async function addValue(event) {
+		let info = event.detail.add;
 		let row = event.detail.row;
 		if (event.detail.attribute == 'groupIds') {
-			const resp = await api.addUsersToGroup(event.detail.add, { fetch: this.fetch });
+			addUserToGroup(info, row, this.fetch)
+		} else if (event.detail.attribute == 'applicationRoles') {
+			addApplicationRoles(info, row, this.fetch)
+		}
+	}
+	async function addUserToGroup(info, row, fetch){
+		const resp = await api.addUsersToGroup(info, { fetch });
 			if (resp.ok) {
 				let groupIds = row.groupIds || [];
-				groupIds.push(Object.keys(event.detail.add.members)[0]);
+				groupIds.push(Object.keys(info.members)[0]);
 				users.forEach((u) => {
 					if (u.id == row.id) u.groupIds = groupIds;
 				});
 				// To force update the table
 				users = users;
 			}
-		} else if (event.detail.attribute == 'applicationRoles') {
-			let resp = '';
-			let info = event.detail.add;
+	}
+	async function addApplicationRoles(info, row, fetch){
+		let resp = '';
+			
 			let appRoles = row.applicationRoles || [];
 			if ((row.applicationRoles?.map((r) => r.id) || []).includes(info.registration.applicationId)) {
-				resp = await api.patchUserRegistration(row.id, info, { fetch: this.fetch });
+				resp = await api.patchUserRegistration(row.id, info, { fetch });
 				if (resp.ok) {
 					appRoles = appRoles.map((e) => (e.id == resp.json.applicationId ? { id: e.id, roles: resp.json.roles } : e));
 				}
 			} else {
-				resp = await api.addUserRegistration(row.id, info, { fetch: this.fetch });
+				resp = await api.addUserRegistration(row.id, info, { fetch });
 				if (resp.ok) {
 					appRoles.push({ id: resp.json.applicationId, roles: resp.json.roles });
 				}
@@ -220,18 +236,47 @@
 				});
 				users = users;
 			}
+	}
+
+	function deleteValue(event) {
+		let row = event.detail.row;
+		let info = event.detail.delete;
+		if (event.detail.attribute == 'groupIds') {
+			deleteUserMembership(info, row, this.fetch)
+		} else if (event.detail.attribute == 'applicationRoles') {
+			deleteApplicationRoles(info, row, this.fetch)
 		}
 	}
-	async function deleteValue(event) {
-		let row = event.detail.row;
-		const resp = await api.removeUsersFromGroup(event.detail.delete, { fetch: this.fetch });
+	async function deleteApplicationRoles(info, row, fetch){
+		let resp = '';
+		let appId = info.registration.applicationId
+		let appRoles = row.applicationRoles || [];
+		if(info.registration.roles.length==appRoles.find((a)=>a.id==appId).roles.length){
+			resp = await api.deleteUserRegistration(row.id, appId, { fetch});
+			if(resp.ok){
+				appRoles = appRoles.filter((a)=> a.id!=appId)
+			}
+		}else {
+			resp = await api.putUserRegistration(row.id, info, { fetch });
+			if (resp.ok) {
+				appRoles = appRoles.map((e) => (e.id == resp.json.applicationId ? { id: e.id, roles: resp.json.roles } : e));
+			}
+		}
+		if(resp.ok){
+			users.forEach((u) => {
+				if (u.id == row.id) u.applicationRoles = appRoles.length ? appRoles : undefined;
+			});
+			users = users;
+		}
+	}
+	async function deleteUserMembership(info, row, fetch){
+		const resp = await api.removeUsersFromGroup(info, { fetch });
 		if (resp.ok) {
-			let groupIds = row.groupIds.filter((g) => g != Object.keys(event.detail.delete.members)[0]);
+			let groupIds = row.groupIds.filter((g) => g != Object.keys(info.members)[0]);
 			if (groupIds.length == 0) groupIds = undefined;
 			users.forEach((u) => {
 				if (u.id == row.id) u.groupIds = groupIds;
 			});
-			// To force update the table
 			users = users;
 		}
 	}
@@ -293,14 +338,18 @@
 						{/if}
 					</div>
 					<div class="user-roles">
-						<p><b>Applikasjoner</b><span class="green" on:click={() => editUser('add', DATA['applications'])}><FaRegPlusSquare /></span></p>
+						<p>
+							<b>Applikasjonsroller</b>
+							<span class="green" on:click={() => editUser('add', DATA['applications'])}><FaRegPlusSquare /></span>
+							<span class="red" on:click={() => editUser('delete', DATA['applications'])}><FaRegMinusSquare /></span>
+						</p>
 						<hr />
 						{#if row?.applicationRoles}
 							<div class="role-info">
-								<span><b>Navn:</b></span><span><b>Registrert med roller:</b></span>
+								<span><b>Applikasjon:</b></span><span><b>Roller:</b></span>
 								{#each row.applicationRoles as application}
 									<p>{applications[application.id]?.name}</p>
-									<p>{application.roles.join(', ')}</p>
+									<p>{application.roles?.join(', ')||''}</p>
 								{/each}
 							</div>
 						{:else}
@@ -353,7 +402,7 @@
 	}
 	.role-info {
 		display: grid;
-		grid-template-columns: 25% 75%;
+		grid-template-columns: 30% 70%;
 		align-items: top;
 		margin: 0;
 		padding: 0;

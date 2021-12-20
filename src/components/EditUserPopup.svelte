@@ -14,11 +14,15 @@
 
 	let changeValue = '';
 	let selectedMulti = [];
+	let changeOptions = "";
 	const dispatch = createEventDispatcher();
 
+	function close(id) {
+		getModal(id).close();
+		changeValue = '';
+		selectedMulti = [];
+	}
 	function confirm() {
-		getModal('second').close();
-		getModal('first').close();
 		if (editType == 'edit') {
 			dispatch('edit', {
 				edit: attributeToEdit.editConfirm(changeValue),
@@ -37,24 +41,38 @@
 				attribute: attributeToEdit?.key
 			});
 		} else if (editType == 'delete') {
+			let del;
+			if (attributeToEdit?.key == 'groupIds') {
+				del = attributeToEdit.deleteConfirm(row.id, changeValue);
+			} else if (attributeToEdit?.key == 'applicationRoles') {
+				del = attributeToEdit.deleteConfirm(row.applicationRoles, changeValue, selectedMulti);
+			}
 			dispatch('delete', {
-				delete: attributeToEdit.deleteConfirm(row.id, changeValue),
-				row: row
+				delete: del,
+				row: row,
+				attribute: attributeToEdit?.key
 			});
 		}
-		changeValue = '';
-		selectedMulti = [];
+		close('second');
+		close('first');
 	}
-	$: isDisabled = (editType == 'add' && attributeToEdit?.add(row)?.length == 0) || (editType == 'delete' && attributeToEdit?.delete(row)?.length == 0);
+	$: isDisabled = (editType == 'add' && changeOptions?.length == 0) || (editType == 'delete' && changeOptions?.length == 0)
+	$: {
+		changeOptions = attributeToEdit?.[(editType+'Options')]
+		if (typeof changeOptions == 'function'){
+			changeOptions = changeOptions(row)
+		}
+		console.log(changeOptions)
+	}
 </script>
 
 <Modal id="first">
 	<h3>{typeText()} {attributeToEdit?.title?.toLocaleLowerCase()} for {row?.fullName}</h3>
 	{#if editType == 'edit'}
 		<p>Eksisterende verdi: {attributeToEdit?.value(row)}</p>
-		{#if Array.isArray(attributeToEdit?.edit)}
+		{#if Array.isArray(changeOptions)}
 			<select bind:value={changeValue}>
-				{#each attributeToEdit?.edit as v}
+				{#each changeOptions as v}
 					<option value={v}>{v}</option>
 				{/each}
 			</select>
@@ -75,20 +93,11 @@
 		<div class="options">
 			<p class="info">{attributeToEdit?.title}:</p>
 			<select bind:value={changeValue}>
-				{#if editType == 'add'}
-					{#each attributeToEdit?.add(row) as option}
-						<option value={option.id}>{option.name}</option>
-					{/each}
-					{#if attributeToEdit?.add(row).length == 0}
-						<option value="" disabled>Allerede med i alle {attributeToEdit?.title_plural}</option>
-					{/if}
-				{:else}
-					{#each attributeToEdit?.delete(row) as option}
-						<option value={option.id}>{option.name}</option>
-					{/each}
-					{#if attributeToEdit?.delete(row).length == 0}
-						<option value="" disabled>Ikke med i noen {attributeToEdit?.title_plural}</option>
-					{/if}
+				{#each changeOptions as option}
+					<option value={option.id}>{option.name}</option>
+				{/each}
+				{#if changeOptions?.length == 0}
+					<option value="" disabled>Kan ikke  {typeText()?.toLocaleLowerCase()}{editType=='delete' ? 'e':''} {attributeToEdit?.title_plural}</option>
 				{/if}
 			</select>
 			{#if attributeToEdit?.key == 'applicationRoles'}
@@ -96,9 +105,13 @@
 				<p class="info">Roller:</p>
 				<MultiSelect
 					bind:selected={selectedMulti}
-					options={attributeToEdit?.add(row)?.find((a) => a.id == changeValue)?.roles || []}
+					options={changeOptions?.find((a) => a.id == changeValue)?.roles || []}
 					noOptionsMsg="Ingen roller tilgjenlig for bruker for applikasjonen"
 				/>
+				{#if editType=='delete'}
+				<br/>
+				<p style="font-size:smaller"><i>Ved å ikke velge noen roller vil brukeren miste tilgang til hele applikasjonen</i></p>
+				{/if}
 			{/if}
 		</div>
 	{/if}
@@ -107,11 +120,10 @@
 	</button>
 </Modal>
 <Modal id="second">
-	<h3>Er du sikker på at du vil endre denne verdien?</h3>
-	<!-- Passing a value back to the callback function	 -->
+	<h3>Er du sikker på at du vil {typeText()?.toLocaleLowerCase()} denne verdien?</h3>
 	<div class="verification">
 		<button on:click={() => confirm()}> Bekreft </button>
-		<button on:click={() => getModal('second').close()}> Avbryt </button>
+		<button on:click={() => close('second')}> Avbryt </button>
 	</div>
 </Modal>
 

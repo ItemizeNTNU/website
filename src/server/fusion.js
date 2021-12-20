@@ -76,8 +76,7 @@ export const addUsersToGroup = async (members) => {
 };
 
 export const removeUsersFromGroup = async (members) => {
-	const res = await _fetch(`/api/group/member`, { method: 'DELETE', json: { members } });
-	return res;
+	return await _fetch(`/api/group/member`, { method: 'DELETE', json: { members } });
 };
 
 export const addUserRegistration = async (userId, registration) => {
@@ -93,8 +92,19 @@ export const patchUserRegistration = async (userId, applicationId, registration)
 	if (res.json?.registration) {
 		res.json = res.json.registration;
 	}
-	console.log(res);
 	return res;
+};
+
+export const putUserRegistration = async (userId, applicationId, registration) => {
+	const res = await _fetch(`/api/user/registration/${userId}/${applicationId}`, { method: 'PUT', json: { registration } });
+	if (res.json?.registration) {
+		res.json = res.json.registration;
+	}
+	return res;
+};
+
+export const deleteUserRegistration = async (userId, applicationId,) => {
+	return await _fetch(`/api/user/registration/${userId}/${applicationId}`, { method: 'DELETE' });
 };
 
 export default {
@@ -107,5 +117,7 @@ export default {
 	addUsersToGroup,
 	removeUsersFromGroup,
 	addUserRegistration,
-	patchUserRegistration
+	patchUserRegistration,
+	deleteUserRegistration,
+	putUserRegistration
 };
