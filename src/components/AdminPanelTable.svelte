@@ -39,6 +39,11 @@
 			columnByKey[col.key] = col;
 		});
 	}
+	const unsetBoolFilter = (input, title) => {
+		if(input.__value===filterValues[title]){
+			filterValues[title] = ''
+		}
+	}
 
 	$: colspan = 1 + columns.length;
 
@@ -106,6 +111,14 @@
 				<span>
 					<p>{filter.title} etter:</p>
 					<input onfocus="(this.type='date')" onblur="(this.type='text')" bind:value={filterValues[filter.title][1]} />
+				</span>
+			{:else if filter.isBoolean}
+				<span class="radio">
+					<p>{filter.title}:</p>
+					<label for="html">Ja</label>
+					<input name="yes" value={true} on:click={unsetBoolFilter(this, filter.title)} bind:group={filterValues[filter.title]} type="radio">
+					<label for="html">Nei</label>
+					<input name="yes" value={undefined} on:click={unsetBoolFilter(this, filter.title)} bind:group={filterValues[filter.title]} type="radio">
 				</span>
 			{:else}
 				<span>
@@ -178,6 +191,15 @@
 </div>
 
 <style>
+	.radio > input{
+		width: min-content;
+		transition: none;
+		background-color: #777;
+		margin-right: 1em;
+	}
+	.radio > input:checked{
+		background-color: var(--green-2);
+	}
 	.pageination p,
 	select {
 		margin: 0px;
@@ -204,13 +226,12 @@
 		width: auto;
 	}
 	.filterOptions {
-		padding: 5px;
 		width: 100%;
 		position: relative;
 		display: grid;
 		grid-template-columns: 50% 50%;
-		align-items: top;
 		padding: 0.6em;
+		padding-bottom: 2em;
 	}
 	table {
 		width: 100%;

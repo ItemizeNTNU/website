@@ -32,7 +32,7 @@
 	// The selected columns to show in table
 	let selectedCols = ['fullName', 'discordName', 'email', 'type'];
 	// The selected filters to show in advanced filter
-	let selectedFilters = ['fullName', 'displayName', 'discordName', 'email', 'registerd', 'type', 'groups', 'applications'];
+	let selectedFilters = ['fullName', 'displayName', 'discordName', 'email', 'registerd', 'discordMember','type', 'groups', 'applications'];
 	let openEdit = false;
 	/* Object in ATTRIBUTES
 	{
@@ -81,7 +81,7 @@
 			value: (r) => r.discord?.isMember ? 'Ja' : 'Nei',
 			defaultFiltering: '',
 			isBoolean: true,
-			filter: (r, v) => !r.discord?.isMember !== v
+			filter: (r, v) =>  v==="" || v==r.discord?.isMember
 		},
 		email: {
 			key: 'email',
@@ -188,7 +188,6 @@
 		// TODO: Add confirmation of edit or error
 	}
 	function addValue(event) {
-		console.log(event)
 		let info = event.detail.value;
 		let user = event.detail.user;
 		if (event.detail.attribute.key == 'groupIds') {
