@@ -92,11 +92,11 @@ export const getAllGroups = async (options) => {
 	return await fetchResource(`/api/group`, options);
 };
 
-export const addUserToGroup = async (members, options) => {
+export const addUserMembership = async (members, options) => {
 	return await fetchResource(`/api/group/member`, { method: 'POST', json: members, errorText: 'ERROR', ...options });
 };
 
-export const removeUserFromGroup = async (query, options) => {
+export const deleteUserMembership = async (query, options) => {
 	return await fetchResource(`/api/group/member?${query}`, { method: 'DELETE', errorText: 'ERROR', ...options });
 };
 
@@ -122,8 +122,8 @@ export default {
 	getAllApplications,
 	getAllGroups,
 	patchUser,
-	addUserToGroup,
-	removeUserFromGroup,
+	addUserMembership,
+	deleteUserMembership,
 	addUserRegistration,
 	deleteUserRegistration
 };

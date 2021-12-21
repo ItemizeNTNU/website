@@ -190,21 +190,21 @@
 		let info = event.detail.value;
 		let user = event.detail.user;
 		if (event.detail.attribute.key == 'groupIds') {
-			addUserToGroup(info, user, this.fetch);
+			addUserMembership(info, user, this.fetch);
 		} else if (event.detail.attribute.key == 'applicationRoles') {
-			addApplicationRoles(info, user, this.fetch);
+			addUserRegistration(info, user, this.fetch);
 		}
 	}
-	async function addUserToGroup(groupId, user, fetch) {
+	async function addUserMembership(groupId, user, fetch) {
 		// TODO: update application roles for user depending on group roles
 		let members = {};
 		members[groupId] = [{ userId: user.id }];
-		if ((await api.addUserToGroup({ members }, { fetch })).ok) {
+		if ((await api.addUserMembership({ members }, { fetch })).ok) {
 			user.groupIds.push(groupId);
 			users = users;
 		}
 	}
-	async function addApplicationRoles(appId, user, fetch) {
+	async function addUserRegistration(appId, user, fetch) {
 		let registration = { applicationId: appId };
 		if ((await api.addUserRegistration(user.id, { registration }, { fetch })).ok) {
 			user.applicationRoles.push({ id: appId, roles: [] });
@@ -218,10 +218,10 @@
 		if (event.detail.attribute.key == 'groupIds') {
 			deleteUserMembership(deleteId, user, this.fetch);
 		} else if (event.detail.attribute.key == 'applicationRoles') {
-			deleteApplicationRoles(deleteId, user, this.fetch);
+			deleteUserRegistration(deleteId, user, this.fetch);
 		}
 	}
-	async function deleteApplicationRoles(appId, user, fetch) {
+	async function deleteUserRegistration(appId, user, fetch) {
 		if ((await api.deleteUserRegistration(user.id, appId, { fetch })).ok) {
 			users.find((u) => u.id == user.id).applicationRoles = user.applicationRoles.filter((a) => a.id != appId);
 			users = users;
@@ -229,7 +229,7 @@
 	}
 	async function deleteUserMembership(groupId, user, fetch) {
 		let query = 'groupId=' + groupId + '&userId=' + user.id;
-		if ((await api.removeUserFromGroup(query, { fetch })).ok) {
+		if ((await api.deleteUserMembership(query, { fetch })).ok) {
 			// TODO: update application roles for user depending on group roles
 			users.find((u) => u.id == user.id).groupIds = user.groupIds.filter((id) => id != groupId);
 			users = users;
