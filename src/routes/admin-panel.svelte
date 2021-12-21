@@ -28,7 +28,7 @@
 
 	let attributeToEdit = '';
 	let editType = '';
-	
+	console.log(users)
 	// The selected columns to show in table
 	let selectedCols = ['fullName', 'discordName', 'email', 'type'];
 	// The selected filters to show in advanced filter
@@ -71,9 +71,17 @@
 		discordName: {
 			key: 'discordName',
 			title: 'Discord-navn',
-			value: (r) => r.discordUsername || '',
+			value: (r) => r.discord?.username || '',
 			defaultFiltering: '',
 			filter: (r, v) => (r.discordUsername || '').toLocaleLowerCase().indexOf(v?.toLocaleLowerCase()) >= 0
+		},
+		discordMember: {
+			key: 'discordMember',
+			title: 'Discord-medlem',
+			value: (r) => r.discord?.isMember ? 'Ja' : 'Nei',
+			defaultFiltering: '',
+			isBoolean: true,
+			filter: (r, v) => !r.discord?.isMember !== v
 		},
 		email: {
 			key: 'email',
@@ -179,7 +187,7 @@
 		if (updatedUser) users = users.map((u) => (u.id == user.id ? updatedUser.json.user : u));
 		// TODO: Add confirmation of edit or error
 	}
-	async function addValue(event) {
+	function addValue(event) {
 		console.log(event)
 		let info = event.detail.value;
 		let user = event.detail.user;
@@ -250,7 +258,7 @@
 					<p><b>Fullt Navn: </b>{row.fullName}</p>
 					<p><b>Visningsnavn: </b>{row.displayName} <span on:click={() => editUser('edit', ATTRIBUTES['displayName'])}><FaEdit /></span></p>
 					<p><b>E-post: </b>{row.email}</p>
-					<p><b>Medlemstype: </b>{row.type || ''}</p>
+					<p><b>Medlemstype: </b>{row.type || 'ikke registrert'}</p>
 					{#if row.type == 'student' || row.type == 'alumni'}
 						<p><b>Studieretning: </b>{row.study.program} <span on:click={() => editUser('edit', ATTRIBUTES['study_program'])}><FaEdit /></span></p>
 						{#if row.type == 'student'}
@@ -261,6 +269,10 @@
 					{:else if row.type == 'employee'}
 						<p><b>Title: </b>{row.employee.title}</p>
 						<p />
+					{/if}
+					{#if row.discord}
+						<p><b>Discord-navn: </b>{row.discord?.username}</p>
+						<p><b>Registrert på discord: </b>{row.discord?.isMember ? 'Ja' : 'Nei'}</p>
 					{/if}
 					<div class="user-roles">
 						<p>
