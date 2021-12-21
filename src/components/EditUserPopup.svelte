@@ -14,7 +14,9 @@
 
 	$: {
 		if (openEdit) {
-			getModal('first').open(() => {changeValue = ''});
+			getModal('first').open(() => {
+				changeValue = '';
+			});
 			openEdit = false;
 		}
 	}
@@ -36,7 +38,7 @@
 		close('second');
 		close('first');
 	}
-	$: isDisabled = (editType == 'add' || editType == 'delete') && changeOptions?.length === 0
+	$: isDisabled = (editType == 'add' || editType == 'delete') && changeOptions?.length === 0;
 	$: {
 		changeOptions = attributeToEdit?.[editType + 'Options'];
 		if (typeof changeOptions == 'function') {
@@ -59,7 +61,7 @@
 			<input bind:value={changeValue} />
 		{/if}
 	{:else if editType == 'add' || editType == 'delete'}
-		{#if attributeToEdit?.value(row).length!=0}
+		{#if attributeToEdit?.value(row).length != 0}
 			<span>Med i følgende {attributeToEdit?.title_plural}:</span>
 			<ul style="margin-top:0">
 				{#each attributeToEdit?.value(row) as v}
@@ -70,20 +72,18 @@
 			<p><i>Ikke medlem av noen {attributeToEdit?.title_plural}</i></p>
 		{/if}
 		{#if changeOptions?.length != 0}
-		<div class="options">
-			<p class="info">{attributeToEdit?.title}:</p>
-			
-			<select bind:value={changeValue}>
-				{#each changeOptions as option}
-					<option value={option.id}>{option.name}</option>
-				{/each}
-				
-			</select>
-		</div>	
-			{:else if editType=='add'}
-				<p><i>Brukeren er med i alle {attributeToEdit?.title_plural}</i></p>
-			{/if}
-			
+			<div class="options">
+				<p class="info">{attributeToEdit?.title}:</p>
+
+				<select bind:value={changeValue}>
+					{#each changeOptions as option}
+						<option value={option.id}>{option.name}</option>
+					{/each}
+				</select>
+			</div>
+		{:else if editType == 'add'}
+			<p><i>Brukeren er med i alle {attributeToEdit?.title_plural}</i></p>
+		{/if}
 	{/if}
 	<button class="do" disabled={isDisabled} on:click={() => getModal('second').open()}>
 		{typeText()}

@@ -28,11 +28,10 @@
 
 	let attributeToEdit = '';
 	let editType = '';
-	console.log(users)
 	// The selected columns to show in table
 	let selectedCols = ['fullName', 'discordName', 'email', 'type'];
 	// The selected filters to show in advanced filter
-	let selectedFilters = ['fullName', 'displayName', 'discordName', 'email', 'registerd', 'discordMember','type', 'groups', 'applications'];
+	let selectedFilters = ['fullName', 'displayName', 'discordName', 'email', 'registerd', 'discordMember', 'type', 'groups', 'applications'];
 	let openEdit = false;
 	/* Object in ATTRIBUTES
 	{
@@ -78,10 +77,10 @@
 		discordMember: {
 			key: 'discordMember',
 			title: 'Discord-medlem',
-			value: (r) => r.discord?.isMember ? 'Ja' : 'Nei',
+			value: (r) => (r.discord?.isMember ? 'Ja' : 'Nei'),
 			defaultFiltering: '',
 			isBoolean: true,
-			filter: (r, v) =>  v==="" || v==r.discord?.isMember
+			filter: (r, v) => v === '' || v == r.discord?.isMember
 		},
 		email: {
 			key: 'email',
@@ -152,10 +151,10 @@
 			value: (r) => r.applicationRoles?.map((a) => applications[a.id]?.name),
 			addOptions: (r) =>
 				Object.keys(applications)
-					?.filter((id) => !r.applicationRoles?.find((a)=>a.id==id))
+					?.filter((id) => !r.applicationRoles?.find((a) => a.id == id))
 					?.map((id) => {
 						return { id, name: applications[id].name };
-				}),
+					}),
 			deleteOptions: (r) =>
 				r?.applicationRoles?.map((a) => {
 					let name = applications[a.id].name;
@@ -181,7 +180,7 @@
 	};
 	async function editValue(event) {
 		let user = event.detail.user;
-		let editValue = event.detail.attribute.editConfirm(event.detail.value)
+		let editValue = event.detail.attribute.editConfirm(event.detail.value);
 		const updatedUser = await api.patchUser(user.id, editValue, { fetch: this.fetch });
 		// update rows with updated user
 		if (updatedUser) users = users.map((u) => (u.id == user.id ? updatedUser.json.user : u));
@@ -201,14 +200,14 @@
 		let members = {};
 		members[groupId] = [{ userId: user.id }];
 		if ((await api.addUserToGroup({ members }, { fetch })).ok) {
-			user.groupIds.push(groupId)
+			user.groupIds.push(groupId);
 			users = users;
 		}
 	}
 	async function addApplicationRoles(appId, user, fetch) {
-		let registration = { applicationId: appId }
+		let registration = { applicationId: appId };
 		if ((await api.addUserRegistration(user.id, { registration }, { fetch })).ok) {
-			user.applicationRoles.push({ id: appId, roles: [] })
+			user.applicationRoles.push({ id: appId, roles: [] });
 			users = users;
 		}
 	}
@@ -224,15 +223,15 @@
 	}
 	async function deleteApplicationRoles(appId, user, fetch) {
 		if ((await api.deleteUserRegistration(user.id, appId, { fetch })).ok) {
-			users.find((u)=>u.id==user.id).applicationRoles = user.applicationRoles.filter((a)=>a.id!=appId)
+			users.find((u) => u.id == user.id).applicationRoles = user.applicationRoles.filter((a) => a.id != appId);
 			users = users;
 		}
 	}
 	async function deleteUserMembership(groupId, user, fetch) {
-		let query = 'groupId='+groupId+'&userId='+user.id
+		let query = 'groupId=' + groupId + '&userId=' + user.id;
 		if ((await api.removeUserFromGroup(query, { fetch })).ok) {
 			// TODO: update application roles for user depending on group roles
-			users.find((u)=>u.id==user.id).groupIds = user.groupIds.filter((id)=>id!=groupId)
+			users.find((u) => u.id == user.id).groupIds = user.groupIds.filter((id) => id != groupId);
 			users = users;
 		}
 	}
@@ -280,7 +279,7 @@
 							<span class="red" on:click={() => editUser('delete', ATTRIBUTES['groups'])}><FaRegMinusSquare /></span>
 						</p>
 						<hr />
-						{#if row?.groupIds.length!=0}
+						{#if row?.groupIds.length != 0}
 							<div class="role-info">
 								<p><b>Navn:</b></p>
 								<p><b>Tilgang til applikasjoner:</b></p>
@@ -304,7 +303,7 @@
 							<span class="red" on:click={() => editUser('delete', ATTRIBUTES['applications'])}><FaRegMinusSquare /></span>
 						</p>
 						<hr />
-						{#if row?.applicationRoles.length!=0}
+						{#if row?.applicationRoles.length != 0}
 							<div class="role-info">
 								<span><b>Applikasjon:</b></span><span><b>Roller:</b></span>
 								{#each row.applicationRoles as application}

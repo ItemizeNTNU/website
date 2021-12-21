@@ -40,10 +40,10 @@
 		});
 	}
 	const unsetBoolFilter = (input, title) => {
-		if(input.__value===filterValues[title]){
-			filterValues[title] = ''
+		if (input.__value === filterValues[title]) {
+			filterValues[title] = '';
 		}
-	}
+	};
 
 	$: colspan = 1 + columns.length;
 
@@ -116,9 +116,9 @@
 				<span class="radio">
 					<p>{filter.title}:</p>
 					<label for="html">Ja</label>
-					<input name="yes" value={true} on:click={unsetBoolFilter(this, filter.title)} bind:group={filterValues[filter.title]} type="radio">
+					<input name="yes" value={true} on:click={unsetBoolFilter(this, filter.title)} bind:group={filterValues[filter.title]} type="radio" />
 					<label for="html">Nei</label>
-					<input name="yes" value={undefined} on:click={unsetBoolFilter(this, filter.title)} bind:group={filterValues[filter.title]} type="radio">
+					<input name="yes" value={undefined} on:click={unsetBoolFilter(this, filter.title)} bind:group={filterValues[filter.title]} type="radio" />
 				</span>
 			{:else}
 				<span>
@@ -143,15 +143,15 @@
 				<th on:click={(e) => handleClickCol(e, col)} class="pointer header">
 					{col.title}
 					<span>
-					{#if sortBy === col.key}
-						{#if sortOrder === 1}
-							<FaSortUp />
+						{#if sortBy === col.key}
+							{#if sortOrder === 1}
+								<FaSortUp />
+							{:else}
+								<FaSortDown />
+							{/if}
 						{:else}
-							<FaSortDown />
+							<FaSort />
 						{/if}
-					{:else}
-						<FaSort />
-					{/if}
 					</span>
 				</th>
 			{/each}
@@ -191,13 +191,13 @@
 </div>
 
 <style>
-	.radio > input{
+	.radio > input {
 		width: min-content;
 		transition: none;
 		background-color: #777;
 		margin-right: 1em;
 	}
-	.radio > input:checked{
+	.radio > input:checked {
 		background-color: var(--green-2);
 	}
 	.pageination p,

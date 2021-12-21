@@ -46,9 +46,10 @@ const findUserData = (userData) => {
 	let { displayName, type, study, alumni, employee, discord } = data || {};
 	let groupIds = memberships?.map((element) => element.groupId) || [];
 
-	let applicationRoles = registrations?.map((element) => {
-		return { id: element.applicationId, roles: element.roles || [] };
-	}) || [];
+	let applicationRoles =
+		registrations?.map((element) => {
+			return { id: element.applicationId, roles: element.roles || [] };
+		}) || [];
 	fullName = fullName || displayName;
 	displayName = displayName || fullName;
 	imageUrl = imageUrl || DEFAULT_PROFILE_IMAGE;
