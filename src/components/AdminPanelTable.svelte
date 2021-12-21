@@ -129,21 +129,17 @@
 			{#each columns as col}
 				<th on:click={(e) => handleClickCol(e, col)} class="pointer header">
 					{col.title}
+					<span>
 					{#if sortBy === col.key}
 						{#if sortOrder === 1}
-							<span>
-								<FaSortUp />
-							</span>
+							<FaSortUp />
 						{:else}
-							<span>
-								<FaSortDown />
-							</span>
+							<FaSortDown />
 						{/if}
 					{:else}
-						<span>
-							<FaSort />
-						</span>
+						<FaSort />
 					{/if}
+					</span>
 				</th>
 			{/each}
 			<th />
