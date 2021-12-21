@@ -34,8 +34,8 @@ router.post('/group/member', async (req, res) => {
 	return res.send({ result });
 });
 
-router.delete('/group/member', async (req, res) => {
-	const result = await fusion.removeUsersFromGroup(req.body.members);
+router.delete('/group/member?:query', async (req, res) => {
+	const result = await fusion.removeUserFromGroup(req._parsedUrl.query);
 	if (result.error) {
 		return res.status(400).send({ message: 'Error removing user from group' });
 	}

@@ -29,24 +29,8 @@ router.get('/application', async (req, res) => {
 	return res.send({ applications });
 });
 
-router.patch('/user/registration/:id/:applicationId', async (req, res) => {
-	const result = await fusion.patchUserRegistration(req.params.id, req.params.applicationId, req.body.registration);
-	if (result.error) {
-		return res.status(400).send({ message: 'Error adding roles to user' });
-	}
-	return res.send(result.json);
-});
-
 router.post('/user/registration/:id', async (req, res) => {
 	const result = await fusion.addUserRegistration(req.params.id, req.body.registration);
-	if (result.error) {
-		return res.status(400).send({ message: 'Error adding roles to user' });
-	}
-	return res.send(result.json);
-});
-
-router.put('/user/registration/:id/:applicationId', async (req, res) => {
-	const result = await fusion.putUserRegistration(req.params.id, req.params.applicationId, req.body.registration);
 	if (result.error) {
 		return res.status(400).send({ message: 'Error adding roles to user' });
 	}

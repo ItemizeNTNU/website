@@ -92,34 +92,16 @@ export const getAllGroups = async (options) => {
 	return await fetchResource(`/api/group`, options);
 };
 
-export const addUsersToGroup = async (members, options) => {
+export const addUserToGroup = async (members, options) => {
 	return await fetchResource(`/api/group/member`, { method: 'POST', json: members, errorText: 'ERROR', ...options });
 };
 
-export const removeUsersFromGroup = async (members, options) => {
-	return await fetchResource(`/api/group/member`, { method: 'DELETE', json: members, errorText: 'ERROR', ...options });
+export const removeUserFromGroup = async (query, options) => {
+	return await fetchResource(`/api/group/member?${query}`, { method: 'DELETE', errorText: 'ERROR', ...options });
 };
 
 export const addUserRegistration = async (userId, registration, options) => {
 	return await fetchResource(`/api/user/registration/${userId}`, { method: 'POST', json: registration, errorText: 'ERROR', ...options });
-};
-
-export const patchUserRegistration = async (userId, registration, options) => {
-	return await fetchResource(`/api/user/registration/${userId}/${registration.registration.applicationId}`, {
-		method: 'PATCH',
-		json: registration,
-		errorText: 'ERROR',
-		...options
-	});
-};
-
-export const putUserRegistration = async (userId, registration, options) => {
-	return await fetchResource(`/api/user/registration/${userId}/${registration.registration.applicationId}`, {
-		method: 'PUT',
-		json: registration,
-		errorText: 'ERROR',
-		...options
-	});
 };
 
 export const deleteUserRegistration = async (userId, applicationId, options) => {
@@ -140,10 +122,8 @@ export default {
 	getAllApplications,
 	getAllGroups,
 	patchUser,
-	addUsersToGroup,
-	removeUsersFromGroup,
+	addUserToGroup,
+	removeUserFromGroup,
 	addUserRegistration,
-	patchUserRegistration,
-	deleteUserRegistration,
-	putUserRegistration
+	deleteUserRegistration
 };
