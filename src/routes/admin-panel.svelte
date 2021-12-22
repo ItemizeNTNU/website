@@ -18,7 +18,7 @@
 <script>
 	import EditUserPopup from '../components/EditUserPopup.svelte';
 	import AdminPanelTable from '../components/AdminPanelTable.svelte';
-	import { toast, SvelteToast } from '@zerodevx/svelte-toast'
+	import { toast, SvelteToast } from '@zerodevx/svelte-toast';
 	import date from '../utils/date';
 	import FaEdit from 'svelte-icons/fa/FaEdit.svelte';
 	import FaRegPlusSquare from 'svelte-icons/fa/FaRegPlusSquare.svelte';
@@ -36,32 +36,34 @@
 	let openEdit = false;
 
 	const toastOptions = {
-		duration: 3000,       
-		initial: 1,          
-		next: 0,              
-		intro: { x: 256 },    
+		duration: 3000,
+		initial: 1,
+		next: 0,
+		intro: { x: 256 },
 		theme: {
 			'list-style-type': 'none',
 			'--toastColor': 'white',
-			'--toastBarBackground':'none',
+			'--toastBarBackground': 'none'
 		}
-	}
+	};
 
-	const success = m => toast.push(m, {
-		...toastOptions,
-		theme: {
-			...toastOptions.theme,
-			'--toastBackground': 'var(--green-2)',
-		}
-	})
+	const success = (m) =>
+		toast.push(m, {
+			...toastOptions,
+			theme: {
+				...toastOptions.theme,
+				'--toastBackground': 'var(--green-2)'
+			}
+		});
 
-	const failure = m => toast.push(m, {
-		...toastOptions,
-		theme: {
-			...toastOptions.theme,
-			'--toastBackground': 'var(--error)',
-		}
-	})
+	const failure = (m) =>
+		toast.push(m, {
+			...toastOptions,
+			theme: {
+				...toastOptions.theme,
+				'--toastBackground': 'var(--error)'
+			}
+		});
 
 	/* Object in ATTRIBUTES
 	{
@@ -215,9 +217,9 @@
 		// update rows with updated user
 		if (updatedUser) {
 			users = users.map((u) => (u.id == user.id ? updatedUser.json.user : u));
-			success(event.detail.attribute.title + ' ble oppdatert!')
-		}else {
-			failure(event.detail.attribute.title + ' ble ikke oppdatert')
+			success(event.detail.attribute.title + ' ble oppdatert!');
+		} else {
+			failure(event.detail.attribute.title + ' ble ikke oppdatert');
 		}
 		// TODO: Add confirmation of edit or error
 	}
@@ -237,9 +239,9 @@
 		if ((await api.addUserMembership({ members }, { fetch })).ok) {
 			user.groupIds.push(groupId);
 			users = users;
-			success("Gruppen " + groups[groupId].name + " ble lagt til!")
-		}else {
-			failure("Gruppen ble ikke lagt til.")
+			success('Gruppen ' + groups[groupId].name + ' ble lagt til!');
+		} else {
+			failure('Gruppen ble ikke lagt til.');
 		}
 	}
 	async function addUserRegistration(appId, user, fetch) {
@@ -247,9 +249,9 @@
 		if ((await api.addUserRegistration(user.id, { registration }, { fetch })).ok) {
 			user.applicationRoles.push({ id: appId, roles: [] });
 			users = users;
-			success("Applikasjonen " + applications[appId].name + " ble lagt til!")
-		}else {
-			failure("Applikasjonen ble ikke lagt til.")
+			success('Applikasjonen ' + applications[appId].name + ' ble lagt til!');
+		} else {
+			failure('Applikasjonen ble ikke lagt til.');
 		}
 	}
 
@@ -266,9 +268,9 @@
 		if ((await api.deleteUserRegistration(user.id, appId, { fetch })).ok) {
 			users.find((u) => u.id == user.id).applicationRoles = user.applicationRoles.filter((a) => a.id != appId);
 			users = users;
-			success("Applikasjonen " + applications[appId].name + " ble fjernet!")
-		}else {
-			failure("Applikasjonen ble ikke fjernet.")
+			success('Applikasjonen ' + applications[appId].name + ' ble fjernet!');
+		} else {
+			failure('Applikasjonen ble ikke fjernet.');
 		}
 	}
 	async function deleteUserMembership(groupId, user, fetch) {
@@ -277,9 +279,9 @@
 			// TODO: update application roles for user depending on group roles
 			users.find((u) => u.id == user.id).groupIds = user.groupIds.filter((id) => id != groupId);
 			users = users;
-			success("Gruppen " + groups[groupId].name + " ble Fjernet!")
-		}else {
-			failure("Gruppen ble ikke fjernet.")
+			success('Gruppen ' + groups[groupId].name + ' ble Fjernet!');
+		} else {
+			failure('Gruppen ble ikke fjernet.');
 		}
 	}
 </script>
@@ -375,9 +377,9 @@
 </main>
 
 <style>
-	.wrap{
+	.wrap {
 		--toastContainerTop: 3rem;
-    	--toastContainerRight: 2rem;
+		--toastContainerRight: 2rem;
 	}
 	.main-info {
 		display: grid;
