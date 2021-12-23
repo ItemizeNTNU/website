@@ -33,8 +33,7 @@
 	<p>
 		Gruppen startet med rundt-bordet-samlinger annenhver tirsdag 17-19 på
 		<a target="_blank" rel="noopener noreferrer" href="https://use.mazemap.com/#v=1&zlevel=2&center=10.400791,63.418490&zoom=19.5&campusid=1&sharepoitype=poi&sharepoi=34096"
-			>Savannen</a
-		>
+			>Savannen</a>
 		ved IIK-instituttet (den gang ITEM-instituttet). En eller to utnevnte studenter tok ansvar for møteregien. Den første itemizeren som tok på seg ansvaret å lede gruppen i 2014 var
 		5. klasse KomTek-student Thomas Kjøglum. Navnet Itemize ble avgjort i et online valg den 18. oktober samme år. Valget stod mellom:
 	</p>

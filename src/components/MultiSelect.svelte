@@ -120,8 +120,7 @@
 				on:blur={() => dispatch(`blur`)}
 				on:blur={() => setOptionsVisible(false)}
 				{name}
-				placeholder={selected.length ? `` : placeholder}
-			/>
+				placeholder={selected.length ? `` : placeholder} />
 		{/if}
 	</ul>
 	<button
@@ -130,8 +129,7 @@
 		title={removeAllTitle}
 		on:mouseup|stopPropagation={removeAll}
 		on:keydown={handleEnterAndSpaceKeys(removeAll)}
-		style={selected.length === 0 ? `display: none;` : ``}
-	>
+		style={selected.length === 0 ? `display: none;` : ``}>
 		<IoMdCloseCircleOutline height="14pt" />
 	</button>
 
@@ -144,8 +142,7 @@
 						isSelected(option) ? remove(option) : add(option);
 					}}
 					class:selected={isSelected(option)}
-					class:active={activeOption === option}
-				>
+					class:active={activeOption === option}>
 					{option}
 				</li>
 			{:else}

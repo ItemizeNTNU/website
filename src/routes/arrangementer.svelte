@@ -128,8 +128,7 @@
 				<label
 					><span class="col">Varighet:</span> <input type="number" bind:value={newEvent.duration} min="0" /> (lengde i timer, slutter {smartFormat(
 						DateTime.fromJSDate(newEvent.date).plus({ hours: newEvent.duration })
-					)})</label
-				>
+					)})</label>
 				<label><span class="col">CTF Navn:</span> <input type="text" bind:value={newEvent.ctf.name} /></label>
 				<label><span class="col">CTF Link:</span> <input type="text" bind:value={newEvent.ctf.url} /></label>
 				<label><span class="col">Info:</span> <textarea rows="3" bind:value={newEvent.info} /></label>
