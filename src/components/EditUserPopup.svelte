@@ -53,6 +53,7 @@
 		<p>Eksisterende verdi: {attributeToEdit?.value(row)}</p>
 		{#if Array.isArray(changeOptions)}
 			<select bind:value={changeValue}>
+				<option></option>
 				{#each changeOptions as v}
 					<option value={v}>{v}</option>
 				{/each}
@@ -76,7 +77,8 @@
 				<p class="info">{attributeToEdit?.title}:</p>
 
 				<select bind:value={changeValue}>
-					{#each changeOptions as option}
+					<option></option>
+					{#each changeOptions as option} 
 						<option value={option.id}>{option.name}</option>
 					{/each}
 				</select>

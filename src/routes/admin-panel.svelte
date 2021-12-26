@@ -27,6 +27,10 @@
 	export let applications;
 	export let groups;
 
+	console.log(users)
+	console.log(groups)
+	console.log(applications)
+
 	let attributeToEdit = '';
 	let editType = '';
 	// The selected columns to show in table
@@ -221,7 +225,6 @@
 		} else {
 			failure(event.detail.attribute.title + ' ble ikke oppdatert');
 		}
-		// TODO: Add confirmation of edit or error
 	}
 	function addValue(event) {
 		let info = event.detail.value;
@@ -233,13 +236,22 @@
 		}
 	}
 	async function addUserMembership(groupId, user, fetch) {
-		// TODO: update application roles for user depending on group roles
 		let members = {};
 		members[groupId] = [{ userId: user.id }];
+		console.log({members})
 		if ((await api.addUserMembership({ members }, { fetch })).ok) {
 			user.groupIds.push(groupId);
 			users = users;
 			success('Gruppen ' + groups[groupId].name + ' ble lagt til!');
+
+			// Update the applications with roles
+			user.applicationRoles.forEach((app)=>{
+				groups[groupId].roles[app.id]?.forEach(role=>{
+					if(!app.roles.includes(role.name)){
+						app.roles.push(role.name)
+					}
+				})
+			})
 		} else {
 			failure('Gruppen ble ikke lagt til.');
 		}
@@ -247,7 +259,15 @@
 	async function addUserRegistration(appId, user, fetch) {
 		let registration = { applicationId: appId };
 		if ((await api.addUserRegistration(user.id, { registration }, { fetch })).ok) {
-			user.applicationRoles.push({ id: appId, roles: [] });
+			let roles = []
+			// Add roles to application based on assigned groups
+			user.groupIds.forEach(id => {
+				if(groups[id].roles[appId]){
+					groups[id].roles[appId].forEach(role=>roles.push(role.name))
+				}
+			})
+
+			user.applicationRoles.push({ id: appId, roles });
 			users = users;
 			success('Applikasjonen ' + applications[appId].name + ' ble lagt til!');
 		} else {
@@ -276,8 +296,20 @@
 	async function deleteUserMembership(groupId, user, fetch) {
 		let query = 'groupId=' + groupId + '&userId=' + user.id;
 		if ((await api.deleteUserMembership(query, { fetch })).ok) {
-			// TODO: update application roles for user depending on group roles
-			users.find((u) => u.id == user.id).groupIds = user.groupIds.filter((id) => id != groupId);
+			// Update the roles of user based on remaning groups 
+			let applicationRoles = user.applicationRoles.map(r=>{return {id: r.id, roles: []}})
+			let updatedGroups = user.groupIds.filter((id) => id != groupId);
+			updatedGroups.forEach(id => {
+				applicationRoles.forEach(app=> {
+					groups[id].roles[app.id]?.forEach(role=>{
+						if (!app.roles.includes(role.name)){
+							app.roles.push(role.name)
+						}
+					})
+				})
+			})
+			users.find((u) => u.id == user.id).groupIds = updatedGroups
+			users.find((u) => u.id == user.id).applicationRoles = applicationRoles
 			users = users;
 			success('Gruppen ' + groups[groupId].name + ' ble Fjernet!');
 		} else {
