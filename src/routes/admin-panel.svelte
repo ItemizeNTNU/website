@@ -27,9 +27,9 @@
 	export let applications;
 	export let groups;
 
-	console.log(users)
-	console.log(groups)
-	console.log(applications)
+	console.log(users);
+	console.log(groups);
+	console.log(applications);
 
 	let attributeToEdit = '';
 	let editType = '';
@@ -238,20 +238,20 @@
 	async function addUserMembership(groupId, user, fetch) {
 		let members = {};
 		members[groupId] = [{ userId: user.id }];
-		console.log({members})
+		console.log({ members });
 		if ((await api.addUserMembership({ members }, { fetch })).ok) {
 			user.groupIds.push(groupId);
 			users = users;
 			success('Gruppen ' + groups[groupId].name + ' ble lagt til!');
 
 			// Update the applications with roles
-			user.applicationRoles.forEach((app)=>{
-				groups[groupId].roles[app.id]?.forEach(role=>{
-					if(!app.roles.includes(role.name)){
-						app.roles.push(role.name)
+			user.applicationRoles.forEach((app) => {
+				groups[groupId].roles[app.id]?.forEach((role) => {
+					if (!app.roles.includes(role.name)) {
+						app.roles.push(role.name);
 					}
-				})
-			})
+				});
+			});
 		} else {
 			failure('Gruppen ble ikke lagt til.');
 		}
@@ -259,13 +259,13 @@
 	async function addUserRegistration(appId, user, fetch) {
 		let registration = { applicationId: appId };
 		if ((await api.addUserRegistration(user.id, { registration }, { fetch })).ok) {
-			let roles = []
+			let roles = [];
 			// Add roles to application based on assigned groups
-			user.groupIds.forEach(id => {
-				if(groups[id].roles[appId]){
-					groups[id].roles[appId].forEach(role=>roles.push(role.name))
+			user.groupIds.forEach((id) => {
+				if (groups[id].roles[appId]) {
+					groups[id].roles[appId].forEach((role) => roles.push(role.name));
 				}
-			})
+			});
 
 			user.applicationRoles.push({ id: appId, roles });
 			users = users;
@@ -296,20 +296,22 @@
 	async function deleteUserMembership(groupId, user, fetch) {
 		let query = 'groupId=' + groupId + '&userId=' + user.id;
 		if ((await api.deleteUserMembership(query, { fetch })).ok) {
-			// Update the roles of user based on remaning groups 
-			let applicationRoles = user.applicationRoles.map(r=>{return {id: r.id, roles: []}})
+			// Update the roles of user based on remaning groups
+			let applicationRoles = user.applicationRoles.map((r) => {
+				return { id: r.id, roles: [] };
+			});
 			let updatedGroups = user.groupIds.filter((id) => id != groupId);
-			updatedGroups.forEach(id => {
-				applicationRoles.forEach(app=> {
-					groups[id].roles[app.id]?.forEach(role=>{
-						if (!app.roles.includes(role.name)){
-							app.roles.push(role.name)
+			updatedGroups.forEach((id) => {
+				applicationRoles.forEach((app) => {
+					groups[id].roles[app.id]?.forEach((role) => {
+						if (!app.roles.includes(role.name)) {
+							app.roles.push(role.name);
 						}
-					})
-				})
-			})
-			users.find((u) => u.id == user.id).groupIds = updatedGroups
-			users.find((u) => u.id == user.id).applicationRoles = applicationRoles
+					});
+				});
+			});
+			users.find((u) => u.id == user.id).groupIds = updatedGroups;
+			users.find((u) => u.id == user.id).applicationRoles = applicationRoles;
 			users = users;
 			success('Gruppen ' + groups[groupId].name + ' ble Fjernet!');
 		} else {
@@ -389,7 +391,7 @@
 						<hr />
 						{#if row?.applicationRoles.length != 0}
 							<div class="role-info">
-								<span><b>Applikasjon:</b></span><span><b>Roller:</b></span>
+								<span><b>Applikasjon:</b></span><span><b>Roller fra grupper:</b></span>
 								{#each row.applicationRoles as application}
 									<p>{applications[application.id]?.name}</p>
 									<p>{application.roles?.join(', ') || ''}</p>

@@ -38,7 +38,7 @@
 		close('second');
 		close('first');
 	}
-	$: isDisabled = (editType == 'add' || editType == 'delete') && changeOptions?.length === 0;
+	$: isDisabled = ((editType == 'add' || editType == 'delete') && changeOptions?.length === 0) || changeValue == '';
 	$: {
 		changeOptions = attributeToEdit?.[editType + 'Options'];
 		if (typeof changeOptions == 'function') {
@@ -53,7 +53,7 @@
 		<p>Eksisterende verdi: {attributeToEdit?.value(row)}</p>
 		{#if Array.isArray(changeOptions)}
 			<select bind:value={changeValue}>
-				<option></option>
+				<option />
 				{#each changeOptions as v}
 					<option value={v}>{v}</option>
 				{/each}
@@ -77,8 +77,8 @@
 				<p class="info">{attributeToEdit?.title}:</p>
 
 				<select bind:value={changeValue}>
-					<option></option>
-					{#each changeOptions as option} 
+					<option />
+					{#each changeOptions as option}
 						<option value={option.id}>{option.name}</option>
 					{/each}
 				</select>
