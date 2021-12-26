@@ -64,6 +64,14 @@ export const getUser = async (id, options) => {
 	return await fetchResource(`/api/user/${id}`, options);
 };
 
+export const patchUser = async (id, user, options = {}) => {
+	return await fetchResource(`/api/user/${id}`, { method: 'PATCH', json: user, errorText: 'ERROR', ...options });
+};
+
+export const searchUsers = async (query, options) => {
+	return await fetchResource(`/api/user/search?${query}`, options);
+};
+
 export const getEvents = async (old, options) => {
 	return await fetchResource(`/api/events?old=${old}`, options);
 };
@@ -76,4 +84,46 @@ export const deleteEvent = async (eventId) => {
 	return await fetchResource(`/api/events/${eventId}`, { method: 'DELETE', errorText: 'ERROR' });
 };
 
-export default { registerUser, getUser, getEvents, postEvent, deleteEvent };
+export const getAllApplications = async (options) => {
+	return await fetchResource(`/api/application`, options);
+};
+
+export const getAllGroups = async (options) => {
+	return await fetchResource(`/api/group`, options);
+};
+
+export const addUserMembership = async (members, options) => {
+	return await fetchResource(`/api/group/member`, { method: 'POST', json: members, errorText: 'ERROR', ...options });
+};
+
+export const deleteUserMembership = async (query, options) => {
+	return await fetchResource(`/api/group/member?${query}`, { method: 'DELETE', errorText: 'ERROR', ...options });
+};
+
+export const addUserRegistration = async (userId, registration, options) => {
+	return await fetchResource(`/api/user/registration/${userId}`, { method: 'POST', json: registration, errorText: 'ERROR', ...options });
+};
+
+export const deleteUserRegistration = async (userId, applicationId, options) => {
+	return await fetchResource(`/api/user/registration/${userId}/${applicationId}`, {
+		method: 'DELETE',
+		errorText: 'ERROR',
+		...options
+	});
+};
+
+export default {
+	registerUser,
+	getUser,
+	searchUsers,
+	getEvents,
+	postEvent,
+	deleteEvent,
+	getAllApplications,
+	getAllGroups,
+	patchUser,
+	addUserMembership,
+	deleteUserMembership,
+	addUserRegistration,
+	deleteUserRegistration
+};

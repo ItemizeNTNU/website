@@ -43,4 +43,63 @@ export const getUser = async (id) => {
 	return res;
 };
 
-export default { createUser, updateUser, getUser };
+export const searchUsers = async (queryString) => {
+	const res = await _fetch(`/api/user/search?${queryString}`);
+	if (res.json?.users) {
+		res.json = res.json.users;
+	}
+	return res;
+};
+
+export const getAllApplications = async () => {
+	const res = await _fetch(`/api/application`);
+	if (res.json?.applications) {
+		res.json = res.json.applications;
+	}
+	return res;
+};
+
+export const getAllGroups = async () => {
+	const res = await _fetch(`/api/group`);
+	if (res.json?.groups) {
+		res.json = res.json.groups;
+	}
+	return res;
+};
+
+export const addUsersToGroup = async (members) => {
+	const res = await _fetch(`/api/group/member`, { method: 'POST', json: { members } });
+	if (res.json?.members) {
+		res.json = res.json.members;
+	}
+	return res;
+};
+
+export const removeUserFromGroup = async (queryString) => {
+	return await _fetch(`/api/group/member?${queryString}`, { method: 'DELETE' });
+};
+
+export const addUserRegistration = async (userId, registration) => {
+	const res = await _fetch(`/api/user/registration/${userId}`, { method: 'POST', json: { registration } });
+	if (res.json?.registration) {
+		res.json = res.json.registration;
+	}
+	return res;
+};
+
+export const deleteUserRegistration = async (userId, applicationId) => {
+	return await _fetch(`/api/user/registration/${userId}/${applicationId}`, { method: 'DELETE' });
+};
+
+export default {
+	createUser,
+	updateUser,
+	getUser,
+	searchUsers,
+	getAllApplications,
+	getAllGroups,
+	addUsersToGroup,
+	removeUserFromGroup,
+	addUserRegistration,
+	deleteUserRegistration
+};

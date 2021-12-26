@@ -41,6 +41,47 @@ const validate_user = (data) => {
 	}
 	return user;
 };
+const findUserData = (userData) => {
+	let { id, email, data, registrations, memberships, fullName, imageUrl, insertInstant, lastLoginInstant } = userData;
+	let { displayName, type, study, alumni, employee, discord } = data || {};
+	let groupIds = memberships?.map((element) => element.groupId) || [];
+
+	let applicationRoles =
+		registrations?.map((element) => {
+			return { id: element.applicationId, roles: element.roles || [] };
+		}) || [];
+	fullName = fullName || displayName;
+	displayName = displayName || fullName;
+	imageUrl = imageUrl || DEFAULT_PROFILE_IMAGE;
+	return {
+		id,
+		email,
+		fullName,
+		displayName,
+		imageUrl,
+		type,
+		study,
+		alumni,
+		employee,
+		discord,
+		insertInstant,
+		lastLoginInstant,
+		groupIds,
+		applicationRoles
+	};
+};
+
+router.get('/user/search?:query', async (req, res) => {
+	const result = await fusion.searchUsers(req._parsedUrl.query);
+	if (result.error) {
+		return res.status(400).send({ message: 'Error fetching user' });
+	}
+	let users = [];
+	for (let i = 0; i < result.json.length; i++) {
+		users.push(findUserData(result.json[i]));
+	}
+	return res.send({ users });
+});
 
 router.get('/user/:id', async (req, res) => {
 	const user = await fusion.getUser(req.params.id);
@@ -63,6 +104,19 @@ router.get('/user/:id', async (req, res) => {
 	}
 
 	return res.send({ id, email, fullName, name: displayName, imageUrl, type, study, alumni, employee, discord: discordUsername, self });
+});
+
+router.patch('/user/:id', async (req, res) => {
+	const result = await fusion.updateUser(req.params.id, req.body.user);
+
+	if (res.status == 404 || result.json?.verified === false) {
+		return res.status(404).send({ message: 'User not found' });
+	}
+	if (result.error) {
+		return res.status(400).send({ message: 'Error fetching user' });
+	}
+	let user = findUserData(result.json.user);
+	return res.send({ user });
 });
 
 router.put('/user', async (req, res) => {

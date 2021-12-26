@@ -26,6 +26,11 @@
 				<a aria-current={`/${segment}/` === side ? 'page' : undefined} href={side}> {side.replace(/-|_/g, '_')} </a>
 			</li>
 		{/each}
+		{#if $user?.roles?.includes('Styret')}
+			<li>
+				<a aria-current={segment === 'admin-panel' ? 'page' : undefined} title="Admin panel" href="/admin-panel"> {'/admin-panel/'.replace(/-|_/g, '_')} </a>
+			</li>
+		{/if}
 	</ul>
 	<ul class="navicons">
 		{#if $user}
