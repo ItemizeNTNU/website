@@ -65,7 +65,7 @@
 	<p>
 		<i>Postadresse:</i><br />
 		Itemize NTNU<br />
-		c/o Institutt for informasjonssikkerhet og kommunikasjonsteknologi<br />
+		c/o IIK<br />
 		O.S. Bragstads plass 2A<br />
 		7034 TRONDHEIM
 	</p>
