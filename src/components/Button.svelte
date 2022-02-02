@@ -19,8 +19,6 @@
 			running = true;
 			try {
 				await submit();
-			} catch (err) {
-				throw err;
 			} finally {
 				running = false;
 			}

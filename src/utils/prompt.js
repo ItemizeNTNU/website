@@ -2,20 +2,19 @@ import { writable } from 'svelte/store';
 
 let prompts_value;
 export let prompts = writable([]);
-prompts.subscribe(ps => {
-	prompts_value = ps.filter(p => p.show)
+prompts.subscribe((ps) => {
+	prompts_value = ps.filter((p) => p.show);
 	if (ps.length != prompts_value.length) {
 		prompts.set(prompts_value);
 	}
 });
-
 
 export function prompt_raw(prompt) {
 	return new Promise((accept, close) => {
 		prompt.accept = () => accept(prompt.inputs.length == 1 ? prompt.inputs[0].value : prompt.inputs);
 		prompt.close = close;
 		prompts.set([...prompts_value, prompt]);
-	})
+	});
 }
 
 /**
@@ -33,11 +32,11 @@ export function prompt(title, inputs, body, acceptText, validate, pre) {
 	}
 	if (!validate) validate = () => true;
 	if (typeof inputs == 'string') inputs = [{ name: inputs, value: '' }];
-	inputs = inputs.map(input => {
-		if (typeof (input) == 'string') {
-			return { name: input, value: '' }
+	inputs = inputs.map((input) => {
+		if (typeof input == 'string') {
+			return { name: input, value: '' };
 		} else if (Array.isArray(input)) {
-			return { name: input[0], value: input[1] }
+			return { name: input[0], value: input[1] };
 		} else {
 			return input;
 		}
@@ -50,14 +49,14 @@ export function prompt(title, inputs, body, acceptText, validate, pre) {
 		acceptText,
 		acceptDisable: !validate(inputs),
 		validate,
-		pre,
-	}
+		pre
+	};
 	return prompt_raw(prompt);
 }
 
 export default prompt;
 
-const true_false_wrap = (promise) => new Promise((res) => promise.then(() => res(true)).catch(() => res(false)))
+const true_false_wrap = (promise) => new Promise((res) => promise.then(() => res(true)).catch(() => res(false)));
 
 /**
  * Pop up confirm modal
@@ -65,7 +64,7 @@ const true_false_wrap = (promise) => new Promise((res) => promise.then(() => res
  * @returns async true/false
  */
 export function confirm(title) {
-	return true_false_wrap(prompt(title, [], '', 'Confirm'))
+	return true_false_wrap(prompt(title, [], '', 'Confirm'));
 }
 
 /**
@@ -75,11 +74,9 @@ export function confirm(title) {
  * @returns async true/false
  */
 export function confirm_strong(title, text) {
-	return true_false_wrap(prompt(title, [''], `Type <code class="error">${text}</code> to confirm:`, 'Confirm', (inputs => inputs[0].value == text)));
+	return true_false_wrap(prompt(title, [''], `Type <code class="error">${text}</code> to confirm:`, 'Confirm', (inputs) => inputs[0].value == text));
 }
-
 
 export function alert(title, body, pre) {
-	return true_false_wrap(prompt(title, [], body, '', false, pre))
+	return true_false_wrap(prompt(title, [], body, '', false, pre));
 }
-

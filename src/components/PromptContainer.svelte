@@ -1,7 +1,3 @@
-<script context="module">
-	export const prompt = (inputs) => {};
-</script>
-
 <script>
 	import { prompts } from '../utils/prompt';
 	import Modal from '../components/Modal.svelte';

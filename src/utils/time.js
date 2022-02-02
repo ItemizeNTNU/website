@@ -1,8 +1,8 @@
-import { DateTime } from "luxon";
+import { DateTime } from 'luxon';
 
 /**
  * Nice string format for multiple data formats
- * @param {String|number|Date|DateTime} date 
+ * @param {String|number|Date|DateTime} date
  * @returns "I dag kl 17:15" or "tirsdag 1. februar kl 17:15" or "tirsdag 1. februar 2021 kl 17:15"
  */
 export const smartFormat = (date) => {

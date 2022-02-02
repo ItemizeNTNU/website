@@ -1,5 +1,5 @@
 {
-	"svelteBracketNewLine": false,
+	"bracketSameLine": true,
 	"useTabs": true,
 	"printWidth": 180,
 	"singleQuote": true,

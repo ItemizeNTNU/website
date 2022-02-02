@@ -22,7 +22,7 @@
 
 	$: {
 		if (show) {
-			zIndex = zIndexCounter++; // svelte-ignore module-script-reactive-declaration
+			zIndex = zIndexCounter++;
 		}
 	}
 
