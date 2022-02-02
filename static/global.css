@@ -17,10 +17,14 @@
 	--green-1: #3cb34f; /* lightest green */
 	--green-2: #159545; /* light green */
 	--green-3: #0f6539; /* green */
+	--gray-1: #535353; /* light gray */
 	--gray-2: #7f7c7f; /* light gray */
 	--gray-3: #8b8886; /* gray */
 	--gray-4: #969395; /* dark gray */
 	--error: #ff5959;
+	--info: #0284c7;
+	--warning: #ca8a04;
+	--success: #16a34a;
 
 	--svg-arrow-black: url('data:image/svg+xml;charset=US-ASCII,%3Csvg%20xmlns%3D%22http%3A%2F%2Fwww.w3.org%2F2000%2Fsvg%22%20width%3D%22292.4%22%20height%3D%22292.4%22%3E%3Cpath%20fill%3D%22%23000%22%20d%3D%22M287%2069.4a17.6%2017.6%200%200%200-13-5.4H18.4c-5%200-9.3%201.8-12.9%205.4A17.6%2017.6%200%200%200%200%2082.2c0%205%201.8%209.3%205.4%2012.9l128%20127.9c3.6%203.6%207.8%205.4%2012.8%205.4s9.2-1.8%2012.8-5.4L287%2095c3.5-3.5%205.4-7.8%205.4-12.8%200-5-1.9-9.2-5.5-12.8z%22%2F%3E%3C%2Fsvg%3E');
 	--svg-arrow-white: url('data:image/svg+xml;charset=US-ASCII,%3Csvg%20xmlns%3D%22http%3A%2F%2Fwww.w3.org%2F2000%2Fsvg%22%20width%3D%22292.4%22%20height%3D%22292.4%22%3E%3Cpath%20fill%3D%22%23fff%22%20d%3D%22M287%2069.4a17.6%2017.6%200%200%200-13-5.4H18.4c-5%200-9.3%201.8-12.9%205.4A17.6%2017.6%200%200%200%200%2082.2c0%205%201.8%209.3%205.4%2012.9l128%20127.9c3.6%203.6%207.8%205.4%2012.8%205.4s9.2-1.8%2012.8-5.4L287%2095c3.5-3.5%205.4-7.8%205.4-12.8%200-5-1.9-9.2-5.5-12.8z%22%2F%3E%3C%2Fsvg%3E');
@@ -105,6 +109,15 @@ code.block {
 	white-space: pre-wrap;
 }
 
+.success {
+	color: var(--success);
+}
+.warning {
+	color: var(--warning);
+}
+.info {
+	color: var(--info);
+}
 .error {
 	color: var(--error);
 }
@@ -114,7 +127,6 @@ textarea,
 button,
 select {
 	font-size: 1em;
-	border: none;
 	padding: 0.25em;
 	margin: 0 0.2em;
 	border-radius: 0.25em;
@@ -122,10 +134,11 @@ select {
 	box-sizing: border-box;
 	color: inherit;
 	cursor: pointer;
-	border: 2px solid #fff0;
+	border: 2px solid #fff1;
 	transition: 200ms linear;
-	width: 15em;
+	width: auto;
 	appearance: none;
+	flex: 1 0 0;
 }
 label {
 	cursor: pointer;
@@ -138,14 +151,14 @@ input:focus,
 textarea:focus,
 button:focus,
 select:focus {
-	background-color: var(--green-3);
-	outline: none;
+	border-color: #fff4;
 }
 input:focus-visible,
 textarea:focus-visible,
 button:focus-visible,
 select:focus-visible {
 	outline: 0.1em solid var(--green-2);
+	border-color: none;
 }
 button:active {
 	background-color: var(--green-1);
@@ -182,13 +195,33 @@ select {
 	background-size: 0.65em auto;
 }
 
-.full {
-	width: 100%;
-}
 .sapper {
 	position: relative;
 	width: 100%;
 	overflow-x: hidden;
+}
+
+.row {
+	display: flex;
+}
+.row + .row {
+	margin-top: 0.3em;
+}
+
+.row > *:first-child {
+	margin-inline-start: 0;
+}
+.row > *:last-child {
+	margin-inline-end: 0;
+}
+
+.st-toast progress {
+	border: unset;
+	background: transparent;
+}
+.st-toast button {
+	flex: unset;
+	border: unset !important;
 }
 
 @media (min-width: 400px) {

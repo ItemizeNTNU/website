@@ -3,7 +3,7 @@
 	import Icon from './Icon.svelte';
 
 	export let value = false;
-	export let rotate = 180;
+	export let rotate = 0;
 
 	export let colorOn = 'inherit';
 	export let colorOff = 'inherit';

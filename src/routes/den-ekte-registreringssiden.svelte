@@ -8,6 +8,7 @@
 
 <script>
 	import { goto } from '@sapper/app';
+	import Button from '../components/Button.svelte';
 	import api from '../utils/api';
 
 	const types = {
@@ -103,7 +104,7 @@
 			<div class="comment">Fyll ut best beskrivende jobb tittel.</div>
 		{/if}
 	</div>
-	<button class="full" on:click={register}>Registrer</button>
+	<Button fill big submit={register}>Register</Button>
 </main>
 
 <style>

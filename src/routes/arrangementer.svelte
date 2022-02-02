@@ -19,6 +19,7 @@
 	import { DateTime } from 'luxon';
 	import TimePicker from '../components/TimePicker.svelte';
 	import Icon from '../components/Icon.svelte';
+	import { smartFormat } from '../utils/time';
 	export let events;
 	let error;
 	let showNew = false;
@@ -49,26 +50,6 @@
 
 	const refresh = async () => {
 		events = (await api.getEvents(showOld)).json;
-	};
-
-	const smartFormat = (date) => {
-		if (['number', 'string'].includes(typeof date)) {
-			date = new Date(date);
-		}
-		if (date instanceof Date) {
-			date = DateTime.fromJSDate(date);
-		}
-
-		date = date.setZone('Europe/Oslo').setLocale('no');
-		const now = DateTime.now().setZone('Europe/Oslo');
-		let format = "'I dag kl' HH:mm";
-		if (date.month != now.month || date.day != now.day) {
-			format = "EEEE d. MMMM 'kl' HH:mm";
-		}
-		if (date.year != now.year) {
-			format = "EEEE d. MMMM y 'kl' HH:mm";
-		}
-		return date.toFormat(format);
 	};
 
 	const postEvent = async () => {

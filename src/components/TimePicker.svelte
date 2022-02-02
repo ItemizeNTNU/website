@@ -3,6 +3,8 @@
 	export let date = new Date();
 	export let tz = 'Europe/Oslo';
 
+	$: if (!date) date = new Date();
+
 	let partDate = '';
 	let partTime = '';
 
