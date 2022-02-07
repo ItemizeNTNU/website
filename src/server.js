@@ -9,6 +9,7 @@ import { json as jsonParser } from 'body-parser';
 import './server/load_envs';
 import { router as calender } from './server/calender';
 import { router as user } from './server/user';
+import { cookieRecipe } from './server/utils';
 
 const APIS = [calender, user];
 
@@ -22,6 +23,7 @@ express()
 	.disable('x-powered-by')
 	.use(
 		compression({ threshold: 0 }),
+		cookieRecipe,
 		sirv('static', { dev }),
 		jsonParser(),
 		auth({
