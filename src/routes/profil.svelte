@@ -52,7 +52,7 @@
 	{/if}
 	<div class="grid">
 		<img src={user.imageUrl} alt="Profilbilde" />
-		<div class="info">
+		<div>
 			<h2>{user.name}</h2>
 			<p><b>Epost:</b> <code>{user.email}</code></p>
 			<p><b>Fullt Navn:</b> {user.fullName}</p>
@@ -79,6 +79,7 @@
 			{/if}
 		</div>
 	</div>
+	<a href="/utmelding" class="bottom-right">Utmelding</a>
 </main>
 
 <style>
@@ -91,5 +92,10 @@
 		height: auto;
 		border-radius: 50%;
 		border: 0.25em solid #888;
+	}
+	.bottom-right {
+		position: absolute;
+		bottom: 1em;
+		right: 1em;
 	}
 </style>
