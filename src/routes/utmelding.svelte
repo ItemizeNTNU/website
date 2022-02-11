@@ -1,7 +1,7 @@
 <script>
 	const to = 'drift@itemize.no';
 	const subject = 'Utmelding av Itemize NTNU';
-	const body = 'Hei.\n\nJeg øsnker å melde meg ut av Itemize NTNU. Jeg bekrefter at jeg ønsker all bruker informasjon slettet.\n\nHilsen XXXX';
+	const body = 'Hei.\n\nJeg ønsker å melde meg ut av Itemize NTNU. Jeg bekrefter at jeg ønsker all brukerinformasjon slettet.\n\nHilsen XXXX';
 	const mailto = `mailto:${to}?subject=${encodeURIComponent(subject)}&body=${encodeURIComponent(body)}`;
 </script>
 
@@ -12,7 +12,7 @@
 <main>
 	<h1>Utmelding</h1>
 
-	<p>Itemize er under kontinuerlig utviling og vi er ikke helt i mål med å utarbeide alle systemene våre enda. Et av disse er automatisk system for utmelding.</p>
+	<p>Itemize er under kontinuerlig utvikling og vi er ikke helt i mål med å utarbeide alle systemene våre enda. Et av disse er automatisk system for utmelding.</p>
 
 	<p>
 		Enn så lenge ber vi eksisterende medlemmer som ønsker å melde seg ut av Itemize NTNU om å sende e-post til <a href={mailto}>drift@itemize.no</a>. Du må bruke samme
@@ -21,14 +21,14 @@
 	</p>
 
 	<p>
-		Merk at ved å melde deg ut av Itemize NTNU så vil du miste tilgang til alle Itemize NTNU sine systemer, slik som medlems Wiki og Discord. Dine personlie filer på Cloud og
+		Merk at ved å melde deg ut av Itemize NTNU så vil du miste tilgang til alle Itemize NTNU sine systemer, slik som medlems-Wiki og -Discord. Dine personlie filer på Cloud og
 		tilsvarende systemer vil også bli slettet.
 	</p>
 
 	<br />
 	<hr />
 	<br />
-	<h2>E-post mal for utmelding:</h2>
+	<h2>E-post-mal for utmelding:</h2>
 	<p>
 		<b>To:</b> <code>{to}</code>
 		<br />
