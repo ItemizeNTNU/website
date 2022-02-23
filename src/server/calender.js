@@ -1,6 +1,6 @@
 import mongoose from 'mongoose';
 import express from 'express';
-import { permission } from './utils';
+import { permission, makeDiscordEvent, deleteDiscordEvent } from './utils';
 import ical from 'ical-generator';
 import joi from 'joi';
 import { DateTime } from 'luxon';
@@ -34,7 +34,8 @@ const eventValidationSchema = joi.object({
 		url: joi.string().trim().allow('').custom(validURL).required()
 	},
 	info: joi.string().trim().min(3).max(2000).required(),
-	hidden: joi.boolean().required()
+	hidden: joi.boolean().required(),
+	discord: joi.boolean().required()
 });
 
 const eventSchema = mongoose.Schema({
@@ -53,6 +54,8 @@ const eventSchema = mongoose.Schema({
 	},
 	info: String,
 	hidden: Boolean,
+	discord: Boolean,
+    discord_event_id: String,
 	created: { type: Date, default: Date.now },
 	edited: Date
 });
@@ -96,16 +99,30 @@ router.post('/events', permission('Styret'), async (req, res) => {
 	}
 	let _id = event._id || mongoose.Types.ObjectId();
 	delete event._id;
+    if(event.discord === true){
+        let makeDiscordEventResponse = await makeDiscordEvent(event);
+        if (!makeDiscordEventResponse.exception){
+            event.discord_event_id = makeDiscordEventResponse.event_id
+        }
+    }
 	await Event.updateOne({ _id }, event, { upsert: true });
 	res.send();
 });
 
-router.delete('/events/:id', permission('Styret'), async (req, res) => {
+router.delete('/events/:id/:discordEventId', permission('Styret'), async (req, res) => {
 	const _id = req.params.id;
+	const discordEventId = req.params.discordEventId;
 	const del = await Event.deleteOne({ _id });
 	if (del.deletedCount) {
-		res.send({ message: 'Success' });
-	} else {
+        const discordDel = await deleteDiscordEvent(discordEventId)
+        if(!discordDel.exception){
+		    res.send({ message: 'Success' });
+        }
+        else if(del.deletedCount){
+            res.send({ message: 'Event was deleted, but could not remove the discord event' });
+        }
+	}
+    else {
 		res.status(404).status({ message: `Event not found with id "${_id}"` });
 	}
 });

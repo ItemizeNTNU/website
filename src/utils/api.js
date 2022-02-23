@@ -72,8 +72,8 @@ export const postEvent = async (event) => {
 	return await fetchResource('/api/events', { method: 'POST', json: event, errorText: 'ERROR' });
 };
 
-export const deleteEvent = async (eventId) => {
-	return await fetchResource(`/api/events/${eventId}`, { method: 'DELETE', errorText: 'ERROR' });
+export const deleteEvent = async (eventId, discordId) => {
+	return await fetchResource(`/api/events/${eventId}/${discordId}`, { method: 'DELETE', errorText: 'ERROR' });
 };
 
-export default { registerUser, getUser, getEvents, postEvent, deleteEvent };
+export default { registerUser, getUser, getEvents, postEvent, deleteEvent};
