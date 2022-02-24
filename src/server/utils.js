@@ -1,6 +1,3 @@
-import { fetchResource } from '../utils/api';
-import fetch from 'node-fetch';
-
 export const permission = (...roles) => {
 	return (req, res, next) => {
 		if (!req.user) {
