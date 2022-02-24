@@ -2,6 +2,7 @@ import mongoose from 'mongoose';
 import express from 'express';
 import { permission, makeDiscordEvent, deleteDiscordEvent} from './utils';
 import ical from 'ical-generator';
+import joi from 'joi';
 import { DateTime } from 'luxon';
 
 export const router = express.Router();
