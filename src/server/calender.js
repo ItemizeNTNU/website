@@ -1,8 +1,7 @@
 import mongoose from 'mongoose';
 import express from 'express';
-import { permission, makeDiscordEvent, deleteDiscordEvent } from './utils';
+import { permission, makeDiscordEvent, deleteDiscordEvent} from './utils';
 import ical from 'ical-generator';
-import joi from 'joi';
 import { DateTime } from 'luxon';
 
 export const router = express.Router();
@@ -21,6 +20,7 @@ const validURL = (url) => {
 
 const eventValidationSchema = joi.object({
 	_id: joi.string().regex(/[0-9a-f]{24}/),
+	discordEventId: joi.string(),
 	name: joi.string().trim().min(3).max(50).required(),
 	location: {
 		name: joi.string().trim().min(3).max(200).required(),
@@ -55,7 +55,7 @@ const eventSchema = mongoose.Schema({
 	info: String,
 	hidden: Boolean,
 	discord: Boolean,
-    discord_event_id: String,
+    discordEventId: String,
 	created: { type: Date, default: Date.now },
 	edited: Date
 });
@@ -92,19 +92,27 @@ router.post('/events', permission('Styret'), async (req, res) => {
 	}
 	event = event.value;
 	event.end = DateTime.fromJSDate(event.date).plus({ hours: event.duration }).toJSDate();
+    let toUpdate = true;
 	if (!event._id) {
 		event.edited = Date.now();
+        //Does not already exist, create a new event, do not udate existing one
+        toUpdate = false;
 	} else {
 		event.created = Date.now();
 	}
-	let _id = event._id || mongoose.Types.ObjectId();
-	delete event._id;
     if(event.discord === true){
-        let makeDiscordEventResponse = await makeDiscordEvent(event);
-        if (!makeDiscordEventResponse.exception){
-            event.discord_event_id = makeDiscordEventResponse.event_id
+        //if it does not already have an id, it means that the event was updated to become a discord event
+        if(!event.discordEventId){
+            toUpdate = false;
+        }
+        //will update an existing event if second parameter === true
+        let makeDiscordEventResponse = await makeDiscordEvent(event, toUpdate);
+        if (!makeDiscordEventResponse.exception && makeDiscordEventResponse.event_id){
+            event.discordEventId = makeDiscordEventResponse.event_id.toString();
         }
     }
+	let _id = event._id || mongoose.Types.ObjectId();
+	delete event._id;
 	await Event.updateOne({ _id }, event, { upsert: true });
 	res.send();
 });

@@ -36,9 +36,9 @@ export const deleteDiscordEvent = async (eventId) => {
             }
         });
 };
-
-//makes a discord event when an event is made on the website, takes in form data from the make-event form
-export const makeDiscordEvent = async (jsonData) => {
+//makes a discord event when an event is made on the website, takes in form data from the make-event form.
+//if isUpdate == true it updates an existing event instead
+export const makeDiscordEvent = async (jsonData, isUpdate) => {
     //convert to iso8601 timestamp as thats what the discord api requires
     const eventStartIso8601 = new Date(jsonData.date).toISOString()
     const eventEndIso8601 = new Date(jsonData.end).toISOString()
@@ -71,23 +71,30 @@ export const makeDiscordEvent = async (jsonData) => {
     }
     json["description"] = descriptionText
 
+    let path = `https://discord.com/api/v8/guilds/${process.env.DISCORD_SERVER_ID}/scheduled-events`;
+    let method = "POST";
+    //its an update
+    if(isUpdate){
+        path = `https://discord.com/api/v8/guilds/${process.env.DISCORD_SERVER_ID}/scheduled-events/${jsonData.discordEventId}`;
+        method = "PATCH";
+    };
+
     const fetchOptions = {
         host: '',
-        method: 'POST',
+        method: method,
         json:json,  
         /** Only works for one layer! */
         urlData: '',
         errorText: 'Unable to fetch resource: ERROR',
         fetch: fetch,
         headers: {
-            "Authorization": `Bot ${process.env.DISCORD_BOT_TOKEN}`
+            'Authorization': `Bot ${process.env.DISCORD_BOT_TOKEN}`
         }
     };
-    const path = `https://discord.com/api/v8/guilds/${process.env.DISCORD_SERVER_ID}/scheduled-events`;
     let svar = await fetchResource(path, fetchOptions);
 
-    if (svar.exception === true){
-        return {exception: true, error: svar.error}
+    if (svar.exception === true || !svar.ok){
+        return {exception: true, error: "Eventet kunne ikke lages på discord"}
     }
     //returns discord id
     return {exception: false, event_id: svar.json.id}

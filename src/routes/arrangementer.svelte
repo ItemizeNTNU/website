@@ -70,6 +70,13 @@
     }
 	const postEvent = async () => {
 		error = '';
+        const eventDate = Date.parse(new Date(newEvent.date));
+        const nowDate = Date.parse(new Date);
+        if(eventDate < nowDate){
+            error = 'Du kan ikke ha et event som starter i fortiden';
+            return;
+        }
+		error = '';
 		const res = await api.postEvent(newEvent);
 		if (res.error) {
 			error = res.error;
@@ -82,18 +89,11 @@
 	const deleteEvent = async () => {
 		if (confirm('Er du sikker på at du vil slette dette arrangementet?\nDette kan ikke angres.')) {
 			error = '';
-			const res = await api.deleteEvent(newEvent._id, newEvent.discord_event_id);
+			const res = await api.deleteEvent(newEvent._id, newEvent.discordEventId);
 			if (res.error) {
 				error = res.error;
 				return;
 			}
-            if(newEvent.discord_event_id){
-                res = await api.deleteDiscordEvent(newEvent.discord_event_id);
-                if (res.error) {
-                    error = res.error;
-                    return;
-                }
-            }
 			resetNewEvent();
 			refresh();
 		}
