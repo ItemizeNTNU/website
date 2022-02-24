@@ -52,30 +52,30 @@
 	const refresh = async () => {
 		events = (await api.getEvents(showOld)).json;
 	};
-    const skjulArrangemant = () =>{
-        //you cant share a hidden event to discord
-        //also tried to disable the other checkboxs if one is selected, but it was hard to see with the colorscheme and made things confusing
+	const skjulArrangemant = () => {
+		//you cant share a hidden event to discord
+		//also tried to disable the other checkboxs if one is selected, but it was hard to see with the colorscheme and made things confusing
 		if (newEvent.discord) {
-			error = "Du kan ikke både skjule et arrangement og dele det på discord";
-            newEvent.discord = false
+			error = 'Du kan ikke både skjule et arrangement og dele det på discord';
+			newEvent.discord = false;
 			return;
 		}
-    }
-    const delArrangemangtDiscord = () =>  {
+	};
+	const delArrangemangtDiscord = () => {
 		if (newEvent.hidden) {
-			error = "Du kan ikke både skjule et arrangement og dele det på discord";
-            newEvent.hidden = false
+			error = 'Du kan ikke både skjule et arrangement og dele det på discord';
+			newEvent.hidden = false;
 			return;
 		}
-    }
+	};
 	const postEvent = async () => {
 		error = '';
-        const eventDate = Date.parse(new Date(newEvent.date));
-        const nowDate = Date.parse(new Date);
-        if(eventDate < nowDate){
-            error = 'Du kan ikke ha et event som starter i fortiden';
-            return;
-        }
+		const eventDate = Date.parse(new Date(newEvent.date));
+		const nowDate = Date.parse(new Date());
+		if (eventDate < nowDate) {
+			error = 'Du kan ikke ha et event som starter i fortiden';
+			return;
+		}
 		error = '';
 		const res = await api.postEvent(newEvent);
 		if (res.error) {
@@ -127,7 +127,7 @@
 				<label><span class="col">Navn:</span> <input type="text" bind:value={newEvent.name} /></label>
 				<label><span class="col">Hvor:</span> <input type="text" bind:value={newEvent.location.name} /></label>
 				<label><span class="col">Hvor link:</span> <input type="text" bind:value={newEvent.location.url} /> (e.g. mazemap link)</label>
-            <label><span class="col">Registrer link:</span> <input type="text" bind:value={newEvent.register_url} /> (link for registrering ved fysisk oppmøte)</label>
+				<label><span class="col">Registrer link:</span> <input type="text" bind:value={newEvent.register_url} /> (link for registrering ved fysisk oppmøte)</label>
 				<span><span class="col">Når: </span> <TimePicker bind:date={newEvent.date} /> {smartFormat(newEvent.date)}</span>
 				<label
 					><span class="col">Varighet:</span> <input type="number" bind:value={newEvent.duration} min="0" /> (lengde i timer, slutter {smartFormat(
@@ -137,7 +137,9 @@
 				<label><span class="col">CTF Link:</span> <input type="text" bind:value={newEvent.ctf.url} /></label>
 				<label><span class="col">Info:</span> <textarea rows="3" bind:value={newEvent.info} /></label>
 				<label><span class="col">Skjult:</span> <input type="checkbox" bind:value={newEvent.hidden} bind:checked={newEvent.hidden} on:change={skjulArrangemant} /></label>
-				<label><span class="col">Del på discord:</span> <input type="checkbox" bind:value={newEvent.discord} bind:checked={newEvent.discord} on:change={delArrangemangtDiscord} /></label>
+				<label
+					><span class="col">Del på discord:</span>
+					<input type="checkbox" bind:value={newEvent.discord} bind:checked={newEvent.discord} on:change={delArrangemangtDiscord} /></label>
 				<span class="col" /> <button on:click|preventDefault={postEvent}>{newEvent._id ? 'Oppdater' : 'Legg til'}</button>
 				<Button icon={FaTrash} title="Delete Event" disabled={!newEvent._id} submit={deleteEvent} />
 			</form>
