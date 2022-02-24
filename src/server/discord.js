@@ -23,6 +23,75 @@ const discordFetch = async (path, options) => {
 	return await fetchResource(path, options);
 };
 
+//deletes discord event with id = eventId
+export const deleteDiscordEvent = async (eventId) => {
+	return await discordFetch(`/guilds/${GUILD_ID}/scheduled-events/${eventId}`, { method: 'DELETE' });
+};
+
+//makes a discord event when an event is made on the website, takes in form data from the make-event form.
+//if isUpdate == true it updates an existing event instead
+export const makeDiscordEvent = async (jsonData, isUpdate) => {
+	//convert to iso8601 timestamp as thats what the discord api requires
+	const eventStartIso8601 = new Date(jsonData.date).toISOString();
+	const eventEndIso8601 = new Date(jsonData.end).toISOString();
+	const json = {
+		name: `${jsonData.name}`,
+		entity_metadata: {
+			location: `${jsonData.location.name}`
+		},
+		scheduled_start_time: `${eventStartIso8601}`,
+		scheduled_end_time: `${eventEndIso8601}`,
+		//entity_type: 3 means externel event, eg not in the discord channel
+		entity_type: 3,
+		//level 2 = channel members only, only available at time of creation
+		privacy_level: 2
+	};
+
+	let descriptionText = jsonData.info;
+	//these fields are not required
+	if (jsonData.register_url) {
+		descriptionText += `\nregister at du kommer her: ${jsonData.location.url}`;
+	}
+	if (jsonData.location.url) {
+		descriptionText += `\nlink til lokasjon: ${jsonData.location.url}`;
+	}
+	if (jsonData.ctf.name) {
+		descriptionText += `\nctf navn: ${jsonData.ctf.name}`;
+	}
+	if (jsonData.ctf.url) {
+		descriptionText += `\nctf link: ${jsonData.ctf.url}`;
+	}
+	json['description'] = descriptionText;
+
+	let path = `https://discord.com/api/v8/guilds/${process.env.DISCORD_SERVER_ID}/scheduled-events`;
+	let method = 'POST';
+	//its an update
+	if (isUpdate) {
+		path = `https://discord.com/api/v8/guilds/${process.env.DISCORD_SERVER_ID}/scheduled-events/${jsonData.discordEventId}`;
+		method = 'PATCH';
+	}
+
+	const fetchOptions = {
+		host: '',
+		method: method,
+		json: json,
+		/** Only works for one layer! */
+		urlData: '',
+		errorText: 'Unable to fetch resource: ERROR',
+		fetch: fetch,
+		headers: {
+			Authorization: `Bot ${process.env.DISCORD_BOT_TOKEN}`
+		}
+	};
+	let svar = await fetchResource(path, fetchOptions);
+
+	if (svar.exception === true || !svar.ok) {
+		return { exception: true, error: 'Eventet kunne ikke lages på discord' };
+	}
+	//returns discord id
+	return { exception: false, event_id: svar.json.id };
+};
+
 export const getCallback = () => `${process.env.BASE_URL}/api/discord/callback`;
 
 export const getOAuthLink = () => {
