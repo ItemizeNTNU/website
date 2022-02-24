@@ -52,7 +52,7 @@
 	const refresh = async () => {
 		events = (await api.getEvents(showOld)).json;
 	};
-	const skjulArrangemant = () => {
+	const hideEvent = () => {
 		//you cant share a hidden event to discord
 		//also tried to disable the other checkboxs if one is selected, but it was hard to see with the colorscheme and made things confusing
 		if (newEvent.discord) {
@@ -61,7 +61,7 @@
 			return;
 		}
 	};
-	const delArrangemangtDiscord = () => {
+	const shareEventDiscord = () => {
 		if (newEvent.hidden) {
 			error = 'Du kan ikke både skjule et arrangement og dele det på discord';
 			newEvent.hidden = false;
@@ -136,10 +136,10 @@
 				<label><span class="col">CTF Navn:</span> <input type="text" bind:value={newEvent.ctf.name} /></label>
 				<label><span class="col">CTF Link:</span> <input type="text" bind:value={newEvent.ctf.url} /></label>
 				<label><span class="col">Info:</span> <textarea rows="3" bind:value={newEvent.info} /></label>
-				<label><span class="col">Skjult:</span> <input type="checkbox" bind:value={newEvent.hidden} bind:checked={newEvent.hidden} on:change={skjulArrangemant} /></label>
+				<label><span class="col">Skjult:</span> <input type="checkbox" bind:checked={newEvent.hidden} on:change={hideEvent} /></label>
 				<label
 					><span class="col">Del på discord:</span>
-					<input type="checkbox" bind:value={newEvent.discord} bind:checked={newEvent.discord} on:change={delArrangemangtDiscord} /></label>
+					<input type="checkbox" bind:checked={newEvent.discord} on:change={shareEventDiscord} /></label>
 				<span class="col" /> <button on:click|preventDefault={postEvent}>{newEvent._id ? 'Oppdater' : 'Legg til'}</button>
 				<Button icon={FaTrash} title="Delete Event" disabled={!newEvent._id} submit={deleteEvent} />
 			</form>
