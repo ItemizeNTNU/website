@@ -1,6 +1,7 @@
 import mongoose from 'mongoose';
 import express from 'express';
 import { permission } from './utils';
+import { deleteDiscordEvent, makeDiscordEvent } from './discord';
 import ical from 'ical-generator';
 import joi from 'joi';
 import { DateTime } from 'luxon';
@@ -21,6 +22,7 @@ const validURL = (url) => {
 
 const eventValidationSchema = joi.object({
 	_id: joi.string().regex(/[0-9a-f]{24}/),
+	discordEventId: joi.string(),
 	name: joi.string().trim().min(3).max(50).required(),
 	location: {
 		name: joi.string().trim().min(3).max(200).required(),
@@ -34,7 +36,8 @@ const eventValidationSchema = joi.object({
 		url: joi.string().trim().allow('').custom(validURL).required()
 	},
 	info: joi.string().trim().min(3).max(2000).required(),
-	hidden: joi.boolean().required()
+	hidden: joi.boolean().required(),
+	discord: joi.boolean().required()
 });
 
 const eventSchema = mongoose.Schema({
@@ -53,6 +56,8 @@ const eventSchema = mongoose.Schema({
 	},
 	info: String,
 	hidden: Boolean,
+	discord: Boolean,
+	discordEventId: String,
 	created: { type: Date, default: Date.now },
 	edited: Date
 });
@@ -89,10 +94,24 @@ router.post('/events', permission('Styret'), async (req, res) => {
 	}
 	event = event.value;
 	event.end = DateTime.fromJSDate(event.date).plus({ hours: event.duration }).toJSDate();
+	let toUpdate = true;
 	if (!event._id) {
 		event.edited = Date.now();
+		//Does not already exist, create a new event, do not udate existing one
+		toUpdate = false;
 	} else {
 		event.created = Date.now();
+	}
+	if (event.discord === true) {
+		//if it does not already have an id, it means that the event was updated to become a discord event
+		if (!event.discordEventId) {
+			toUpdate = false;
+		}
+		//will update an existing event if second parameter === true
+		let makeDiscordEventResponse = await makeDiscordEvent(event, toUpdate);
+		if (!makeDiscordEventResponse.exception && makeDiscordEventResponse.event_id) {
+			event.discordEventId = makeDiscordEventResponse.event_id.toString();
+		}
 	}
 	let _id = event._id || mongoose.Types.ObjectId();
 	delete event._id;
@@ -100,11 +119,17 @@ router.post('/events', permission('Styret'), async (req, res) => {
 	res.send();
 });
 
-router.delete('/events/:id', permission('Styret'), async (req, res) => {
+router.delete('/events/:id/:discordEventId', permission('Styret'), async (req, res) => {
 	const _id = req.params.id;
+	const discordEventId = req.params.discordEventId;
 	const del = await Event.deleteOne({ _id });
 	if (del.deletedCount) {
-		res.send({ message: 'Success' });
+		const discordDel = await deleteDiscordEvent(discordEventId);
+		if (!discordDel.exception) {
+			res.send({ message: 'Success' });
+		} else if (del.deletedCount) {
+			res.send({ message: 'Event was deleted, but could not remove the discord event' });
+		}
 	} else {
 		res.status(404).status({ message: `Event not found with id "${_id}"` });
 	}
