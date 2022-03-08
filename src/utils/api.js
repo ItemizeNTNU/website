@@ -6,7 +6,8 @@ const defFetchOptions = {
 	urlData: '',
 	errorText: 'Unable to fetch resource: ERROR',
 	fetch: undefined,
-	headers: {}
+	headers: {},
+	debug: false
 };
 export const fetchResource = async (path, options = defFetchOptions) => {
 	options = { ...defFetchOptions, ...options };
@@ -53,6 +54,10 @@ export const fetchResource = async (path, options = defFetchOptions) => {
 	if (typeof resp.error == 'string' && options.errorText) {
 		resp.error = options.errorText.replace(/\bERROR\b/g, resp.error);
 	}
+	if (options.debug) {
+		console.debug(options.method, path, settings);
+		console.debug(resp);
+	}
 	return resp;
 };
 
@@ -72,8 +77,8 @@ export const postEvent = async (event) => {
 	return await fetchResource('/api/events', { method: 'POST', json: event, errorText: 'ERROR' });
 };
 
-export const deleteEvent = async (eventId, discordId) => {
-	return await fetchResource(`/api/events/${eventId}/${discordId}`, { method: 'DELETE', errorText: 'ERROR' });
+export const deleteEvent = async (eventId) => {
+	return await fetchResource(`/api/events/${eventId}`, { method: 'DELETE', errorText: 'ERROR' });
 };
 
 export default { registerUser, getUser, getEvents, postEvent, deleteEvent };
