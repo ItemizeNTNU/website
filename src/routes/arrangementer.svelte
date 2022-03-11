@@ -170,7 +170,7 @@
 						{/if}
 						<tr>
 							<td>Info:</td>
-							<td>
+							<td class="event-info">
 								{@html event.info}
 							</td>
 						</tr>
@@ -270,5 +270,8 @@
 		display: flex;
 		flex-direction: row;
 		padding: 0.5em;
+	}
+	.event-info {
+		white-space: break-spaces;
 	}
 </style>
