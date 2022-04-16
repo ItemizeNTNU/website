@@ -38,7 +38,8 @@
 			url: ''
 		},
 		info: '',
-		hidden: false
+		hidden: false,
+		discord: false
 	};
 	let newEvent;
 	const resetNewEvent = (data = newEventDefault, show) => {
@@ -51,7 +52,6 @@
 	const refresh = async () => {
 		events = (await api.getEvents(showOld)).json;
 	};
-
 	const postEvent = async () => {
 		error = '';
 		const res = await api.postEvent(newEvent);
@@ -106,15 +106,18 @@
 				<label><span class="col">Hvor link:</span> <input type="text" bind:value={newEvent.location.url} /> (e.g. mazemap link)</label>
 				<label><span class="col">Registrer link:</span> <input type="text" bind:value={newEvent.register_url} /> (link for registrering ved fysisk oppmøte)</label>
 				<span><span class="col">Når: </span> <TimePicker bind:date={newEvent.date} /> {smartFormat(newEvent.date)}</span>
-				<label
-					><span class="col">Varighet:</span> <input type="number" bind:value={newEvent.duration} min="0" /> (lengde i timer, slutter {smartFormat(
-						DateTime.fromJSDate(newEvent.date).plus({ hours: newEvent.duration })
-					)})</label>
+				<label>
+					<span class="col">Varighet:</span>
+					<input type="number" bind:value={newEvent.duration} min="0" />
+					(lengde i timer, slutter {smartFormat(DateTime.fromJSDate(newEvent.date).plus({ hours: newEvent.duration }))})
+				</label>
 				<label><span class="col">CTF Navn:</span> <input type="text" bind:value={newEvent.ctf.name} /></label>
 				<label><span class="col">CTF Link:</span> <input type="text" bind:value={newEvent.ctf.url} /></label>
 				<label><span class="col">Info:</span> <textarea rows="3" bind:value={newEvent.info} /></label>
-				<label><span class="col">Skjult:</span> <input type="checkbox" bind:value={newEvent.hidden} bind:checked={newEvent.hidden} /></label>
-				<span class="col" /> <button on:click|preventDefault={postEvent}>{newEvent._id ? 'Oppdater' : 'Legg til'}</button>
+				<label><span class="col">Skjult:</span> <input type="checkbox" bind:checked={newEvent.hidden} /></label>
+				<label><span class="col">Del på discord:</span> <input type="checkbox" disabled={newEvent.hidden} bind:checked={newEvent.discord} /></label>
+				<span class="col" />
+				<button on:click|preventDefault={postEvent}>{newEvent._id ? 'Oppdater' : 'Legg til'}</button>
 				<Button icon={FaTrash} title="Delete Event" disabled={!newEvent._id} submit={deleteEvent} />
 			</form>
 		{/if}
@@ -167,7 +170,7 @@
 						{/if}
 						<tr>
 							<td>Info:</td>
-							<td>
+							<td class="event-info">
 								{@html event.info}
 							</td>
 						</tr>
@@ -267,5 +270,8 @@
 		display: flex;
 		flex-direction: row;
 		padding: 0.5em;
+	}
+	.event-info {
+		white-space: break-spaces;
 	}
 </style>

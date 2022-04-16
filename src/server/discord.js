@@ -139,4 +139,55 @@ export const updateDiscordInfo = async (req, res, id, fusionUser) => {
 	return true;
 };
 
+export const deleteDiscordEvent = async (discord_event_id) => {
+	// DELETE /guilds/{guild.id}/scheduled-events/{guild_scheduled_event.id} https://discord.com/developers/docs/resources/guild-scheduled-event#delete-guild-scheduled-event
+	return await discordFetch(`/guilds/${GUILD_ID}/scheduled-events/${discord_event_id}`, { method: 'DELETE' });
+};
+
+/**
+ * Creates or updates an Discord event.
+ */
+export const upsertDiscordEvent = async (event) => {
+	const json = {
+		name: `${event.name}`,
+		description: event.info,
+		entity_metadata: {
+			location: `${event.location.name}`
+		},
+		scheduled_start_time: event.date.toISOString(),
+		scheduled_end_time: event.end.toISOString(),
+		entity_type: 3, //Externel event
+		privacy_level: 2 // Channel members only
+	};
+
+	const info = [];
+
+	if (event.register_url) {
+		info.push(`Registrering: ${event.location.url}`);
+	}
+	if (event.location.url) {
+		info.push(`Hvor: ${event.location.url}`);
+	}
+	if (event.ctf.name) {
+		if (event.ctf.url) {
+			info.push(`CTF: ${event.ctf.name} (${event.ctf.url})`);
+		} else {
+			info.push(`CTF: ${event.ctf.name}`);
+		}
+	}
+	if (info.length) {
+		info.push('-'.repeat(50));
+		info.push('');
+		info.push(event.info);
+		json.description = info.join('\n');
+	}
+
+	// create POST  /guilds/{guild.id}/scheduled-events https://discord.com/developers/docs/resources/guild-scheduled-event#create-guild-scheduled-event
+	// update PATCH /guilds/{guild.id}/scheduled-events/{guild_scheduled_event.id} https://discord.com/developers/docs/resources/guild-scheduled-event#modify-guild-scheduled-event
+	let url = `/guilds/${GUILD_ID}/scheduled-events`;
+	if (event.discordEventId) url += `/${event.discordEventId}`;
+	const method = event.discordEventId ? 'PATCH' : 'POST';
+	return await discordFetch(url, { method, json });
+};
+
 export default { addRole, removeRole, updateDiscordInfo, getDiscordId, getUser, getOAuthLink, getGuildUser };

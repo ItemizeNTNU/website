@@ -143,7 +143,7 @@ select {
 label {
 	cursor: pointer;
 }
-input,
+input[type^='checkbox'],
 textarea {
 	cursor: text;
 }
@@ -181,8 +181,7 @@ select:hover {
 	border-color: #fff8;
 }
 input[type='checkbox']:checked {
-	border: 0.4em solid var(--green-1);
-	border-radius: 50%;
+	border: 0.5em solid var(--green-1);
 }
 select {
 	-moz-appearance: none;
@@ -193,6 +192,17 @@ select {
 	background-repeat: no-repeat;
 	background-position: right 0.7em top 50%;
 	background-size: 0.65em auto;
+}
+input:disabled,
+textarea:disabled,
+button:disabled,
+select:disabled {
+	background-color: #0001;
+	border: 2px solid #00000008;
+	color: #fffa;
+}
+input[type='checkbox']:checked:disabled {
+	border: 0.5em solid var(--green-3);
 }
 
 .sapper {

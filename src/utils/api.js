@@ -6,7 +6,8 @@ const defFetchOptions = {
 	urlData: '',
 	errorText: 'Unable to fetch resource: ERROR',
 	fetch: undefined,
-	headers: {}
+	headers: {},
+	debug: false
 };
 export const fetchResource = async (path, options = defFetchOptions) => {
 	options = { ...defFetchOptions, ...options };
@@ -52,6 +53,10 @@ export const fetchResource = async (path, options = defFetchOptions) => {
 	}
 	if (typeof resp.error == 'string' && options.errorText) {
 		resp.error = options.errorText.replace(/\bERROR\b/g, resp.error);
+	}
+	if (options.debug) {
+		console.debug(options.method, path, settings);
+		console.debug(resp);
 	}
 	return resp;
 };
