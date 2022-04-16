@@ -1,18 +1,4 @@
 <script>
-	import People from '../components/People.svelte';
-
-	const people = [
-		{
-			name: 'Håvard Borgen Myrekrok',
-			position: 'Bedriftskontakt',
-			mail: 'havard.myrekrok@itemize.no'
-		},
-		{
-			name: 'Erik Borgeteien Hansen',
-			position: 'Bedriftskontakt',
-			mail: 'erik.borgeteien.hans@itemize.no'
-		}
-	];
 </script>
 
 <svelte:head>
@@ -39,6 +25,4 @@
 			href="mailto:bedrift@itemize.no">bedrift@itemize.no</a
 		>.
 	</p>
-
-	<People {people} />
 </main>

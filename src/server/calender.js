@@ -1,6 +1,7 @@
 import mongoose from 'mongoose';
 import express from 'express';
 import { permission } from './utils';
+import { deleteDiscordEvent, upsertDiscordEvent } from './discord';
 import ical from 'ical-generator';
 import joi from 'joi';
 import { DateTime } from 'luxon';
@@ -34,7 +35,13 @@ const eventValidationSchema = joi.object({
 		url: joi.string().trim().allow('').custom(validURL).required()
 	},
 	info: joi.string().trim().min(3).max(2000).required(),
-	hidden: joi.boolean().required()
+	hidden: joi.boolean().required(),
+	discord: joi.boolean().required(),
+	discordEventId: joi
+		.string()
+		.allow('')
+		.trim()
+		.regex(/[0-9]*/)
 });
 
 const eventSchema = mongoose.Schema({
@@ -53,6 +60,8 @@ const eventSchema = mongoose.Schema({
 	},
 	info: String,
 	hidden: Boolean,
+	discord: Boolean,
+	discordEventId: String,
 	created: { type: Date, default: Date.now },
 	edited: Date
 });
@@ -83,27 +92,54 @@ router.post('/events', permission('Styret'), async (req, res) => {
 	delete event.created;
 	delete event.edited;
 	delete event.end;
+	event.discordEventId = '';
+	if (event._id) {
+		const oldExisting = await Event.findById({ _id: event._id });
+		event.discordEventId = oldExisting.discordEventId || '';
+	}
 	event = eventValidationSchema.validate(event, { abortEarly: true, convert: true, stripUnknown: true });
 	if (event.error) {
 		return res.status(400).send({ message: event.error.details[0].message });
 	}
 	event = event.value;
 	event.end = DateTime.fromJSDate(event.date).plus({ hours: event.duration }).toJSDate();
+	const resp = { message: 'Success' };
 	if (!event._id) {
 		event.edited = Date.now();
 	} else {
 		event.created = Date.now();
 	}
+	if ((event.hidden || !event.discord) && event.discordEventId) {
+		console.log('deleting discord event...');
+		await deleteDiscordEvent(event.discordEventId);
+		event.discordEventId = '';
+	} else if (!event.hidden && event.discord) {
+		const discordEvent = await upsertDiscordEvent(event);
+		if (discordEvent.error) {
+			console.error('Error upserting discord event:', discordEvent.error);
+			resp.message = `Error upserting discord event: ${discordEvent.error}`;
+			resp.error = true;
+		} else {
+			event.discordEventId = discordEvent.json.id;
+		}
+	}
 	let _id = event._id || mongoose.Types.ObjectId();
 	delete event._id;
 	await Event.updateOne({ _id }, event, { upsert: true });
-	res.send();
+	res.status(resp.error ? 500 : 200).send(resp);
 });
 
 router.delete('/events/:id', permission('Styret'), async (req, res) => {
 	const _id = req.params.id;
-	const del = await Event.deleteOne({ _id });
-	if (del.deletedCount) {
+	const event = await Event.findById(_id);
+	if (event.discord && !event.hidden && event.discordEventId) {
+		const discordDeletion = await deleteDiscordEvent(event.discordEventId);
+		if (discordDeletion.exception) {
+			return res.status(500).send({ message: `Error trying to delete discord event: ${discordDeletion.error}` });
+		}
+	}
+	const eventDeletion = await Event.deleteOne({ _id });
+	if (!eventDeletion.deletedCount) {
 		res.send({ message: 'Success' });
 	} else {
 		res.status(404).status({ message: `Event not found with id "${_id}"` });
