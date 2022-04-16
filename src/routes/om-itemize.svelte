@@ -8,23 +8,23 @@
 			mail: 'christopher.lokken@itemize.no'
 		},
 		{
-			name: 'Eline Sjølie Wasa',
-			position: '?',
-			mail: 'eline.sjolie.wasa@itemize.no'
-		},
-		{
-			name: "Jonny Ngo Luong",
-			position: '?',
-			mail: 'jonny.ngo.luong@itemize.no'
-		},
-		{
 			name: 'Torgeir Lund',
-			position: '?',
+			position: 'Nestleder',
 			mail: 'torgeir.lund@itemize.no'
 		},
 		{
+			name: 'Eline Sjølie Wasa',
+			position: 'Økonomiansvarlig',
+			mail: 'eline.sjolie.wasa@itemize.no'
+		},
+		{
+			name: 'Jonny Ngo Luong',
+			position: 'Driftsansvarlig',
+			mail: 'jonny.ngo.luong@itemize.no'
+		},
+		{
 			name: 'Sivert Lundli',
-			position: '?',
+			position: 'PR- og informasjonsansvarlig',
 			mail: 'sivert.lundli@itemize.no'
 		}
 	];
