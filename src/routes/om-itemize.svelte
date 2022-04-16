@@ -3,34 +3,29 @@
 
 	const board = [
 		{
-			name: 'Aleksander Styrmoe',
+			name: 'Christopher Collin Løkken',
 			position: 'Leder',
-			mail: 'leder@itemize.no'
+			mail: 'christopher.lokken@itemize.no'
 		},
 		{
-			name: 'Sigurd Varhaugvik',
+			name: 'Torgeir Lund',
 			position: 'Nestleder',
-			mail: 'nestleder@itemize.no'
+			mail: 'torgeir.lund@itemize.no'
 		},
 		{
-			name: "Kristian in't Veld",
+			name: 'Eline Sjølie Wasa',
+			position: 'Økonomiansvarlig',
+			mail: 'eline.sjolie.wasa@itemize.no'
+		},
+		{
+			name: 'Jonny Ngo Luong',
 			position: 'Driftsansvarlig',
-			mail: 'drift@itemize.no'
+			mail: 'jonny.ngo.luong@itemize.no'
 		},
 		{
-			name: 'Anna Fridtun Aarekol',
-			position: 'Prosjektansvarlig',
-			mail: 'prosjekt@itemize.no'
-		},
-		{
-			name: 'Håkon Tjomsland',
-			position: 'CTF- og arrangementsansvarlig',
-			mail: 'arrangement@itemize.no'
-		},
-		{
-			name: 'Knut Formo Buene',
-			position: 'PR- og rekrutteringsansvarlig',
-			mail: 'pr@itemize.no'
+			name: 'Sivert Lundli',
+			position: 'PR- og informasjonsansvarlig',
+			mail: 'sivert.lundli@itemize.no'
 		}
 	];
 </script>
