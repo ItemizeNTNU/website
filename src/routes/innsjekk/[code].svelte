@@ -1,24 +1,24 @@
 <script context="module">
-	import api from '../utils/api';
+	import api from '../../utils/api';
 	export async function preload(page, session) {
 		if (!session.user) this.redirect(302, '/login');
 		if (!session.user.roles.includes('Styret')) this.redirect(302, '/arrangementer');
-		let event = (await api.getCheckin('ece94523-2b70-43da-8c9d-bf4382d86f6a', { fetch: this.fetch })).json;
+		const { code } = page.params;
+		let event = (await api.getCheckin(code, { fetch: this.fetch })).json;
 		return { event };
 	}
 </script>
 
 <script>
-	import { user } from '../utils/stores';
-	import { smartFormat } from '../utils/time';
+	import { user } from '../../utils/stores';
+	import { smartFormat } from '../../utils/time';
 	import { slide } from 'svelte/transition';
-	import ToggleIcon from '../components/ToggleIcon.svelte';
+	import ToggleIcon from '../../components/ToggleIcon.svelte';
 	import FaAngleDown from 'svelte-icons/fa/FaAngleDown.svelte';
 	import FaAngleUp from 'svelte-icons/fa/FaAngleUp.svelte';
 	let showNew = false;
 	export let event;
 	console.log(event);
-	console.log(event.check_in.attendances);
 </script>
 
 <svelte:head>
@@ -33,7 +33,7 @@
 
 	<div class="qr" class:old={new Date(event.end) < new Date()}>
 		<h3>TODO: Add QR-code here :)</h3>
-		<h3>{event.check_in.code}</h3>
+		<h3><a href={`/innsjekk-qr/${event.check_in.code}`}>{event.check_in.code}</a></h3>
 	</div>
 
 	{#if $user?.roles?.includes('Styret')}
@@ -67,7 +67,7 @@
 
 <style>
 	.qr {
-		background: var(--green-1);
+		background: var(--gray-2);
 		display: flex;
 		justify-content: center;
 		align-items: center;
