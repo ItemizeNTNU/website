@@ -45,7 +45,7 @@ const eventValidationSchema = joi.object({
 		.regex(/[0-9]*/),
 	check_in: {
 		code: joi.string().trim(),
-		attendances: joi.any()
+		attendances: joi.array().items(joi.any()).allow(null)
 	}
 });
 
@@ -69,7 +69,16 @@ const eventSchema = mongoose.Schema({
 	discordEventId: String,
 	created: { type: Date, default: Date.now },
 	edited: Date,
-	check_in: { code: String, attendances: [String] }
+	check_in: {
+		code: String,
+		attendances: [
+			{
+				name: String,
+				user_id: String,
+				registered: { type: Date, default: Date.now }
+			}
+		]
+	}
 });
 eventSchema.index({ date: 1 });
 const Event = mongoose.model('events', eventSchema);
@@ -110,6 +119,7 @@ router.post('/events', permission('Styret'), async (req, res) => {
 	// event.check_in = { code: 'null' };
 	console.log(event.check_in);
 	event = eventValidationSchema.validate(event, { abortEarly: true, convert: true, stripUnknown: true });
+	console.log(event.value.check_in);
 	if (event.error) {
 		return res.status(400).send({ message: event.error.details[0].message });
 	}
@@ -193,10 +203,12 @@ router.post('/checkin/:code', async (req, res) => {
 
 	const resp = { message: 'Success' };
 	const user_id = req.user?.id;
+	console.log(req.user);
 	if (user_id) {
-		const eventAttendances = event.check_in?.attendances;
-		const attendances = eventAttendances ? [...eventAttendances, user_id] : [user_id];
-		if (attendances.filter((a) => a == user_id).length > 1) return res.status(500).send({ message: `You have already registered your attendance for event "${event.name}"` });
+		const nAttendance = { name: req.user.fullName, user_id: user_id, registered: Date.now() };
+		const attendances = event.check_in.attendances ? [...event.check_in.attendances, nAttendance] : [nAttendance];
+		if (attendances.filter((na) => na?.user_id == user_id).length > 1)
+			return res.status(500).send({ message: `You have already registered your attendance for event "${event.name}"` });
 		event.check_in = { ...event.check_in, attendances };
 		await Event.updateOne({ _id }, event, { upsert: true });
 	} else {

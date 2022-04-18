@@ -134,6 +134,7 @@
 						{#if event.hidden}
 							<Button disabled icon={FaEyeSlash} />
 						{/if}
+						<Button href={`/innsjekk?code=${event.check_in?.code || ''}`} icon={FaCog} />
 						<Button submit={() => resetNewEvent(event, true)} icon={FaCog} />
 					</div>
 				{/if}
