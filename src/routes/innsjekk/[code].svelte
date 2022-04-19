@@ -10,15 +10,26 @@
 </script>
 
 <script>
+	import { onMount } from 'svelte';
 	import { user } from '../../utils/stores';
 	import { smartFormat } from '../../utils/time';
 	import { slide } from 'svelte/transition';
 	import ToggleIcon from '../../components/ToggleIcon.svelte';
 	import FaAngleDown from 'svelte-icons/fa/FaAngleDown.svelte';
 	import FaAngleUp from 'svelte-icons/fa/FaAngleUp.svelte';
+	import QRCode from 'qrcode';
 	let showNew = false;
 	export let event;
-	console.log(event);
+	let canvas;
+	onMount(() => {
+		const opts = {
+			width: 300
+		};
+		if (event.check_in.code)
+			QRCode.toCanvas(canvas, `${window.location.origin}/innsjekk-qr/${event.check_in.code}`, opts, function (error) {
+				if (error) console.error(error);
+			});
+	});
 </script>
 
 <svelte:head>
@@ -32,7 +43,8 @@
 	</p>
 
 	<div class="qr" class:old={new Date(event.end) < new Date()}>
-		<h3>TODO: Add QR-code here :)</h3>
+		<canvas bind:this={canvas} />
+		<br />
 		<h3><a href={`/innsjekk-qr/${event.check_in.code}`}>{event.check_in.code}</a></h3>
 	</div>
 
@@ -67,13 +79,16 @@
 
 <style>
 	.qr {
-		background: var(--gray-2);
 		display: flex;
 		justify-content: center;
 		align-items: center;
 		flex-direction: column;
-		padding: 2em;
+		padding: 2em 0;
 		margin-top: 2em;
+	}
+	canvas {
+		max-width: 80vw;
+		max-height: 80vw;
 	}
 	.attendances {
 		padding: 0;
