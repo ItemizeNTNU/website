@@ -11,7 +11,6 @@
 
 <script>
 	import { onMount } from 'svelte';
-	import { user } from '../../utils/stores';
 	import { smartFormat } from '../../utils/time';
 	import { slide } from 'svelte/transition';
 	import ToggleIcon from '../../components/ToggleIcon.svelte';
@@ -48,32 +47,30 @@
 		<h3><a href={`/innsjekk-qr/${event.check_in.code}`}>{event.check_in.code}</a></h3>
 	</div>
 
-	{#if $user?.roles?.includes('Styret')}
-		<div class="center">
-			<ToggleIcon bind:value={showNew} iconOn={FaAngleUp} iconOff={FaAngleDown} />
-		</div>
-		{#if showNew}
-			<div class="attendances" transition:slide>
-				<table>
-					<thead>
+	<div class="center">
+		<ToggleIcon bind:value={showNew} iconOn={FaAngleUp} iconOff={FaAngleDown} />
+	</div>
+	{#if showNew}
+		<div class="attendances" transition:slide>
+			<table>
+				<thead>
+					<tr>
+						<th>Navn</th>
+						<th>Profil id</th>
+						<th>Innsjekk dato</th>
+					</tr>
+				</thead>
+				<tbody>
+					{#each event.check_in.attendances ?? [] as checkin}
 						<tr>
-							<th>Navn</th>
-							<th>Profil id</th>
-							<th>Innsjekk dato</th>
+							<td>{checkin.name}</td>
+							<td>{checkin.user_id}</td>
+							<td>{smartFormat(checkin.registered)}</td>
 						</tr>
-					</thead>
-					<tbody>
-						{#each event.check_in.attendances ?? [] as checkin}
-							<tr>
-								<td>{checkin.name}</td>
-								<td>{checkin.user_id}</td>
-								<td>{smartFormat(checkin.registered)}</td>
-							</tr>
-						{/each}
-					</tbody>
-				</table>
-			</div>
-		{/if}
+					{/each}
+				</tbody>
+			</table>
+		</div>
 	{/if}
 </main>
 

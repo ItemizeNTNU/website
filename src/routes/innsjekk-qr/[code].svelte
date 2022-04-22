@@ -11,7 +11,6 @@
 <script>
 	export let res;
 	export let code;
-	console.log(res);
 </script>
 
 <svelte:head>

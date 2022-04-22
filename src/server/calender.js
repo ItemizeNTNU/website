@@ -115,11 +115,7 @@ router.post('/events', permission('Styret'), async (req, res) => {
 		event.check_in = { ...event.check_in, attendances: event.check_in.attendances ?? undefined };
 		event.discordEventId = oldExisting.discordEventId || '';
 	}
-	// event.check_in = { code: 'null', attendances: undefined };
-	// event.check_in = { code: 'null' };
-	console.log(event.check_in);
 	event = eventValidationSchema.validate(event, { abortEarly: true, convert: true, stripUnknown: true });
-	console.log(event.value.check_in);
 	if (event.error) {
 		return res.status(400).send({ message: event.error.details[0].message });
 	}
@@ -131,9 +127,7 @@ router.post('/events', permission('Styret'), async (req, res) => {
 	} else {
 		event.created = Date.now();
 	}
-	console.log(event.check_in);
 	if (event.check_in?.code == 'null') event.check_in = { code: uuidv4() + '', attendances: undefined };
-	console.log(event.check_in);
 	if ((event.hidden || !event.discord) && event.discordEventId) {
 		console.log('deleting discord event...');
 		await deleteDiscordEvent(event.discordEventId);
@@ -203,7 +197,6 @@ router.post('/checkin/:code', async (req, res) => {
 
 	const resp = { message: 'Success' };
 	const user_id = req.user?.id;
-	console.log(req.user);
 	if (user_id) {
 		const nAttendance = { name: req.user.fullName, user_id: user_id, registered: Date.now() };
 		const attendances = event.check_in.attendances ? [...event.check_in.attendances, nAttendance] : [nAttendance];
