@@ -5,6 +5,7 @@ import { deleteDiscordEvent, upsertDiscordEvent } from './discord';
 import ical from 'ical-generator';
 import joi from 'joi';
 import { DateTime } from 'luxon';
+import { v4 as uuidv4 } from 'uuid';
 
 export const router = express.Router();
 
@@ -41,7 +42,11 @@ const eventValidationSchema = joi.object({
 		.string()
 		.allow('')
 		.trim()
-		.regex(/[0-9]*/)
+		.regex(/[0-9]*/),
+	check_in: {
+		code: joi.string().trim(),
+		attendances: joi.array().items(joi.any()).allow(null)
+	}
 });
 
 const eventSchema = mongoose.Schema({
@@ -63,7 +68,17 @@ const eventSchema = mongoose.Schema({
 	discord: Boolean,
 	discordEventId: String,
 	created: { type: Date, default: Date.now },
-	edited: Date
+	edited: Date,
+	check_in: {
+		code: String,
+		attendances: [
+			{
+				name: String,
+				user_id: String,
+				registered: { type: Date, default: Date.now }
+			}
+		]
+	}
 });
 eventSchema.index({ date: 1 });
 const Event = mongoose.model('events', eventSchema);
@@ -93,8 +108,11 @@ router.post('/events', permission('Styret'), async (req, res) => {
 	delete event.edited;
 	delete event.end;
 	event.discordEventId = '';
+	event.check_in = { code: 'null' };
 	if (event._id) {
 		const oldExisting = await Event.findById({ _id: event._id });
+		event.check_in = oldExisting.check_in || { code: 'null' };
+		event.check_in = { ...event.check_in, attendances: event.check_in.attendances ?? undefined };
 		event.discordEventId = oldExisting.discordEventId || '';
 	}
 	event = eventValidationSchema.validate(event, { abortEarly: true, convert: true, stripUnknown: true });
@@ -109,6 +127,7 @@ router.post('/events', permission('Styret'), async (req, res) => {
 	} else {
 		event.created = Date.now();
 	}
+	if (event.check_in?.code == 'null') event.check_in = { code: uuidv4() + '', attendances: undefined };
 	if ((event.hidden || !event.discord) && event.discordEventId) {
 		console.log('deleting discord event...');
 		await deleteDiscordEvent(event.discordEventId);
@@ -142,7 +161,7 @@ router.delete('/events/:id', permission('Styret'), async (req, res) => {
 	if (!eventDeletion.deletedCount) {
 		res.send({ message: 'Success' });
 	} else {
-		res.status(404).status({ message: `Event not found with id "${_id}"` });
+		res.status(404).send({ message: `Event not found with id "${_id}"` });
 	}
 });
 
@@ -161,4 +180,33 @@ router.get('/events/ical', async (req, res) => {
 		});
 	});
 	cal.serve(res);
+});
+
+router.get('/checkin/:code', async (req, res) => {
+	const code = req.params.code;
+	res.send(await Event.findOne({ 'check_in.code': code }).lean());
+});
+
+router.post('/checkin/:code', async (req, res) => {
+	const code = req.params.code;
+	const event = await Event.findOne({ 'check_in.code': code }).lean();
+	if (!event) return res.status(404).send({ message: `Event not found with check_in code "${code}"` });
+
+	const _id = event._id || mongoose.Types.ObjectId();
+	delete event._id;
+
+	const resp = { message: 'Success' };
+	const user_id = req.user?.id;
+	if (user_id) {
+		const nAttendance = { name: req.user.fullName, user_id: user_id, registered: Date.now() };
+		const attendances = event.check_in.attendances ? [...event.check_in.attendances, nAttendance] : [nAttendance];
+		if (attendances.filter((na) => na?.user_id == user_id).length > 1)
+			return res.status(500).send({ message: `You have already registered your attendance for event "${event.name}"` });
+		event.check_in = { ...event.check_in, attendances };
+		await Event.updateOne({ _id }, event, { upsert: true });
+	} else {
+		resp.message = `User id not found`;
+		resp.error = true;
+	}
+	res.status(resp.error ? 500 : 200).send(resp);
 });

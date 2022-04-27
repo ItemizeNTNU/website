@@ -81,4 +81,12 @@ export const deleteEvent = async (eventId) => {
 	return await fetchResource(`/api/events/${eventId}`, { method: 'DELETE', errorText: 'ERROR' });
 };
 
-export default { registerUser, getUser, getEvents, postEvent, deleteEvent };
+export const getCheckin = async (code, options) => {
+	return await fetchResource(`/api/checkin/${code}`, options);
+};
+
+export const postCheckin = async (code, options) => {
+	return await fetchResource(`/api/checkin/${code}`, { method: 'POST', errorText: 'ERROR', ...options });
+};
+
+export default { registerUser, getUser, getEvents, postEvent, deleteEvent, getCheckin, postCheckin };

@@ -11,6 +11,7 @@
 	import { user } from '../utils/stores';
 	import { slide } from 'svelte/transition';
 	import FaCog from 'svelte-icons/fa/FaCog.svelte';
+	import FaQrcode from 'svelte-icons/fa/FaQrcode.svelte';
 	import FaEyeSlash from 'svelte-icons/fa/FaEyeSlash.svelte';
 	import FaCalendarCheck from 'svelte-icons/fa/FaCalendarCheck.svelte';
 	import FaTrash from 'svelte-icons/fa/FaTrash.svelte';
@@ -133,6 +134,9 @@
 					<div class="buttons">
 						{#if event.hidden}
 							<Button disabled icon={FaEyeSlash} />
+						{/if}
+						{#if event?.check_in?.code}
+							<Button href={`/innsjekk/${event.check_in.code}`} icon={FaQrcode} />
 						{/if}
 						<Button submit={() => resetNewEvent(event, true)} icon={FaCog} />
 					</div>
