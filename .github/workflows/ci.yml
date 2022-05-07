@@ -43,4 +43,4 @@ jobs:
       - name: Deploy Container
         env:
           URL: ${{ secrets.DEPLOY_UPDATE_WEBHOOK }}
-        run: "curl -i -X POST '$URL'"
+        run: 'curl -i -X POST "$URL"'
