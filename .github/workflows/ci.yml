@@ -39,3 +39,8 @@ jobs:
           username: ${{ github.actor }}
           password: ${{ secrets.GITHUB_TOKEN }}
           registry: ghcr.io
+
+      - name: Deploy Container
+        env:
+          URL: ${{ secrets.DEPLOY_UPDATE_WEBHOOK }}
+        run: "curl -i -X POST '$URL'"
