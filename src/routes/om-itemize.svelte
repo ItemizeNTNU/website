@@ -3,44 +3,44 @@
 
 	const board = [
 		{
-			name: 'Theodor Signebøen Midtlien',
+			name: 'Jo Vassbotn Remvik',
 			position: 'Leder',
-			mail: 'theodor.midtlien@itemize.no'
-		},
-		{
-			name: 'Jonatan Kifle Assefa Aalen',
-			position: 'Nestleder',
-			mail: 'jonatan.aalen@itemize.no'
-		},
-		{
-			name: 'Sindre Holbek Sørbye',
-			position: 'Økonomiansvarlig',
-			mail: 'sindre.sorbye@itemize.no'
-		},
-		{
-			name: 'Torstein Martinsheimen Egge',
-			position: 'Driftsansvarlig',
-			mail: 'torstein.egge@itemize.no'
-		},
-		{
-			name: 'Kristian Karlsen',
-			position: 'Driftsansvarlig',
-			mail: 'kristian.karlsen@itemize.no'
+			mail: 'jo@itemize.no'
 		},
 		{
 			name: 'Martin Henøen',
-			position: 'Bedriftsansvarlig',
+			position: 'Nestleder',
 			mail: 'martin.henoen@itemize.no'
 		},
 		{
-			name: 'Jonatan Kifle Assefa Aalen',
-			position: 'Sosialt ansvarlig',
-			mail: 'jonatan.aalen@itemize.no'
+			name: 'Adelin Mae Evergreen',
+			position: 'Økonomiansvarlig',
+			mail: 'adelin@itemize.no'
 		},
 		{
-			name: 'Theodor Signebøen Midtlien',
+			name: 'Sindre Holbek Sørbye',
+			position: 'Driftsansvarlig',
+			mail: 'sindre.sorbye@itemize.no'
+		},
+		{
+			name: 'Martin Henøen',
+			position: 'Driftsansvarlig',
+			mail: 'martin.henoen@itemize.no'
+		},
+		{
+			name: 'Noah Johannes Borch',
+			position: 'Bedriftsansvarlig',
+			mail: 'noah@itemize.no'
+		},
+		{
+			name: 'Mina Johanne Heier',
+			position: 'Sosialt ansvarlig',
+			mail: 'mina@itemize.no'
+		},
+		{
+			name: 'Jo Vassbotn Remvik',
 			position: 'PR- og informasjonsansvarlig',
-			mail: 'theodor.midtlien@itemize.no'
+			mail: 'jo@itemize.no'
 		}
 	];
 </script>
