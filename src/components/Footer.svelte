@@ -1,6 +1,7 @@
 <script>
 	import FaFacebookSquare from 'svelte-icons/fa/FaFacebookSquare.svelte';
 	import FaInstagram from 'svelte-icons/fa/FaInstagram.svelte';
+	import FaTwitter from 'svelte-icons/fa/FaTwitter.svelte';
 	import FaDiscord from 'svelte-icons/fa/FaDiscord.svelte';
 	import FaGithub from 'svelte-icons/fa/FaGithub.svelte';
 </script>
@@ -47,6 +48,14 @@
 						<FaInstagram />
 					</span>
 					itemizentnu
+				</a>
+			</div>
+			<div>
+				<a href="https://www.twitter.com/itemizentnu/">
+					<span>
+						<FaTwitter />
+					</span>
+					itemizeNTNU
 				</a>
 			</div>
 			<div>
@@ -130,7 +139,7 @@
 		align-self: center;
 		display: grid;
 		grid-gap: 12px;
-		height: 170px;
+		height: 210px;
 	}
 	.socials > div {
 		display: flex;
