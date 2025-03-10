@@ -3,9 +3,9 @@
 
 	const board = [
 		{
-			name: 'Jo Vassbotn Remvik',
+			name: 'Mina Johanne Heier',
 			position: 'Leder',
-			mail: 'jo@itemize.no'
+			mail: 'mina@itemize.no'
 		},
 		{
 			name: 'Martin Henøen',
@@ -13,14 +13,14 @@
 			mail: 'martin.henoen@itemize.no'
 		},
 		{
-			name: 'Adelin Mae Evergreen',
+			name: 'Frederik Negård',
 			position: 'Økonomiansvarlig',
-			mail: 'adelin@itemize.no'
+			mail: 'frederik@itemize.no'
 		},
 		{
-			name: 'Sindre Holbek Sørbye',
+			name: 'Andreas Virkesdal Jonsterhaug',
 			position: 'Driftsansvarlig',
-			mail: 'sindre.sorbye@itemize.no'
+			mail: 'andrevj@itemize.no'
 		},
 		{
 			name: 'Martin Henøen',
@@ -28,19 +28,9 @@
 			mail: 'martin.henoen@itemize.no'
 		},
 		{
-			name: 'Noah Johannes Borch',
+			name: 'Afras Mansoor',
 			position: 'Bedriftsansvarlig',
-			mail: 'noah@itemize.no'
-		},
-		{
-			name: 'Mina Johanne Heier',
-			position: 'Sosialt ansvarlig',
-			mail: 'mina@itemize.no'
-		},
-		{
-			name: 'Jo Vassbotn Remvik',
-			position: 'PR- og informasjonsansvarlig',
-			mail: 'jo@itemize.no'
+			mail: ' afras@itemize.no'
 		}
 	];
 </script>
