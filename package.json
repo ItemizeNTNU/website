@@ -19,7 +19,7 @@
 		"body-parser": "^1.19.0",
 		"compression": "^1.7.1",
 		"dotenv": "^9.0.2",
-		"express": "^4.17.1",
+		"express": "^4.17.3",
 		"express-openid-connect": "^2.7.2",
 		"ical-generator": "^3.0.0",
 		"joi": "^17.4.2",
