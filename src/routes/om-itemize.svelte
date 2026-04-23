@@ -3,24 +3,14 @@
 
 	const board = [
 		{
-			name: 'Mina Johanne Heier',
+			name: 'Felix Krogvold',
 			position: 'Leder',
-			mail: 'mina@itemize.no'
+			mail: 'felix@itemize.no'
 		},
 		{
-			name: 'Martin Henøen',
-			position: 'Nestleder',
-			mail: 'martin.henoen@itemize.no'
-		},
-		{
-			name: 'Frederik Negård',
+			name: 'Axel Haukeland Strand',
 			position: 'Økonomiansvarlig',
-			mail: 'frederik@itemize.no'
-		},
-		{
-			name: 'Andreas Virkesdal Jonsterhaug',
-			position: 'Driftsansvarlig',
-			mail: 'andrevj@itemize.no'
+			mail: 'axel@itemize.no'
 		},
 		{
 			name: 'Martin Henøen',
@@ -28,9 +18,9 @@
 			mail: 'martin.henoen@itemize.no'
 		},
 		{
-			name: 'Afras Mansoor',
-			position: 'Bedriftsansvarlig',
-			mail: ' afras@itemize.no'
+			name: 'Rohaan Malik Mooken',
+			position: 'Driftsansvarlig',
+			mail: 'rohaan@itemize.no'
 		}
 	];
 </script>
