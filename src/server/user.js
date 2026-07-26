@@ -23,7 +23,8 @@ const UserSchema = joi.object({
 		type: joi.string().allow('student', 'alumni', 'employee').required(),
 		study: {
 			program: joi.when('$type', { is: ['alumni', 'student'], then: joi.string().min(3).max(64).required(), otherwise: joi.strip() }),
-			year: joi.when('$type', { is: 'student', then: joi.number().integer().min(1).max(100).required(), otherwise: joi.strip() })
+			year: joi.when('$type', { is: 'student', then: joi.number().integer().min(1).max(100).required(), otherwise: joi.strip() }),
+			expectedFinishYear: joi.when('$type', { is: 'student', then: joi.string().isoDate().required(), otherwise: joi.strip() })
 		},
 		alumni: {
 			joinYear: joi.when('$type', { is: 'alumni', then: joi.number().integer().min(2014).max(new Date().getFullYear()).required(), otherwise: joi.strip() })
