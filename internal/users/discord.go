@@ -25,6 +25,11 @@ type Link struct {
 	// account and joining the server are separate steps, and people routinely
 	// do the first and forget the second.
 	IsMember bool
+	// MembershipUnknown is set when Discord could not be asked at all — a
+	// rejected bot token, say. That is not the same as "has not joined", and
+	// conflating them tells a member to go join a server they are already in
+	// while the real fault is ours.
+	MembershipUnknown bool
 }
 
 // DiscordService links member accounts to Discord identities.
@@ -94,9 +99,13 @@ func (s *DiscordService) store(ctx context.Context, userID string, account *disc
 	member, err := s.discord.GuildMember(ctx, account.ID)
 	if err != nil {
 		// Being unable to check membership should not lose the link itself —
-		// the member can press refresh once whatever broke is fixed.
-		s.log.Warn("could not check guild membership", "discord_id", account.ID, "err", err)
+		// the member can press refresh once whatever broke is fixed. But it
+		// must not be reported as "has not joined" either.
+		s.log.Error("could not check guild membership; the member role cannot be "+
+			"granted until this is fixed",
+			"discord_id", account.ID, "err", err)
 	}
+	unknown := err != nil
 	isMember := member != nil
 
 	if isMember {
@@ -106,10 +115,11 @@ func (s *DiscordService) store(ctx context.Context, userID string, account *disc
 	}
 
 	link := &Link{
-		ID:       account.ID,
-		Username: account.DisplayName(),
-		Avatar:   account.AvatarURL(),
-		IsMember: isMember,
+		ID:                account.ID,
+		Username:          account.DisplayName(),
+		Avatar:            account.AvatarURL(),
+		IsMember:          isMember,
+		MembershipUnknown: unknown,
 	}
 
 	changes := map[string]any{
