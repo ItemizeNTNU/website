@@ -214,11 +214,30 @@ func (s *Server) Routes(mux *http.ServeMux) {
 	mux.HandleFunc("/", s.NotFound)
 }
 
+// brainfuckHello prints "Itemize NTNU".
+//
+// Carried over from the previous site, where it drifted behind the logo as
+// texture. The front page now shows it being run, so it is rendered here
+// rather than only assembled in script — with JavaScript off the hero is a
+// finished terminal session instead of an empty frame.
+const brainfuckHello = "++++++++[->++++++++<]>+++++++++.<++++++[->++++++<]>++++" +
+	"+++.<+++[->---<]>------.++++++++.----.<++++[->++++<]>+.<++++[->----<]>--" +
+	"---.<++++++++[->--------<]>-----.<++++++[->++++++<]>++++++++++.++++++.--" +
+	"----.+++++++.<++++++++[->--------<]>--------.---.>"
+
+type indexView struct {
+	Page
+	Brainfuck string
+}
+
 func (s *Server) index(w http.ResponseWriter, r *http.Request) {
-	page := s.page(r, "", "index")
-	page.Desc = "Itemize NTNU er en studentorganisasjon ved NTNU Trondheim for " +
+	view := indexView{
+		Page:      s.page(r, "", "index"),
+		Brainfuck: brainfuckHello,
+	}
+	view.Desc = "Itemize NTNU er en studentorganisasjon ved NTNU Trondheim for " +
 		"informasjonssikkerhet, hacking og CTF-konkurranser."
-	s.render(w, r, http.StatusOK, "index", page)
+	s.render(w, r, http.StatusOK, "index", view)
 }
 
 // registerRedirects preserves the URLs the previous site answered on. They are

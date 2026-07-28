@@ -12,78 +12,40 @@
  * which destroys legibility and pins a compositor repaint forever.
  */
 
+
 /* ── Hero ──────────────────────────────────────────────────────────────── */
 
 .hero {
-  position: relative;
-  isolation: isolate;
-  overflow: hidden;
-  padding: var(--s8) var(--s5) var(--s7);
+  padding: var(--s7) 0 var(--s6);
   text-align: center;
 }
 
-/* Static scanlines, scoped to the hero so prose is never overlaid. */
-.hero::after {
+/*
+ * Scanlines belong to the terminal, not the whole hero. Over a framed window
+ * they read as the screen being looked at; over the prose beneath they only
+ * made it harder to read.
+ */
+.term::after {
   content: "";
   position: absolute;
   inset: 0;
-  z-index: 1;
+  z-index: 2;
   pointer-events: none;
   background: repeating-linear-gradient(
     0deg,
     transparent 0 2px,
-    rgba(0, 0, 0, 0.05) 2px 3px
+    rgba(0, 0, 0, 0.06) 2px 3px
   );
-  mix-blend-mode: overlay;
-  opacity: 0.5;
-}
-
-/* Lift the content above the scanline overlay — but not the background
-   stream, which has its own positioning and belongs underneath. */
-.hero > *:not(#bf) {
-  position: relative;
-  z-index: 2;
 }
 
 /*
- * The background stream is a real brainfuck program, and it prints the
- * organisation's own name. It is ambient, so it is hidden from assistive
- * technology and cannot be selected.
+ * The program stream now lives inside the frame — see 06b-terminal.css. The
+ * rules that used to position it as a layer behind the hero are gone rather
+ * than left to fight the new ones: an id selector outranks a class, so the
+ * leftovers silently pulled the program out of the frame and dragged it across
+ * the commands above it.
  */
-#bf {
-  position: absolute;
-  inset: 0 0 auto;
-  z-index: 0;
-  height: 55vh;
-  padding: var(--s4);
-  font-family: var(--font-mono);
-  font-size: clamp(11px, 2.2vw, 18px);
-  line-height: 1.4;
-  color: var(--g1);
-  opacity: 0.2;
-  white-space: pre-wrap;
-  word-break: break-all;
-  user-select: none;
-  pointer-events: none;
-  -webkit-mask-image: linear-gradient(
-    to bottom,
-    rgba(0, 0, 0, 0.85) 0%,
-    #000 30%,
-    transparent 100%
-  );
-  mask-image: linear-gradient(
-    to bottom,
-    rgba(0, 0, 0, 0.85) 0%,
-    #000 30%,
-    transparent 100%
-  );
-}
 
-/* The program's output, revealed once the stream finishes. */
-#bf .bf-out {
-  color: var(--g-hi);
-  opacity: 5; /* multiplies against the parent's 0.2 to reach full strength */
-}
 
 /* ── Glitching logo ────────────────────────────────────────────────────── */
 
@@ -244,8 +206,13 @@
     opacity: 1;
   }
 
-  #bf,
-  .hero::after {
+  /*
+   * The terminal sequence is not hidden here, only left un-animated. The
+   * markup already contains the finished session — program, output and all —
+   * and the script simply does not clear it. Hiding it would remove content
+   * rather than motion, which is not what the preference asks for.
+   */
+  .term::after {
     display: none;
   }
 }

@@ -80,6 +80,9 @@
 .events {
   display: grid;
   gap: var(--s5);
+  list-style: none;
+  padding: 0;
+  margin: 0;
 }
 
 .event dl {

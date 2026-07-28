@@ -1,6 +1,6 @@
 {{ define "content" }}
 <div class="row">
-  <h1 style="margin-bottom: 0">Arrangementer</h1>
+  <h1 class="flush-bottom">Arrangementer</h1>
   <a
     class="push-right"
     href="/api/events/ical"
@@ -36,14 +36,14 @@
   {{- end }}
 </p>
 {{- else }}
-<ul class="events" style="list-style: none; padding: 0">
+<ul class="events">
   {{- range .Events }}
   {{ template "event-card" dict "Event" . "Styret" $.User.IsStyret }}
   {{- end }}
 </ul>
 {{- end }}
 
-<p class="row" style="margin-top: var(--s6)">
+<p class="row gap-top">
   {{- if .ShowOld }}
   <a class="btn btn--ghost" href="/arrangementer">Skjul tidligere</a>
   {{- else }}

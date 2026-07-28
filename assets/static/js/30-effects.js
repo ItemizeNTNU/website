@@ -1,51 +1,40 @@
 /* The two signature animations. */
 
 /*
- * The background stream on the front page.
+ * The front page sequence.
  *
- * It is not decorative noise: it is a real brainfuck program, and what it
- * prints is "Itemize NTNU". Once the source has finished typing out, the
- * output is appended — the payoff for anyone who watches long enough or
- * recognises the language.
+ * The program source is already in the markup, so with scripting off the hero
+ * reads as a finished terminal session. With scripting, it is cleared and
+ * typed back in, then the output — the wordmark — fades in beneath it.
  *
  * The irregular delay imitates a person typing rather than a machine.
  */
-var BRAINFUCK =
-  "++++++++[->++++++++<]>+++++++++.<++++++[->++++++<]>+++++++.<+++[->---<]>" +
-  "------.++++++++.----.<++++[->++++<]>+.<++++[->----<]>-----.<++++++++[->-" +
-  "-------<]>-----.<++++++[->++++++<]>++++++++++.++++++.------.+++++++.<+++" +
-  "+++++[->--------<]>--------.---.>";
+function runHeroSequence(src, out) {
+  var program = src.textContent.trim();
+  if (!program) return;
 
-function brainfuck(el) {
-  if (itemize.prefersReducedMotion()) return;
+  if (itemize.prefersReducedMotion()) return; // already complete in the markup
 
-  var buffer = "";
-  var i = 0;
+  // Hide the output until the program has "run", and start from an empty
+  // buffer. Both are undone by the sequence itself, so a script that fails
+  // partway leaves the page readable rather than blank.
+  if (out) out.removeAttribute("data-shown");
+  src.textContent = "";
 
+  var typed = 0;
   (function tick() {
-    if (buffer.length >= 3000) {
-      revealOutput(el);
+    if (typed >= program.length) {
+      if (out) out.setAttribute("data-shown", "");
       return;
     }
-    var n = 2 + Math.floor(Math.random() * 2);
-    for (var k = 0; k < n; k++) {
-      buffer += BRAINFUCK[i++ % BRAINFUCK.length];
-    }
+    typed += 2 + Math.floor(Math.random() * 3);
     // textContent, never innerHTML: the program is full of < and >.
-    el.textContent = buffer;
+    src.textContent = program.slice(0, typed);
     setTimeout(
       tick,
-      (30 + Math.pow(Math.random(), 2) * 100 + Math.pow(Math.random(), 6) * 500) *
-        0.3,
+      12 + Math.pow(Math.random(), 2) * 40 + Math.pow(Math.random(), 6) * 160,
     );
   })();
-}
-
-function revealOutput(el) {
-  var out = document.createElement("span");
-  out.className = "bf-out";
-  out.textContent = "\n\n» Itemize NTNU\n";
-  el.appendChild(out);
 }
 
 /*
@@ -100,8 +89,8 @@ function glitchReveal(el, startDelay) {
  * Keeping the call at the bottom means everything it touches is initialised.
  */
 itemize.ready(function () {
-  var bg = document.getElementById("bf");
-  if (bg) brainfuck(bg);
+  var src = document.getElementById("bf");
+  if (src) runHeroSequence(src, document.getElementById("hero-out"));
 
   // One reveal per page, not one per heading. A page where every heading
   // scrambles itself on load is a costume; a single one is a signature.

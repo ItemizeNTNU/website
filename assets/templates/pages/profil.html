@@ -57,7 +57,7 @@
     </div>
     {{- end }}
 
-    <div class="row" style="margin-top: var(--s5)">
+    <div class="row gap-top-sm">
       <form method="post" action="/profil/discord/oppdater">
         {{ csrf .CSRF }}
         <button type="submit" class="btn">
@@ -87,7 +87,7 @@
     </p>
     {{- end }}
 
-    <div class="row" style="margin-top: var(--s6)">
+    <div class="row gap-top">
       <a class="btn" href="/logout">Logg ut</a>
       <a class="btn btn--danger" href="/utmelding">Utmelding</a>
     </div>

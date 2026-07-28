@@ -73,3 +73,27 @@
   font-family: var(--font-mono);
   overflow-wrap: anywhere;
 }
+
+/*
+ * Spacing utilities, replacing inline style attributes.
+ *
+ * Those attributes never took effect in production: the Content-Security-
+ * Policy allows style-src 'self' and no 'unsafe-inline', which blocks a style
+ * attribute as surely as it blocks a <style> block. The layout only looked
+ * correct in review, where the policy is easy to overlook.
+ */
+.flush-top {
+  margin-top: 0;
+}
+
+.flush-bottom {
+  margin-bottom: 0;
+}
+
+.gap-top {
+  margin-top: var(--s6);
+}
+
+.gap-top-sm {
+  margin-top: var(--s5);
+}

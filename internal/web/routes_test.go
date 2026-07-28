@@ -221,3 +221,25 @@ func count(haystack, needle string) int {
 	}
 	return n
 }
+
+// The Content-Security-Policy allows style-src 'self' with no 'unsafe-inline',
+// which blocks a style attribute as surely as it blocks a <style> block. An
+// inline style therefore has no effect in production while looking correct in
+// review, where the policy is easy to overlook — a failure mode that reaches
+// users as subtly wrong spacing and nothing in the logs.
+func TestNoInlineStylesInMarkup(t *testing.T) {
+	mux := newMux(t)
+
+	paths := []string{
+		"/", "/om-itemize", "/historie", "/for-bedrifter",
+		"/ressurser", "/utmelding", "/registrert", "/registrer", "/arrangementer",
+	}
+	for _, path := range paths {
+		rec := httptest.NewRecorder()
+		mux.ServeHTTP(rec, httptest.NewRequest(http.MethodGet, path, nil))
+
+		if contains(rec.Body.String(), `style="`) {
+			t.Errorf("%s carries an inline style attribute, which the CSP drops", path)
+		}
+	}
+}
