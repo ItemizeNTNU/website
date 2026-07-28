@@ -1,0 +1,21 @@
+# Lenker i bunnteksten.
+#
+# `icon` må matche en <symbol id="i-…"> i assets/templates/partials/icons.html.
+# Skrivefeil stopper oppstart i stedet for å gi en usynlig lenke.
+
+socials:
+  - icon: facebook
+    label: ItemizeNTNU
+    url: https://www.facebook.com/ItemizeNTNU/
+
+  - icon: instagram
+    label: itemizentnu
+    url: https://www.instagram.com/itemizentnu/
+
+  - icon: discord
+    label: Itemize NTNU
+    url: https://discord.com/invite/gWJdXbW8Sg
+
+  - icon: github
+    label: ItemizeNTNU
+    url: https://github.com/ItemizeNTNU/website

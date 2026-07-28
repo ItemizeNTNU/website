@@ -1,0 +1,14 @@
+{{- /*
+  Messages carried across a redirect.
+
+  Rendered by the server rather than raised by script, so a form submission
+  that redirects still reports its result with JavaScript disabled. aria-live
+  is polite so the announcement does not interrupt whatever is being read.
+*/ -}}
+{{- define "toasts" -}}
+<div class="toasts" id="toasts" aria-live="polite" aria-atomic="false">
+  {{- range .Flash }}
+  <div class="toast toast--{{ .Kind }}">{{ .Text }}</div>
+  {{- end }}
+</div>
+{{- end -}}

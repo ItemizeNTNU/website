@@ -1,0 +1,23 @@
+# The legacy Sapper app is reference-only and must never enter the build
+# context — it is ~200 MB with node_modules and contributes nothing to the
+# Go binary.
+old-website/
+design/
+
+.git/
+.github/
+.idea/
+.vscode/
+
+.env
+.env.*
+!.env.example
+
+*.md
+!README.md
+
+# Local build output
+/website
+/dist/
+*.test
+*.out

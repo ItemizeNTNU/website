@@ -1,0 +1,8 @@
+User-agent: *
+Allow: /
+
+# Check-in URLs are single-use links printed on QR codes; there is nothing
+# there to index and following one registers attendance.
+Disallow: /innsjekk/
+Disallow: /innsjekk-qr/
+Disallow: /profil

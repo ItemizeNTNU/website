@@ -1,0 +1,28 @@
+{{ define "content" }}
+<h1>Ressurser:</h1>
+
+{{- /* Plain fragment links. The previous version had to read
+       window.location.pathname on mount to build these; server-rendered they
+       just work, including with scripting off. */}}
+<ul class="jumpnav">
+  {{- range .Site.Categories }}
+  <li><a href="#{{ .ID }}">{{ .NavLabel }}</a></li>
+  {{- end }}
+</ul>
+
+{{- range .Site.Categories }}
+<section>
+  {{- /* The // marker is only used on headings that are jump targets, so it
+         means "this section has an address" rather than being decoration. */}}
+  <div class="section-head" id="{{ .ID }}">
+    <h2>{{ .Heading }}</h2>
+  </div>
+
+  <ul class="grid grid--links">
+    {{- range .Links }}
+    {{ template "link-card" . }}
+    {{- end }}
+  </ul>
+</section>
+{{- end }}
+{{ end }}

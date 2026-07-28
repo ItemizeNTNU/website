@@ -1,0 +1,47 @@
+{{ define "title" }}Itemize NTNU{{ end }}
+
+{{ define "content" }}
+<section class="hero">
+  {{- /* Filled in by app.js: a brainfuck program that types itself out and
+         then prints what it computes, which is this organisation's name. */}}
+  <div id="bf" aria-hidden="true"></div>
+
+  <h1 class="logo-glitch">
+    <span class="visually-hidden">Itemize NTNU</span>
+    <img class="l-red" src="/logo.png" alt="" aria-hidden="true" />
+    <img src="/logo.png" alt="" aria-hidden="true" />
+    <img class="l-blue" src="/logo.png" alt="" aria-hidden="true" />
+  </h1>
+
+  <p class="lead">
+    Vi er en studentorganisasjon ved NTNU Trondheim som digger
+    informasjonssikkerhet og CTFer.
+  </p>
+
+  <ul class="questions">
+    <li>Er du interessert i informasjonssikkerhet?</li>
+    <li>Vil du lære mer om snill hacking?</li>
+    <li>
+      Liker du å holde på med
+      <a
+        href="https://ctftime.org/ctf-wtf/"
+        rel="noopener"
+        title="Capture The Flag er konkurranser som omhandler forskjellige aspekter av IT-sikkerhet, og er en god måte å lære seg noen av de praktiske skilza man bruker som «etisk hacker» 😎&#10;Trykk for mer info."
+        >CTFer</a
+      >?
+    </li>
+    <li>Vil du være med på NTNU Trondheim's CTF lag?</li>
+  </ul>
+
+  <p>
+    <a class="btn btn--primary btn--lg" href="/registrer">Bli medlem her!</a>
+  </p>
+</section>
+
+<p class="outro">
+  Du kan finne en liste over fremtidige arrangementer
+  <a href="/arrangementer">her</a>.<br />
+  Følg oss også gjerne på
+  <a href="https://www.facebook.com/ItemizeNTNU" rel="noopener">facebook</a>.
+</p>
+{{ end }}

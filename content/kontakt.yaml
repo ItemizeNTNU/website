@@ -1,0 +1,30 @@
+# Kontaktinformasjon for Itemize NTNU.
+# Alle e-postadresser her blir kodet i HTML-kilden og satt sammen igjen av
+# nettleseren, slik at de ikke kan høstes av enkle skrapeverktøy.
+
+email: hack@itemize.no
+invoice_email: faktura@itemize.no
+company_email: bedrift@itemize.no
+membership_email: drift@itemize.no
+
+org_number: "925 906 824" # i hermetegn, ellers tolkes det som et tall
+
+# Merk: den gamle nettsiden hadde to ulike Discord-invitasjoner — denne, og
+# discord.gg/3NAzCuA i bunnteksten. Denne brukes alle andre steder, så den
+# er valgt her. Bekreft gjerne at den andre kan pensjoneres.
+discord_invite: https://discord.com/invite/gWJdXbW8Sg
+
+bylaws_url: https://cloud.itemize.no/f/62583
+
+# Bunnteksten bruker den korte varianten, /om-itemize den fulle.
+address_short:
+  - Itemize NTNU
+  - c/o IIK NTNU
+  - O.S. Bragstads plass 2A
+  - 7034 TRONDHEIM
+
+address_full:
+  - Itemize NTNU
+  - c/o Institutt for informasjonssikkerhet og kommunikasjonsteknologi
+  - O.S. Bragstads plass 2A
+  - 7034 TRONDHEIM
