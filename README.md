@@ -119,6 +119,20 @@ come up rather than run degraded: MongoDB must answer, and OIDC discovery must
 succeed (retried five times with backoff, since the identity provider and the
 site often start together).
 
+## What runs where
+
+| | |
+|---|---|
+| Members, roles, passwords | FusionAuth |
+| Events and attendance | MongoDB |
+| Announcements, member role | Discord |
+| Everything else | this binary |
+
+Discord and the FusionAuth API key are both optional. Without them the site
+still runs and still logs people in; event announcements are skipped, and
+registration and account linking say they are unavailable rather than failing
+on submit.
+
 ## History
 
 Before 2026 this site ran on Sapper (the predecessor to SvelteKit) with an

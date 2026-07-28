@@ -4,11 +4,13 @@ import (
 	"io/fs"
 	"log/slog"
 	"net/http"
+	"strings"
 
 	"github.com/ItemizeNTNU/website/content"
 	"github.com/ItemizeNTNU/website/internal/auth"
 	"github.com/ItemizeNTNU/website/internal/events"
 	"github.com/ItemizeNTNU/website/internal/fusionauth"
+	"github.com/ItemizeNTNU/website/internal/users"
 )
 
 // Server renders the HTML side of the site.
@@ -18,16 +20,19 @@ type Server struct {
 	site     *content.Site
 	// events may be nil when the database is unreachable. Pages that need it
 	// say so rather than pretending the calendar is empty.
-	events   events.Repository
-	eventSvc *events.Service
-	fusion   *fusionauth.Client
-	baseURL  string
-	log      *slog.Logger
-	dev      bool
+	events     events.Repository
+	eventSvc   *events.Service
+	fusion     *fusionauth.Client
+	discordSvc *users.DiscordService
+	baseURL    string
+	// secureCookies mirrors whether the site is served over TLS.
+	secureCookies bool
+	log           *slog.Logger
+	dev           bool
 }
 
 // NewServer parses the templates and loads the editable content.
-func NewServer(fsys fs.FS, assets AssetResolver, repo events.Repository, svc *events.Service, fusion *fusionauth.Client, baseURL string, log *slog.Logger, dev bool) (*Server, error) {
+func NewServer(fsys fs.FS, assets AssetResolver, repo events.Repository, svc *events.Service, fusion *fusionauth.Client, discordSvc *users.DiscordService, baseURL string, log *slog.Logger, dev bool) (*Server, error) {
 	site, err := content.Load(dev)
 	if err != nil {
 		return nil, err
@@ -37,15 +42,17 @@ func NewServer(fsys fs.FS, assets AssetResolver, repo events.Repository, svc *ev
 		return nil, err
 	}
 	return &Server{
-		renderer: renderer,
-		assets:   assets,
-		site:     site,
-		events:   repo,
-		eventSvc: svc,
-		fusion:   fusion,
-		baseURL:  baseURL,
-		log:      log,
-		dev:      dev,
+		renderer:      renderer,
+		assets:        assets,
+		site:          site,
+		events:        repo,
+		eventSvc:      svc,
+		fusion:        fusion,
+		discordSvc:    discordSvc,
+		baseURL:       baseURL,
+		secureCookies: strings.HasPrefix(baseURL, "https://"),
+		log:           log,
+		dev:           dev,
 	}, nil
 }
 
@@ -175,6 +182,17 @@ func (s *Server) Routes(mux *http.ServeMux) {
 	// rather than inheriting one from a role gate.
 	mux.HandleFunc("GET /registrer", s.registrer)
 	mux.Handle("POST /registrer", auth.CSRF(http.HandlerFunc(s.submitRegistration)))
+
+	// Discord account linking. The two GETs are the OAuth round trip, so they
+	// carry their own state parameter rather than a form token; the two writes
+	// are ordinary form posts and take the CSRF check.
+	login := auth.RequireLogin
+	mux.Handle("GET /api/discord/link", login(http.HandlerFunc(s.discordLink)))
+	mux.Handle("GET "+discordCallbackPath, login(http.HandlerFunc(s.discordCallback)))
+	mux.Handle("POST /profil/discord/oppdater",
+		login(auth.CSRF(http.HandlerFunc(s.discordRefresh))))
+	mux.Handle("POST /profil/discord/koble-fra",
+		login(auth.CSRF(http.HandlerFunc(s.discordUnlink))))
 	s.registerStaticPages(mux)
 	s.registerRedirects(mux)
 
