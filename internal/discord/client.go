@@ -63,6 +63,14 @@ type APIError struct {
 }
 
 func (e *APIError) Error() string {
+	// A 401 on a bot-token call is almost always the token itself, and the
+	// bare status says nothing about where to look. Naming the variable turns
+	// a support conversation into a one-line check.
+	if e.Status == http.StatusUnauthorized {
+		return "discord: the bot token was rejected (HTTP 401) — check " +
+			"DISCORD_BOT_TOKEN; it must be the bot token from Bot → Reset Token, " +
+			"not the client secret, and it is invalidated whenever it is reset"
+	}
 	if e.Message != "" {
 		return fmt.Sprintf("discord: %s (HTTP %d, code %d)", e.Message, e.Status, e.Code)
 	}

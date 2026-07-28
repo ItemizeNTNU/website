@@ -128,11 +128,11 @@ func Load() (*Config, error) {
 			IDTokenHMACSecret: os.Getenv("FUSION_AUTH_ID_TOKEN_HMAC_SECRET"),
 		},
 		Discord: Discord{
-			ClientID:     os.Getenv("DISCORD_CLIENT_ID"),
-			ClientSecret: os.Getenv("DISCORD_CLIENT_SECRET"),
-			BotToken:     os.Getenv("DISCORD_BOT_TOKEN"),
-			GuildID:      os.Getenv("DISCORD_SERVER_ID"),
-			MemberRoleID: os.Getenv("DISCORD_SERVER_MEMBER_ROLE_ID"),
+			ClientID:     strings.TrimSpace(os.Getenv("DISCORD_CLIENT_ID")),
+			ClientSecret: strings.TrimSpace(os.Getenv("DISCORD_CLIENT_SECRET")),
+			BotToken:     botToken(os.Getenv("DISCORD_BOT_TOKEN")),
+			GuildID:      strings.TrimSpace(os.Getenv("DISCORD_SERVER_ID")),
+			MemberRoleID: strings.TrimSpace(os.Getenv("DISCORD_SERVER_MEMBER_ROLE_ID")),
 		},
 	}
 
@@ -193,6 +193,27 @@ func Load() (*Config, error) {
 		return nil, errors.Join(errs...)
 	}
 	return cfg, nil
+}
+
+// botToken normalises the Discord bot token.
+//
+// Two mistakes account for most "401 Unauthorized" reports, and neither is
+// visible by looking at the value:
+//
+//   - The token is copied together with the "Bot " prefix that appears in
+//     Discord's documentation and in example headers. We add that prefix
+//     ourselves, so the header becomes "Bot Bot xxx" and every call fails.
+//   - A trailing newline survives being pasted into a .env file or a secret
+//     store, and goes out as part of the header value.
+//
+// Both are silently corrected here rather than left to fail at the first API
+// call, which happens well away from the configuration that caused it.
+func botToken(raw string) string {
+	token := strings.TrimSpace(raw)
+	if after, found := strings.CutPrefix(token, "Bot "); found {
+		token = strings.TrimSpace(after)
+	}
+	return token
 }
 
 // resolveAddr picks the listen address. The old Express server read PORT

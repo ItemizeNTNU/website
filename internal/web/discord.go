@@ -88,6 +88,12 @@ func (s *Server) discordCallback(w http.ResponseWriter, r *http.Request) {
 	case err != nil:
 		s.log.Error("linking the Discord account failed", "err", err)
 		SetFlash(w, "error", "Discord-kontoen kunne ikke kobles. Prøv igjen.")
+	case link.MembershipUnknown:
+		// Our fault, not theirs. Telling them to go join would send them after
+		// a problem they cannot fix.
+		SetFlash(w, "warning",
+			"Discord-kontoen er koblet, men vi fikk ikke sjekket medlemskapet på "+
+				"serveren. Si fra til styret.")
 	case !link.IsMember:
 		// The common case worth explaining: linked, but not in the server yet.
 		SetFlash(w, "info",
@@ -112,6 +118,10 @@ func (s *Server) discordRefresh(w http.ResponseWriter, r *http.Request) {
 	case err != nil:
 		s.log.Error("refreshing the Discord link failed", "err", err)
 		SetFlash(w, "error", "Kunne ikke oppdatere Discord-informasjonen.")
+	case link.MembershipUnknown:
+		SetFlash(w, "warning",
+			"Vi fikk ikke kontakt med Discord for å sjekke medlemskapet ditt. "+
+				"Si fra til styret.")
 	case !link.IsMember:
 		SetFlash(w, "warning",
 			"Du er fortsatt ikke med på Discord-serveren. Bli med, og prøv igjen.")
