@@ -2,8 +2,13 @@
   The layout. Pages contribute only {{define}} blocks that override the
   {{block}} defaults below; this file is the template that gets executed.
 
-  lang is "nb": the content is Norwegian bokmål. The previous site declared
-  English, which made every screen reader mispronounce the whole thing.
+  The whole page is one terminal window: chrome holding the tabs, a pane holding
+  the session, a status line underneath. The document scrolls normally — the
+  window is a frame around it rather than a fixed viewport — which is what keeps
+  the sticky chrome, the #anchor jumps on /ressurser and every responsive
+  breakpoint working unchanged.
+
+  lang is "nb": the content is Norwegian bokmål.
 */ -}}
 <!doctype html>
 <html lang="nb">
@@ -18,11 +23,6 @@
     <meta name="description" content="{{ . }}" />
     {{- end }}
 
-    {{- /* Only the two faces used above the fold are preloaded; the display
-           face arrives with font-display:swap, where a brief swap is
-           invisible at that size. Guarded on existence so a checkout that has
-           not run scripts/fetch-fonts.sh serves system fonts cleanly instead
-           of preloading two 404s. */}}
     {{- range $font := (list "fonts/ibm-plex-sans-latin-400.woff2" "fonts/jetbrains-mono-latin-400.woff2") }}
     {{- if hasAsset $font }}
     <link
@@ -46,9 +46,8 @@
       href="/api/events/ical"
     />
 
-    {{- /* Not deferred: this sets the flag the stylesheet uses to decide
-           whether the navigation collapses, and it has to happen before the
-           first paint. */}}
+    {{- /* Not deferred: sets the flag the stylesheet uses to decide what only
+           exists with scripting, before the first paint. */}}
     <script src="{{ asset "boot.js" }}"></script>
     {{- block "head" . }}{{ end }}
   </head>
@@ -56,12 +55,23 @@
   <body class="{{ .BodyClass }}">
     <a class="skiplink" href="#main">Hopp til innhold</a>
 
-    {{ template "icons" . }} {{ template "nav" . }}
+    {{ template "icons" . }}
 
-    <main id="main">{{ block "content" . }}{{ end }}</main>
+    <div class="shell">
+      {{ template "tabs" . }}
 
-    {{ template "footer" . }} {{ template "toasts" . }}
-    {{ template "dialog" . }}
+      <div class="shell__pane">
+        {{ template "command" .Command }}
+
+        <main id="main">{{ block "content" . }}{{ end }}</main>
+
+        {{ template "footer" . }} {{ template "console" . }}
+      </div>
+
+      {{ template "status" . }}
+    </div>
+
+    {{ template "toasts" . }} {{ template "dialog" . }}
 
     <script src="{{ asset "app.js" }}" defer></script>
     {{- block "scripts" . }}{{ end }}

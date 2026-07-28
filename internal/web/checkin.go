@@ -48,6 +48,7 @@ func (s *Server) innsjekk(w http.ResponseWriter, r *http.Request) {
 		ScanURL: scanURL,
 		QR:      svg,
 	}
+	view.Command = "./checkin --qr"
 	// A code on screen is a code someone can register attendance with, so it
 	// should not sit in a shared cache or a browser's history store.
 	w.Header().Set("Cache-Control", "no-store")
@@ -91,6 +92,7 @@ func (s *Server) innsjekkQR(w http.ResponseWriter, r *http.Request) {
 		Page:  s.page(r, "Innsjekk", "innsjekk"),
 		Event: event,
 	}
+	view.Command = "./checkin --scan"
 
 	err = s.events.AddAttendance(r.Context(), code, events.Attendance{
 		// The attendance list is read by people, so it wants the real name.

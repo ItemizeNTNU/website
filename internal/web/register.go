@@ -47,6 +47,7 @@ func (s *Server) registrer(w http.ResponseWriter, r *http.Request) {
 
 	view := s.newRegisterView(r)
 	view.Desc = "Bli medlem av Itemize NTNU."
+	view.Command = "./register --new"
 	view.CSRF = s.csrf(w, r)
 	s.render(w, r, http.StatusOK, "registrer", view)
 }

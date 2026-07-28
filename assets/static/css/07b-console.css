@@ -1,0 +1,144 @@
+/*
+ * The command line, and the arrival animation's hidden state.
+ *
+ * Everything here is gated on html[data-js]. Without scripting the console
+ * would be a dead input and the hidden state would be a blank page, so neither
+ * exists at all — the server never hides anything, and there is a test
+ * asserting the served markup is complete.
+ */
+
+[data-js-only] {
+  display: none;
+}
+
+html[data-js] [data-js-only] {
+  display: initial;
+}
+
+html[data-js] .status__hint {
+  display: flex;
+}
+
+/* ── Arrival ───────────────────────────────────────────────────────────── */
+
+/*
+ * The pane is faded, not hidden, while the command types. Content that is
+ * display:none cannot be found by in-page search or read ahead by a screen
+ * reader, and there is no reason to take it away — only to let the command
+ * land first.
+ */
+html[data-js] .shell__pane[data-arriving] main,
+html[data-js] .shell__pane[data-arriving] .footer,
+html[data-js] .shell__pane[data-arriving] .cmd--static {
+  opacity: 0;
+}
+
+html[data-js] .shell__pane main,
+html[data-js] .shell__pane .footer,
+html[data-js] .shell__pane .cmd--static {
+  opacity: 1;
+  transition: opacity 0.25s ease-out;
+}
+
+/* ── Console ───────────────────────────────────────────────────────────── */
+
+html[data-js] .console {
+  display: block;
+  margin-top: var(--s6);
+  padding-top: var(--s4);
+  border-top: 1px solid var(--border);
+  font-family: var(--font-mono);
+  font-size: var(--fs-sm);
+}
+
+.console__out:empty {
+  display: none;
+}
+
+.console__out {
+  margin-bottom: var(--s3);
+  display: flex;
+  flex-direction: column;
+  gap: var(--s1);
+}
+
+/* Echo of what was typed, so the session reads back. */
+.console__echo {
+  color: var(--dim);
+}
+
+.console__echo::before {
+  content: "$ ";
+  color: var(--g1);
+}
+
+.console__line {
+  color: var(--muted-strong);
+  white-space: pre-wrap;
+  word-break: break-word;
+}
+
+.console__line a {
+  color: var(--g1);
+}
+
+.console__line--error {
+  color: var(--error);
+}
+
+html[data-js] .console__form {
+  display: flex;
+  align-items: baseline;
+  gap: var(--s2);
+}
+
+.console__prompt {
+  color: var(--g1);
+  flex-shrink: 0;
+}
+
+.console__in {
+  flex: 1;
+  min-width: 0;
+  padding: 0;
+  border: none;
+  background: none;
+  border-radius: 0;
+  font-family: inherit;
+  font-size: inherit;
+  color: var(--text);
+  caret-color: var(--g1);
+}
+
+.console__in:hover,
+.console__in:focus {
+  border: none;
+  background: none;
+  box-shadow: none;
+  outline: none;
+}
+
+/* The caret is the focus indicator inside a terminal, but that is invisible to
+   anyone tabbing through — so the row gets a ring of its own. */
+html[data-js] .console__form:focus-within {
+  outline: var(--focus);
+  outline-offset: var(--focus-offset);
+  border-radius: var(--r-sm);
+}
+
+.console__in::placeholder {
+  color: var(--muted);
+  opacity: 0.7;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  /*
+   * No arrival animation at all: the pane is complete the moment it renders.
+   * The script does not run either, so this is belt and braces.
+   */
+  html[data-js] .shell__pane[data-arriving] main,
+  html[data-js] .shell__pane[data-arriving] .footer,
+  html[data-js] .shell__pane[data-arriving] .cmd--static {
+    opacity: 1;
+  }
+}

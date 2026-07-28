@@ -13,6 +13,10 @@ type staticPage struct {
 	navKey   string
 	title    string
 	desc     string
+	// command is the shell line the page opens with. It names what the page
+	// holds rather than decorating it: a directory listing is ls, a document
+	// is cat.
+	command string
 }
 
 // staticPages are the pages with no data behind them beyond the shared
@@ -21,25 +25,25 @@ type staticPage struct {
 var staticPages = []staticPage{
 	{
 		route: "/om-itemize", template: "om-itemize", navKey: "om-itemize",
-		title: "Om Itemize",
+		title: "Om Itemize", command: "cat om-itemize.md",
 		desc: "Itemize NTNU er en frivillig interesseorganisasjon for studenter og " +
 			"ansatte ved NTNU Trondheim som vil lære om informasjonssikkerhet og hacking.",
 	},
 	{
 		route: "/historie", template: "historie", navKey: "historie",
-		title: "Historie",
-		desc:  "Itemize NTNU ble startet i oktober 2014. Dette er historien.",
+		title: "Historie", command: "cat historie.md",
+		desc: "Itemize NTNU ble startet i oktober 2014. Dette er historien.",
 	},
 	{
 		route: "/for-bedrifter", template: "for-bedrifter", navKey: "for-bedrifter",
-		title: "For Bedrifter",
+		title: "For Bedrifter", command: "cat for-bedrifter.md",
 		desc: "Itemize NTNU samarbeider gjerne med bedrifter om kurs, " +
 			"CTF-konkurranser og andre arrangementer.",
 	},
 	{
 		route: "/ressurser", template: "ressurser", navKey: "ressurser",
-		title: "Ressurser",
-		desc:  "Lenker til CTF-plattformer, YouTube-kanaler og verktøy vi anbefaler.",
+		title: "Ressurser", command: "ls -la ressurser/",
+		desc: "Lenker til CTF-plattformer, YouTube-kanaler og verktøy vi anbefaler.",
 	},
 }
 
@@ -55,6 +59,7 @@ func (s *Server) staticHandler(p staticPage) http.Handler {
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		page := s.page(r, p.title, p.navKey)
 		page.Desc = p.desc
+		page.Command = p.command
 		s.render(w, r, http.StatusOK, p.template, page)
 	})
 }
@@ -77,8 +82,9 @@ func (s *Server) registrert(w http.ResponseWriter, r *http.Request) {
 		http.Redirect(w, r, "/profil", http.StatusSeeOther)
 		return
 	}
-	s.render(w, r, http.StatusOK, "registrert",
-		s.page(r, "Vellykket brukerregistrering!", "registrert"))
+	page := s.page(r, "Vellykket brukerregistrering!", "registrert")
+	page.Command = "./register --confirm"
+	s.render(w, r, http.StatusOK, "registrert", page)
 }
 
 type utmeldingView struct {
@@ -94,5 +100,6 @@ func (s *Server) utmelding(w http.ResponseWriter, r *http.Request) {
 		Body:    resignationBody,
 	}
 	view.Desc = "Slik melder du deg ut av Itemize NTNU."
+	view.Command = "cat utmelding.md"
 	s.render(w, r, http.StatusOK, "utmelding", view)
 }

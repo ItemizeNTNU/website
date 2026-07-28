@@ -86,10 +86,21 @@ func (s *Server) page(r *http.Request, title, navKey string) Page {
 		Nav:       navKey,
 		BodyClass: "p-" + navKey,
 		NavItems:  NavItems,
+		Path:      shellPath(r.URL.Path),
 		Site:      site,
 		User:      userFrom(r),
 		Flash:     takeFlash(r),
 	}
+}
+
+// shellPath renders the request path the way a shell would show a working
+// directory: the site root is "~", everything else hangs off it.
+func shellPath(p string) string {
+	trimmed := strings.Trim(p, "/")
+	if trimmed == "" {
+		return "~"
+	}
+	return "~/" + trimmed
 }
 
 func (s *Server) render(w http.ResponseWriter, r *http.Request, status int, page string, data any) {
@@ -149,6 +160,8 @@ func (s *Server) ErrorPage(w http.ResponseWriter, r *http.Request, status int) {
 		StatusText: text,
 		Message:    message,
 	}
+	// The command that did not work is the one the visitor just attempted.
+	view.Command = "cat " + strings.TrimPrefix(r.URL.Path, "/")
 	s.render(w, r, status, "error", view)
 }
 
@@ -237,6 +250,9 @@ func (s *Server) index(w http.ResponseWriter, r *http.Request) {
 	}
 	view.Desc = "Itemize NTNU er en studentorganisasjon ved NTNU Trondheim for " +
 		"informasjonssikkerhet, hacking og CTF-konkurranser."
+	// The front page runs the program rather than reading a file, so it opens
+	// its own sequence instead of the shared command line.
+	view.Command = ""
 	s.render(w, r, http.StatusOK, "index", view)
 }
 

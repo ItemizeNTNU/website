@@ -243,3 +243,81 @@ func TestNoInlineStylesInMarkup(t *testing.T) {
 		}
 	}
 }
+
+// Every page opens with a shell line naming what it is, and that line is typed
+// on arrival. A page without one renders a bare heading with no context and
+// silently drops out of the session metaphor.
+func TestEveryPageRendersACommand(t *testing.T) {
+	mux := newMux(t)
+
+	// The front page runs its own sequence instead of the shared line.
+	paths := []string{
+		"/om-itemize", "/historie", "/for-bedrifter",
+		"/ressurser", "/utmelding", "/registrert", "/registrer", "/arrangementer",
+	}
+	for _, path := range paths {
+		t.Run(path, func(t *testing.T) {
+			rec := httptest.NewRecorder()
+			mux.ServeHTTP(rec, httptest.NewRequest(http.MethodGet, path, nil))
+
+			if !contains(rec.Body.String(), `class="cmd" data-cmd="`) {
+				t.Error("no shell command line")
+			}
+		})
+	}
+}
+
+// Exactly one tab is the current page. Zero means the strip shows no position;
+// more than one is a routing mistake that looks like a styling one.
+func TestExactlyOneTabIsCurrent(t *testing.T) {
+	mux := newMux(t)
+
+	for _, path := range []string{"/", "/om-itemize", "/historie", "/ressurser"} {
+		rec := httptest.NewRecorder()
+		mux.ServeHTTP(rec, httptest.NewRequest(http.MethodGet, path, nil))
+
+		if n := count(rec.Body.String(), `aria-current="page"`); n != 1 {
+			t.Errorf("%s marks %d tabs as current, want 1", path, n)
+		}
+	}
+}
+
+// The arrival animation hides the pane's content and reveals it once the
+// command has typed. That hiding must be the script's doing and never the
+// server's — otherwise a visitor without JavaScript, or with a script that
+// failed to load, gets a page that renders blank.
+func TestServedMarkupIsNeverHidden(t *testing.T) {
+	mux := newMux(t)
+
+	for _, path := range []string{"/", "/historie", "/ressurser", "/registrer"} {
+		rec := httptest.NewRecorder()
+		mux.ServeHTTP(rec, httptest.NewRequest(http.MethodGet, path, nil))
+		body := rec.Body.String()
+
+		// data-arriving is what fades the pane out; only 05-session.js may add it.
+		if contains(body, "data-arriving") {
+			t.Errorf("%s ships with the pane already hidden", path)
+		}
+		// The command must arrive as readable text, not only in the attribute.
+		if contains(body, `class="cmd" data-cmd=""`) {
+			t.Errorf("%s has an empty command", path)
+		}
+	}
+}
+
+// The console is an enhancement. Without scripting it must not render as a
+// dead input, which is what the data-js-only gate is for.
+func TestConsoleIsGatedOnScripting(t *testing.T) {
+	mux := newMux(t)
+
+	rec := httptest.NewRecorder()
+	mux.ServeHTTP(rec, httptest.NewRequest(http.MethodGet, "/historie", nil))
+	body := rec.Body.String()
+
+	if !contains(body, `class="console" data-js-only`) {
+		t.Error("the console is not gated on data-js-only")
+	}
+	if contains(body, "autofocus") {
+		t.Error("the console autofocuses, which steals keyboard scrolling")
+	}
+}

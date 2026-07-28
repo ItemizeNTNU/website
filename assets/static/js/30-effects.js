@@ -38,6 +38,25 @@ function runHeroSequence(src, out) {
 }
 
 /*
+ * Runs fn once the arrival animation has finished, or straight away if there is
+ * none — reduced motion, no command on this page, or the script never ran.
+ */
+function whenArrived(fn) {
+  var pane = document.querySelector(".shell__pane");
+  if (!pane || !pane.hasAttribute("data-arriving")) {
+    fn();
+    return;
+  }
+  var observer = new MutationObserver(function () {
+    if (!pane.hasAttribute("data-arriving")) {
+      observer.disconnect();
+      fn();
+    }
+  });
+  observer.observe(pane, { attributes: true, attributeFilter: ["data-arriving"] });
+}
+
+/*
  * Scrambles an element's text, then locks it in from the left.
  *
  * The real text is always present in the markup and the accessible name is set
@@ -90,7 +109,15 @@ function glitchReveal(el, startDelay) {
  */
 itemize.ready(function () {
   var src = document.getElementById("bf");
-  if (src) runHeroSequence(src, document.getElementById("hero-out"));
+  if (src) {
+    // The pane fades its content in once the page's own command has typed. On
+    // the front page that content is this sequence, so starting it immediately
+    // would run the program behind a fade and finish before anyone saw it.
+    // 60-session.js clears the attribute when it is done.
+    whenArrived(function () {
+      runHeroSequence(src, document.getElementById("hero-out"));
+    });
+  }
 
   // One reveal per page, not one per heading. A page where every heading
   // scrambles itself on load is a costume; a single one is a signature.

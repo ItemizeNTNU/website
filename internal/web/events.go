@@ -51,6 +51,10 @@ func (s *Server) renderEventsPage(
 		FormOpen: verr.Any() || form.ID != "",
 	}
 	view.Desc = "Oversikt over kommende arrangementer i Itemize NTNU."
+	view.Command = "./events --upcoming"
+	if showOld {
+		view.Command = "./events --all"
+	}
 
 	if styret {
 		view.CSRF = s.csrf(w, r)
