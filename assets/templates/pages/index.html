@@ -7,33 +7,25 @@
 
     That brainfuck source prints "Itemize NTNU" — it always did, but it used to
     drift behind the logo as texture. Here it is typed out, run, and the
-    wordmark is its output. Nothing about the effect changed; it just became
-    the point.
+    wordmark is its output.
 
-    Without scripting the whole sequence is present at once, which reads as a
-    finished terminal session rather than a broken one.
+    No window of its own: the page already is one. The sequence runs straight in
+    the pane, which makes the front page the plainest statement of the idea
+    rather than a special case nested inside it.
+
+    The whole sequence is present in the markup, so without scripting it reads
+    as a finished session rather than a broken one.
   */ -}}
-  <div class="term" id="hero-term">
-    <div class="term__bar">
-      <span class="term__dots" aria-hidden="true"><i></i><i></i><i></i></span>
-      <span class="term__title">itemize@ntnu:~</span>
-    </div>
+  <p class="cmd cmd--static">cat hello.bf</p>
+  <div class="hero__src" id="bf" aria-hidden="true">{{ .Brainfuck }}</div>
 
-    <div class="term__body">
-      <p class="term__cmd">cat hello.bf</p>
-      <div class="term__src" id="bf" aria-hidden="true">{{ .Brainfuck }}</div>
-
-      <p class="term__cmd">bf hello.bf</p>
-      <h1 class="term__out logo-glitch" id="hero-out" data-shown>
-        <span class="visually-hidden">Itemize NTNU</span>
-        <img class="l-red" src="/logo.png" alt="" aria-hidden="true" />
-        <img src="/logo.png" alt="" aria-hidden="true" />
-        <img class="l-blue" src="/logo.png" alt="" aria-hidden="true" />
-      </h1>
-
-      <p class="term__prompt" aria-hidden="true"></p>
-    </div>
-  </div>
+  <p class="cmd cmd--static">bf hello.bf</p>
+  <h1 class="hero__out logo-glitch" id="hero-out" data-shown>
+    <span class="visually-hidden">Itemize NTNU</span>
+    <img class="l-red" src="/logo.png" alt="" aria-hidden="true" />
+    <img src="/logo.png" alt="" aria-hidden="true" />
+    <img class="l-blue" src="/logo.png" alt="" aria-hidden="true" />
+  </h1>
 
   <p class="lead">
     Vi er en studentorganisasjon ved NTNU Trondheim som digger

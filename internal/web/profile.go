@@ -32,6 +32,7 @@ func (s *Server) profil(w http.ResponseWriter, r *http.Request) {
 		DiscordAvailable: s.discordSvc.Available(),
 	}
 	view.CSRF = s.csrf(w, r)
+	view.Command = "whoami --verbose"
 
 	if s.fusion.Configured() {
 		if stored, err := s.fusion.GetUser(r.Context(), user.ID); err != nil {

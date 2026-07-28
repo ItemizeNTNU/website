@@ -1,0 +1,13 @@
+{{- /*
+  The shell line a page opens with.
+
+  The text is rendered complete, in the markup, and also carried in data-cmd.
+  60-session.js empties the visible copy and types it back from the attribute —
+  so with scripting off, under reduced motion, or if the script fails, the line
+  is simply already there. Nothing is ever hidden by the server.
+*/ -}}
+{{- define "command" -}}
+{{- with . }}
+<p class="cmd" data-cmd="{{ . }}">{{ . }}</p>
+{{- end }}
+{{- end -}}

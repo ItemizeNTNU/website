@@ -2,10 +2,6 @@
 
 /* ── / ─────────────────────────────────────────────────────────────────── */
 
-.p-index main {
-  padding-top: 0;
-}
-
 .p-index .lead {
   max-width: 42ch;
   margin: 0 auto var(--s6);

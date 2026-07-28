@@ -52,8 +52,18 @@
   font-display: swap;
 }
 
+/*
+ * Mono is the default voice now that the page is a terminal; the readable face
+ * is reserved for the places where it earns its keep.
+ *
+ * /historie is around seven hundred words of Norwegian and /om-itemize is not
+ * far behind. Monospace across that much text measurably slows reading and
+ * reads as a wall, and those are exactly the pages a prospective member
+ * actually reads — so paragraphs and list items inside .prose keep IBM Plex
+ * Sans while everything else goes mono.
+ */
 body {
-  font-family: var(--font-body);
+  font-family: var(--font-mono);
   font-size: var(--fs-base);
   line-height: var(--lh-body);
   color: var(--text);
@@ -92,6 +102,13 @@ h3 {
 
 .prose {
   max-width: var(--measure);
+}
+
+.prose p,
+.prose li,
+.prose address,
+.prose blockquote {
+  font-family: var(--font-body);
 }
 
 .prose p,

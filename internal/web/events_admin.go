@@ -159,6 +159,7 @@ func (s *Server) confirmDelete(w http.ResponseWriter, r *http.Request) {
 		Event *events.Event
 	}{Page: s.page(r, "Slett arrangement", "arrangementer"), Event: event}
 	view.CSRF = s.csrf(w, r)
+	view.Command = "./events --delete " + event.HexID()
 
 	s.render(w, r, http.StatusOK, "slett-arrangement", view)
 }

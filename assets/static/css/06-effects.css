@@ -16,16 +16,15 @@
 /* ── Hero ──────────────────────────────────────────────────────────────── */
 
 .hero {
-  padding: var(--s7) 0 var(--s6);
   text-align: center;
 }
 
 /*
- * Scanlines belong to the terminal, not the whole hero. Over a framed window
- * they read as the screen being looked at; over the prose beneath they only
- * made it harder to read.
+ * Scanlines belong to the window. Now that the window is the page they cover
+ * the whole pane, which is the point — but they stay very faint, because this
+ * is laid over every paragraph on the site rather than over a hero.
  */
-.term::after {
+.shell__pane::after {
   content: "";
   position: absolute;
   inset: 0;
@@ -34,7 +33,7 @@
   background: repeating-linear-gradient(
     0deg,
     transparent 0 2px,
-    rgba(0, 0, 0, 0.06) 2px 3px
+    rgba(0, 0, 0, 0.035) 2px 3px
   );
 }
 
@@ -212,7 +211,7 @@
    * and the script simply does not clear it. Hiding it would remove content
    * rather than motion, which is not what the preference asks for.
    */
-  .term::after {
+  .shell__pane::after {
     display: none;
   }
 }

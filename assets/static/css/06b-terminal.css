@@ -11,84 +11,58 @@
  * the point of the page rather than texture behind it.
  */
 
-/* ── The terminal window ───────────────────────────────────────────────── */
+/* ── The shell line ───────────────────────────────────────────────────── */
 
-.term {
-  position: relative;
-  max-width: 46rem;
-  margin: 0 auto;
-  border: 1px solid var(--border-strong);
-  border-radius: var(--r);
-  background: rgba(13, 15, 20, 0.72);
-  box-shadow: var(--shadow-card), 0 0 60px rgba(60, 179, 79, 0.06);
-  overflow: hidden;
-  text-align: left;
-}
-
-.term__bar {
-  display: flex;
-  align-items: center;
-  gap: var(--s3);
-  padding: var(--s2) var(--s4);
-  background: rgba(255, 255, 255, 0.04);
-  border-bottom: 1px solid var(--border);
+/*
+ * The line each page opens with. It names what the page is — cat for a
+ * document, ls for a listing — and typing it on arrival is what makes changing
+ * page read as a session continuing rather than a document being replaced.
+ */
+.cmd {
+  margin: 0 0 var(--s4);
   font-family: var(--font-mono);
-  font-size: var(--fs-xs);
-  color: var(--muted);
-}
-
-/* Three dots, but drawn in the palette rather than borrowed from macOS. */
-.term__dots {
-  display: flex;
-  gap: 6px;
-  flex-shrink: 0;
-}
-
-.term__dots i {
-  width: 9px;
-  height: 9px;
-  border-radius: 50%;
-  background: var(--border-strong);
-}
-
-.term__dots i:first-child {
-  background: rgba(60, 179, 79, 0.5);
-}
-
-.term__title {
-  overflow: hidden;
-  text-overflow: ellipsis;
-  white-space: nowrap;
-}
-
-.term__body {
-  padding: var(--s4) var(--s5) var(--s5);
-  font-family: var(--font-mono);
-  font-size: clamp(0.75rem, 1.6vw, 0.875rem);
-  line-height: 1.6;
-}
-
-/* A command the visitor is watching being run. */
-.term__cmd {
+  font-size: var(--fs-sm);
   color: var(--dim);
-  margin: 0;
+  word-break: break-word;
 }
 
-.term__cmd::before {
+.cmd::before {
   content: "$ ";
   color: var(--g1);
 }
 
-.term__cmd + .term__cmd {
-  margin-top: var(--s3);
+/* The board is root; see the session note in 03-layout.css. */
+.p-styret .cmd::before {
+  content: "# ";
+  color: var(--g-hi);
+}
+
+/* Lines that are part of the page's own output, never retyped. */
+.cmd--static {
+  margin-top: var(--s5);
+}
+
+.cmd--static:first-child {
+  margin-top: 0;
 }
 
 /*
- * The program source. Wraps hard because it is one unbroken run of
- * punctuation, and is dimmed so the output below it stays the focus.
+ * While the line is being typed it carries a cursor. The attribute is added and
+ * removed by script, so nothing blinks on a page that never animates.
  */
-.term__src {
-  margin: var(--s2) 0 var(--s4);
+.cmd[data-typing]::after {
+  content: "▊";
+  color: var(--g1);
+  animation: cursor-blink 1.1s step-end infinite;
+}
+
+/* ── Front-page sequence ───────────────────────────────────────────────── */
+
+.hero__src {
+  margin: 0 0 var(--s4);
+  font-family: var(--font-mono);
+  font-size: clamp(0.7rem, 1.5vw, 0.8rem);
+  line-height: 1.6;
   color: var(--g2);
   opacity: 0.75;
   word-break: break-all;
@@ -97,36 +71,20 @@
   user-select: none;
 }
 
-/* The output: the wordmark itself. */
-.term__out {
-  margin: var(--s3) 0 var(--s4);
+.hero__out {
+  position: relative;
+  margin: var(--s3) 0 var(--s5);
   opacity: 0;
   transition: opacity 0.4s ease-out;
 }
 
-.term__out[data-shown] {
+.hero__out[data-shown] {
   opacity: 1;
 }
 
-.term__out {
-  position: relative;
-}
-
-.term__out img {
+.hero__out img {
   width: min(100%, 26rem);
   height: auto;
-}
-
-/* The idle prompt the sequence finishes on. */
-.term__prompt::before {
-  content: "$ ";
-  color: var(--g1);
-}
-
-.term__prompt::after {
-  content: "▊";
-  color: var(--g1);
-  animation: cursor-blink 1.1s step-end infinite;
 }
 
 /* ── Corner brackets ───────────────────────────────────────────────────── */
@@ -237,12 +195,16 @@
 /* ── Reduced motion ────────────────────────────────────────────────────── */
 
 @media (prefers-reduced-motion: reduce) {
-  .term__prompt::after {
+  /*
+   * Nothing is typed, so nothing carries a cursor and the front page's output
+   * is simply present. The markup already holds the finished session — this
+   * only stops it being animated, it never hides content.
+   */
+  .cmd[data-typing]::after {
     animation: none;
   }
 
-  /* The sequence never runs, so the output is simply present. */
-  .term__out {
+  .hero__out {
     opacity: 1;
     transition: none;
   }

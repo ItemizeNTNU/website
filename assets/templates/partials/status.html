@@ -1,0 +1,22 @@
+{{- /*
+  The status line, in the shape a tmux or vim status bar takes: where you are on
+  the left, how to move in the middle, who you are on the right. Every field is
+  real state rather than decoration.
+*/ -}}
+{{- define "status" -}}
+<div class="status">
+  <span class="status__path">{{ .Path }}</span>
+
+  {{- /* A shortcut nobody knows about is not a feature. */}}
+  <span class="status__hint" data-js-only>
+    <kbd>←</kbd><kbd>→</kbd> bytt fane
+  </span>
+
+  <span class="status__session">
+    {{- if .User.IsStyret }}styret
+    {{- else if .User }}medlem
+    {{- else }}gjest
+    {{- end }}
+  </span>
+</div>
+{{- end -}}

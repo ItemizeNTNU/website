@@ -1,4 +1,11 @@
 {{- define "footer" -}}
+{{- /*
+  Inside the window the footer is output, not chrome. Introducing it with the
+  command that would produce it keeps it part of the session instead of adding
+  a second frame below the first — and the content is unchanged, so it stays as
+  findable as it was.
+*/ -}}
+<p class="cmd cmd--static">cat kontakt.txt</p>
 <footer class="footer">
   <h2 class="visually-hidden">Bunntekst</h2>
   <div class="footer__inner">
