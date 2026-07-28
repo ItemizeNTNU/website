@@ -1,0 +1,69 @@
+{{- /*
+  The layout. Pages contribute only {{define}} blocks that override the
+  {{block}} defaults below; this file is the template that gets executed.
+
+  lang is "nb": the content is Norwegian bokmål. The previous site declared
+  English, which made every screen reader mispronounce the whole thing.
+*/ -}}
+<!doctype html>
+<html lang="nb">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <meta name="theme-color" content="#181b23" />
+    <title>
+      {{- block "title" . }}{{ with .Title }}{{ . }} – Itemize NTNU{{ else }}Itemize NTNU{{ end }}{{ end -}}
+    </title>
+    {{- with .Desc }}
+    <meta name="description" content="{{ . }}" />
+    {{- end }}
+
+    {{- /* Only the two faces used above the fold are preloaded; the display
+           face arrives with font-display:swap, where a brief swap is
+           invisible at that size. Guarded on existence so a checkout that has
+           not run scripts/fetch-fonts.sh serves system fonts cleanly instead
+           of preloading two 404s. */}}
+    {{- range $font := (list "fonts/ibm-plex-sans-latin-400.woff2" "fonts/jetbrains-mono-latin-400.woff2") }}
+    {{- if hasAsset $font }}
+    <link
+      rel="preload"
+      as="font"
+      type="font/woff2"
+      crossorigin
+      href="{{ asset $font }}"
+    />
+    {{- end }}
+    {{- end }}
+
+    <link rel="stylesheet" href="{{ asset "app.css" }}" />
+    <link rel="icon" href="/icon.svg" type="image/svg+xml" />
+    <link rel="apple-touch-icon" href="/logo-192.png" />
+    <link rel="manifest" href="/manifest.json" />
+    <link
+      rel="alternate"
+      type="text/calendar"
+      title="Itemize Arrangementer"
+      href="/api/events/ical"
+    />
+
+    {{- /* Not deferred: this sets the flag the stylesheet uses to decide
+           whether the navigation collapses, and it has to happen before the
+           first paint. */}}
+    <script src="{{ asset "boot.js" }}"></script>
+    {{- block "head" . }}{{ end }}
+  </head>
+
+  <body class="{{ .BodyClass }}">
+    <a class="skiplink" href="#main">Hopp til innhold</a>
+
+    {{ template "icons" . }} {{ template "nav" . }}
+
+    <main id="main">{{ block "content" . }}{{ end }}</main>
+
+    {{ template "footer" . }} {{ template "toasts" . }}
+    {{ template "dialog" . }}
+
+    <script src="{{ asset "app.js" }}" defer></script>
+    {{- block "scripts" . }}{{ end }}
+  </body>
+</html>

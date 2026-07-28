@@ -1,0 +1,48 @@
+{{ define "content" }}
+<h1>{{ .User.DisplayName }}</h1>
+
+<div class="profile">
+  <img
+    class="profile__avatar"
+    src="{{ .AvatarURL }}"
+    alt=""
+    width="192"
+    height="192"
+  />
+
+  <div>
+    <dl>
+      <dt>Navn</dt>
+      <dd>{{ .User.DisplayName }}</dd>
+
+      {{- with .User.FullName }}
+      <dt>Fullt navn</dt>
+      <dd>{{ . }}</dd>
+      {{- end }}
+
+      {{- with .User.Email }}
+      <dt>E-post</dt>
+      <dd class="mono">{{ . }}</dd>
+      {{- end }}
+
+      {{- if .User.IsStyret }}
+      <dt>Rolle</dt>
+      <dd><span class="eyebrow">Styret</span></dd>
+      {{- end }}
+    </dl>
+
+    <div class="panel panel--info">
+      <p>
+        Kobling mot Discord er ikke flyttet over til den nye nettsiden enda. Du
+        kan fortsatt bli med på serveren
+        <a href="{{ .Site.Contact.DiscordInvite }}" rel="noopener">her</a>.
+      </p>
+    </div>
+
+    <div class="row" style="margin-top: var(--s6)">
+      <a class="btn" href="/logout">Logg ut</a>
+      <a class="btn btn--danger" href="/utmelding">Utmelding</a>
+    </div>
+  </div>
+</div>
+{{ end }}

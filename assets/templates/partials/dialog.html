@@ -1,0 +1,22 @@
+{{- /*
+  One dialog per page, reused for every confirmation.
+
+  A native <dialog> brings the focus trap, Escape-to-close, the backdrop and
+  top-layer stacking with it — which is the whole of what the old modal
+  component hand-rolled, including its z-index counter.
+
+  It is an enhancement only: every destructive action also has a server
+  -rendered confirmation page that works without scripting.
+*/ -}}
+{{- define "dialog" -}}
+<dialog id="app-dialog" aria-labelledby="app-dialog-title">
+  <p class="dialog__header" id="app-dialog-title">Er du sikker?</p>
+  <div class="dialog__body"></div>
+  <div class="dialog__footer">
+    <button type="button" class="btn" data-dialog-cancel>Avbryt</button>
+    <button type="button" class="btn btn--danger" data-dialog-accept>
+      Bekreft
+    </button>
+  </div>
+</dialog>
+{{- end -}}

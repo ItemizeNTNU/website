@@ -1,0 +1,14 @@
+{{- /*
+  One board member. The role becomes an eyebrow above the name rather than a
+  bold prefix, which gives the grid a consistent reading order and drops the
+  float that the previous layout needed to undo on narrow screens.
+*/ -}}
+{{- define "person" -}}
+<li class="card card--hover">
+  <span class="eyebrow person__role">{{ .Position }}</span>
+  <span class="person__name">{{ .Name }}</span>
+  {{- with .Mail }}
+  <span class="person__mail">{{ template "email" . }}</span>
+  {{- end }}
+</li>
+{{- end -}}

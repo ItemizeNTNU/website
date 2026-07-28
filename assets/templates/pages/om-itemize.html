@@ -1,0 +1,68 @@
+{{ define "content" }}
+<h1>Om Itemize</h1>
+
+<div class="prose">
+  <p>
+    Itemize NTNU er en frivillig interesseorganisasjon for studenter og ansatte
+    ved NTNU Trondheim som liker eller vil lære om informasjonssikkerhet og
+    hacking. I vedtektene til Itemize NTNU står det også at Itemize skal være
+    med på å fremme god sikkerhetskultur i Norge. Dette gjør vi ved å delta på
+    både nasjonale og internasjonale CTFer jevnlig samt å holde både interne og
+    eksterne kurs.
+  </p>
+  <p>
+    Driften til Itemize er prosjektbasert, noe som betyr at medlemmer kan velge
+    å engasjere seg i kortvarige prosjekter. Dette sikrer at Itemize utvikler
+    seg videre. Det er selvfølgelig også mulig å være medlem uten å være med på
+    prosjekter, men heller bare være med på CTFer og andre arrangementene man
+    har mulighet til.
+  </p>
+  <p>
+    Itemize NTNU er tilknyttet Institutt for informasjonssikkerhet og
+    kommunikasjonsteknologi og får store deler av støtten til driften derifra.
+  </p>
+  <p>
+    Vi har også en alumniordning for tidligere medlemmer, slik at de kan være
+    med videre på å hjelpe fremtidens sikkerhetsinteresserte.
+  </p>
+  <p>
+    For medlemmer bruker vi
+    <a href="{{ .Site.Contact.DiscordInvite }}" rel="noopener noreferrer"
+      >Discord</a
+    >
+    som hovedkommunikasjonskanal.
+  </p>
+</div>
+
+<section>
+  <h2>Kontakt</h2>
+  <div class="prose">
+    <p>
+      Vi tar imot innmeldinger, spørsmål og andre henvendelser på mail:
+      {{ template "email" .Site.Contact.Email }}
+    </p>
+    <p>
+      <i>Postadresse:</i><br />
+      <address>
+        {{- range $i, $line := .Site.Contact.AddressFull }}
+        {{- if $i }}<br />{{ end }}{{ $line }}
+        {{- end }}
+      </address>
+    </p>
+    <p><i>Org.nr:</i> <span class="mono">{{ .Site.Contact.OrgNumber }}</span></p>
+    <p>
+      Fakturaer sendes til
+      {{ template "email" .Site.Contact.InvoiceEmail }}.
+    </p>
+  </div>
+</section>
+
+<section>
+  <h2>Styret</h2>
+  <ul class="grid grid--people">
+    {{- range .Site.Board }}
+    {{ template "person" . }}
+    {{- end }}
+  </ul>
+</section>
+{{ end }}

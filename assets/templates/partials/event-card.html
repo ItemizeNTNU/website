@@ -1,0 +1,61 @@
+{{- /*
+  One event.
+
+  The field pairs are a <dl>, not a <table> — they are labels and values, not
+  tabular data, and a description list gives the two-column grid for free while
+  collapsing cleanly on a phone.
+*/ -}}
+{{- define "event-card" -}}
+<li class="card event{{ if .Past }} event--past{{ end }}">
+  <div class="event__header">
+    <h3>{{ .Name }}</h3>
+    {{- if .Past }}<span class="chip">Ferdig</span>{{ end }}
+    {{- if .Hidden }}
+    <span class="chip" title="Skjult — bare styret ser dette"
+      >{{ template "icon" "eye-off" }} Skjult</span
+    >
+    {{- end }}
+  </div>
+
+  <dl>
+    <dt>Hvor</dt>
+    <dd>
+      {{- with .Location.URL -}}
+      <a href="{{ . }}" rel="noopener noreferrer">{{ $.Location.Name }}</a>
+      {{- else -}}
+      {{ .Location.Name }}
+      {{- end }}
+    </dd>
+
+    <dt>Når</dt>
+    <dd><time datetime="{{ .WhenISO }}">{{ .When }}</time></dd>
+
+    {{- with .RegisterURL }}
+    <dt>Registrering</dt>
+    <dd><a href="{{ . }}" rel="noopener noreferrer">her</a></dd>
+    {{- end }}
+
+    {{- with .CTF.Name }}
+    <dt>CTF</dt>
+    <dd>
+      {{- with $.CTF.URL -}}
+      <a href="{{ . }}" rel="noopener noreferrer">{{ $.CTF.Name }}</a>
+      {{- else -}}
+      {{ $.CTF.Name }}
+      {{- end }}
+    </dd>
+    {{- end }}
+
+    {{- with .Info }}
+    <dt>Info</dt>
+    {{- /*
+      Escaped, not raw. This is board-authored text that used to be injected as
+      HTML, which made a compromised board account into stored cross-site
+      scripting against every visitor. Line breaks — the only thing anyone
+      actually used it for — are preserved by white-space: pre-wrap.
+    */}}
+    <dd class="event__info">{{ . }}</dd>
+    {{- end }}
+  </dl>
+</li>
+{{- end -}}

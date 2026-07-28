@@ -1,0 +1,22 @@
+# Styret i Itemize NTNU.
+#
+# Rekkefølgen her er visningsrekkefølgen på /om-itemize.
+# Oppdateres etter hver generalforsamling — dette er den eneste filen som
+# trenger å endres.
+
+board:
+  - name: Felix Krogvold
+    position: Leder
+    mail: felix@itemize.no
+
+  - name: Axel Haukeland Strand
+    position: Økonomiansvarlig
+    mail: axel@itemize.no
+
+  - name: Martin Henøen
+    position: Driftsansvarlig
+    mail: martin.henoen@itemize.no
+
+  - name: Rohaan Malik Mooken
+    position: Driftsansvarlig
+    mail: rohaan@itemize.no

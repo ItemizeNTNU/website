@@ -1,0 +1,116 @@
+/* Reset — normalise the handful of defaults that actually get in the way. */
+
+*,
+*::before,
+*::after {
+  box-sizing: border-box;
+}
+
+html {
+  -webkit-text-size-adjust: 100%;
+  overflow-x: hidden;
+}
+
+body,
+h1,
+h2,
+h3,
+h4,
+p,
+figure,
+blockquote,
+dl,
+dd {
+  margin: 0;
+}
+
+/*
+ * Load-bearing, not housekeeping.
+ *
+ * The user-agent rule for [hidden] has the lowest possible specificity, so any
+ * later rule that sets `display` on a matching element silently reveals it.
+ * There is a deliberately hidden element on /ressurser whose whole point is to
+ * be in the source but not on the page — see partials/link-card.html — and one
+ * innocent `.link-card p { display: block }` would expose it. Keep this.
+ */
+[hidden] {
+  display: none !important;
+}
+
+img,
+picture,
+svg,
+video {
+  display: block;
+  max-width: 100%;
+}
+
+input,
+button,
+textarea,
+select {
+  font: inherit;
+  color: inherit;
+}
+
+button {
+  background: none;
+  border: none;
+}
+
+ul[class],
+ol[class] {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+}
+
+a {
+  color: var(--g1);
+  text-decoration-thickness: 1px;
+  text-underline-offset: 0.2em;
+}
+
+a:hover {
+  color: var(--g-hi);
+}
+
+hr {
+  border: none;
+  border-top: 1px solid var(--border);
+  margin: var(--s6) 0;
+}
+
+:target {
+  scroll-margin-top: calc(var(--nav-h) + var(--s5));
+}
+
+::selection {
+  background: rgba(60, 179, 79, 0.3);
+  color: var(--text);
+}
+
+/* Focus: visible on every surface, including on top of a green fill. */
+:focus-visible {
+  outline: var(--focus);
+  outline-offset: var(--focus-offset);
+}
+
+::-webkit-scrollbar {
+  width: 10px;
+  height: 10px;
+}
+
+::-webkit-scrollbar-track {
+  background: transparent;
+}
+
+::-webkit-scrollbar-thumb {
+  background: rgba(255, 255, 255, 0.12);
+  border-radius: var(--r-pill);
+  border: 3px solid var(--bg);
+}
+
+::-webkit-scrollbar-thumb:hover {
+  background: rgba(60, 179, 79, 0.45);
+}
