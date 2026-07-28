@@ -139,6 +139,13 @@
   }
 }
 
+/* The window is edge to edge now, so a third column finally fits. */
+@media (min-width: 96rem) {
+  .grid--links {
+    grid-template-columns: repeat(3, 1fr);
+  }
+}
+
 /* ── Section header ────────────────────────────────────────────────────── */
 
 /*
@@ -256,6 +263,9 @@
   border-radius: var(--r);
   padding: var(--s4) var(--s5);
   margin: var(--s5) 0;
+  /* A panel is a sentence to read, so it keeps to the reading column rather
+     than following the window out to the edge of a wide screen. */
+  max-width: 62rem;
 }
 
 .panel--success {

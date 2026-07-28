@@ -67,6 +67,7 @@ ol[class] {
 
 a {
   color: var(--g1);
+  text-shadow: var(--glow);
   text-decoration-thickness: 1px;
   text-underline-offset: 0.2em;
 }
@@ -85,9 +86,11 @@ hr {
   scroll-margin-top: calc(var(--nav-h) + var(--s5));
 }
 
+/* Terminals invert their selection; one line, instantly recognisable. */
 ::selection {
-  background: rgba(60, 179, 79, 0.3);
-  color: var(--text);
+  background: var(--g1);
+  color: var(--bg);
+  text-shadow: none;
 }
 
 /* Focus: visible on every surface, including on top of a green fill. */

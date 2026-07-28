@@ -65,10 +65,14 @@
 
         <main id="main">{{ block "content" . }}{{ end }}</main>
 
-        {{ template "footer" . }} {{ template "console" . }}
+        {{ template "footer" . }}
       </div>
 
-      {{ template "status" . }}
+      {{- /* Pinned together at the foot of the screen on a wide viewport, and
+             unpinned back into the document flow on a narrow one. */}}
+      <div class="shell__bar">
+        {{ template "console" . }} {{ template "status" . }}
+      </div>
     </div>
 
     {{ template "toasts" . }} {{ template "dialog" . }}

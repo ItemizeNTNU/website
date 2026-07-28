@@ -1,5 +1,18 @@
 /* Forms. */
 
+/*
+ * The window runs edge to edge; a form does not follow it out there. A text
+ * field a metre wide is harder to fill in than one at reading width, and a
+ * label pinned to the far left of a control on the far right stops reading as
+ * a pair.
+ *
+ * Scoped to main so it never reaches the console, which lives in the bar and
+ * is sized by it.
+ */
+main form {
+  max-width: 62rem;
+}
+
 input,
 textarea,
 select {

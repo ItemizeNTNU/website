@@ -84,9 +84,20 @@
   --r: 6px;
   --r-lg: 10px;
   --r-pill: 99px;
-  --maxw: 56em;
+  /*
+   * The window is the viewport now; this caps the content inside it so an
+   * ultrawide monitor does not put the status line's two ends a metre apart.
+   *
+   * rem, not em. An em resolves against the element's own font size, so the
+   * same token would cap the 12px status line at 1200px and the 14px console
+   * at 1400px — the bar's contents would each centre to a different width and
+   * visibly fail to line up with the pane above them.
+   */
+  --maxw-pane: 100rem;
   --measure: 68ch;
-  --nav-h: 56px;
+  --nav-h: 48px;
+  /* Height of the pinned console + status bar, so the pane can clear it. */
+  --bar-h: 66px;
 
   /* ── effect ── */
   --focus: 2px solid var(--g1);
@@ -95,6 +106,19 @@
   --shadow-glow: 0 0 0 1px var(--border-green), 0 4px 20px rgba(60, 179, 79, 0.08);
   --dots: radial-gradient(circle, rgba(255, 255, 255, 0.045) 1px, transparent 1px);
   --dots-size: 28px 28px;
+
+  /*
+   * Phosphor glow — the one thing taken from the reference site, whose
+   * effects.css layers three shadows of its accent colour on everything.
+   *
+   * Applied to green and chrome only. A halo over seven hundred words of
+   * Norwegian is the difference between atmosphere and eye strain, and those
+   * are the pages somebody deciding whether to join actually reads.
+   */
+  --glow: 0 0 6px rgba(60, 179, 79, 0.55), 0 0 18px rgba(60, 179, 79, 0.25);
+  --glow-lg: 0 0 7px rgba(60, 179, 79, 0.6), 0 0 25px rgba(60, 179, 79, 0.3),
+    0 0 40px rgba(60, 179, 79, 0.15);
+  --glow-soft: 0 0 8px rgba(240, 242, 248, 0.18);
   --bullet: "» ";
 
   /* Chevron for <select>, inlined so it needs no extra request. */

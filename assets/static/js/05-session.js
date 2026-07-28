@@ -40,11 +40,16 @@ itemize.ready(function () {
 
   // Any input at all completes it immediately. A transition that cannot be
   // dismissed stops being an effect and becomes an obstacle on the third visit.
+  // So does leaving the tab: this one gates the whole page's content, so it is
+  // the last thing that should be left waiting on a throttled timer.
   var events = ["keydown", "pointerdown", "wheel", "touchstart"];
+  var cancelHidden = function () {};
+
   function detach() {
     events.forEach(function (name) {
       window.removeEventListener(name, finish, { capture: true });
     });
+    cancelHidden();
   }
   events.forEach(function (name) {
     window.addEventListener(name, finish, { capture: true, passive: true });
@@ -53,6 +58,12 @@ itemize.ready(function () {
   pane.setAttribute("data-arriving", "");
   cmd.setAttribute("data-typing", "");
   cmd.textContent = "";
+
+  // Only now: onHidden calls back synchronously on a page that is already in
+  // the background, and finishing before the attributes exist would set them
+  // straight afterwards with nothing left running to take them off again.
+  cancelHidden = itemize.onHidden(finish);
+  if (finished) return;
 
   var i = 0;
   (function tick() {

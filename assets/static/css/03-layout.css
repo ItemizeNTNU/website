@@ -23,10 +23,6 @@ body {
   margin: 0;
   min-height: 100vh;
   background-color: var(--bg);
-  /* The dot grid sits on the body so it scrolls with the page. */
-  background-image: var(--dots);
-  background-size: var(--dots-size);
-  padding: var(--s5) var(--s4) var(--s7);
 }
 
 .skiplink {
@@ -47,30 +43,41 @@ body {
 
 /* ── The window ────────────────────────────────────────────────────────── */
 
+/*
+ * The window is the viewport. No margin, no radius, no border — a terminal
+ * fills the screen, and the moment it floats on a background it reads as a
+ * widget on a page instead.
+ */
 .shell {
-  max-width: var(--maxw);
-  margin: 0 auto;
-  border: 1px solid var(--border-strong);
-  border-radius: var(--r-lg);
-  background: rgba(13, 15, 20, 0.72);
-  box-shadow: var(--shadow-card), 0 0 80px rgba(60, 179, 79, 0.05);
-  /* Clips the chrome's corners against the frame. */
-  overflow: hidden;
+  min-height: 100vh;
+  display: flex;
+  flex-direction: column;
 }
 
 /* ── Chrome ────────────────────────────────────────────────────────────── */
 
 .chrome {
-  position: sticky;
+  position: fixed;
   top: 0;
+  left: 0;
+  right: 0;
   z-index: 100;
   display: flex;
   align-items: center;
   gap: var(--s3);
   min-height: var(--nav-h);
-  padding: 0 var(--s4);
+  padding: 0 var(--s5);
   background: var(--surface);
   border-bottom: 1px solid var(--border);
+}
+
+.chrome__inner {
+  display: flex;
+  align-items: center;
+  gap: var(--s3);
+  width: 100%;
+  max-width: var(--maxw-pane);
+  margin-inline: auto;
 }
 
 .chrome__dots {
@@ -86,8 +93,11 @@ body {
   background: var(--border-strong);
 }
 
+/* Only the live one glows, so it reads as a status light rather than
+   borrowed window decoration. */
 .chrome__dots i:first-child {
-  background: rgba(60, 179, 79, 0.5);
+  background: var(--g1);
+  box-shadow: var(--glow);
 }
 
 .chrome__actions {
@@ -114,9 +124,7 @@ body {
 /* ── Tabs ──────────────────────────────────────────────────────────────── */
 
 /*
- * The strip scrolls sideways rather than collapsing into a menu. That is what a
- * terminal app does on a phone, and it is one component fewer than the
- * hamburger it replaces — no toggle, no open state, nothing to trap focus in.
+ * Wide: a strip across the chrome, scrolling if it has to.
  */
 .tabs {
   min-width: 0;
@@ -127,6 +135,11 @@ body {
   -webkit-overflow-scrolling: touch;
   /* Fades the right edge so the strip reads as scrollable when it overflows. */
   mask-image: linear-gradient(to right, #000 calc(100% - 2rem), transparent);
+}
+
+/* The button belongs to the narrow layout only. */
+.menu-btn {
+  display: none;
 }
 
 .tabs::-webkit-scrollbar {
@@ -166,13 +179,181 @@ body {
   color: var(--text);
   background: rgba(60, 179, 79, 0.07);
   border-bottom-color: var(--g1);
+  box-shadow: inset 0 -1px 12px rgba(60, 179, 79, 0.12);
+}
+
+/* ── Menu, below the breakpoint ────────────────────────────────────────── */
+
+/*
+ * A scrolling strip on a phone shows two destinations and hides the rest behind
+ * a drag. The menu shows all six at once, which is the whole job of navigation.
+ *
+ * Gated on html[data-js]: without scripting there is no toggle to press, so the
+ * list simply renders and every destination stays reachable.
+ */
+@media (max-width: 51.99rem) {
+  .chrome {
+    padding: 0 var(--s4);
+  }
+
+  .chrome__dots {
+    display: none;
+  }
+
+  html[data-js] .menu-btn {
+    display: flex;
+    align-items: center;
+    gap: var(--s3);
+    height: var(--nav-h);
+    padding: 0;
+    font-family: var(--font-mono);
+    font-size: var(--fs-sm);
+    color: var(--dim);
+    cursor: pointer;
+  }
+
+  .menu-btn__path {
+    color: var(--g1);
+    text-shadow: var(--glow);
+  }
+
+  /* Three bars, drawn rather than shipped as an icon. */
+  .menu-btn__icon,
+  .menu-btn__icon::before,
+  .menu-btn__icon::after {
+    display: block;
+    width: 16px;
+    height: 2px;
+    background: currentColor;
+  }
+
+  .menu-btn__icon {
+    position: relative;
+  }
+
+  .menu-btn__icon::before,
+  .menu-btn__icon::after {
+    content: "";
+    position: absolute;
+    left: 0;
+  }
+
+  .menu-btn__icon::before {
+    top: -5px;
+  }
+
+  .menu-btn__icon::after {
+    top: 5px;
+  }
+
+  /* Open: the bars become a cross. */
+  .menu-btn[aria-expanded="true"] .menu-btn__icon {
+    background: transparent;
+  }
+
+  .menu-btn[aria-expanded="true"] .menu-btn__icon::before {
+    top: 0;
+    transform: rotate(45deg);
+  }
+
+  .menu-btn[aria-expanded="true"] .menu-btn__icon::after {
+    top: 0;
+    transform: rotate(-45deg);
+  }
+
+  /*
+   * The listing drops below the chrome as a panel rather than growing it. The
+   * chrome is position:fixed, so it is already the containing block — nothing
+   * else has to change to anchor this. The insets are zero and the panel still
+   * spans the full width: offsets resolve against the containing block's
+   * padding box, and the chrome's padding box reaches its edges.
+   */
+  html[data-js] .tabs {
+    position: absolute;
+    top: 100%;
+    left: 0;
+    right: 0;
+    flex: none;
+    overflow: visible;
+    mask-image: none;
+    background: var(--surface);
+    border-bottom: 1px solid var(--border);
+    box-shadow: var(--shadow-card);
+    /*
+     * display:none, never a transform. A menu moved offscreen is still
+     * focusable — the previous site let keyboard users tab into an invisible
+     * panel, and that is not coming back with the menu.
+     */
+    display: none;
+  }
+
+  html[data-js] .tabs[data-open] {
+    display: block;
+  }
+
+  /*
+   * Without scripting there is no toggle, so the list renders in full and the
+   * chrome becomes as tall as six destinations. Pinned, that would sit on top
+   * of the first screenful — so it goes back into the flow, and the pane stops
+   * reserving height for a bar that is no longer floating above it.
+   */
+  html:not([data-js]) .chrome {
+    position: static;
+  }
+
+  html:not([data-js]) .shell__pane {
+    padding-top: var(--s5);
+  }
+
+  .tabs__list {
+    flex-direction: column;
+    align-items: stretch;
+    width: auto;
+    padding: var(--s2) 0;
+  }
+
+  .tab {
+    height: auto;
+    padding: var(--s3) var(--s4) var(--s3) var(--s5);
+    border-bottom: none;
+    border-left: 2px solid transparent;
+  }
+
+  /* The listing marks the current entry the way a terminal would. */
+  .tab[aria-current="page"] {
+    border-bottom-color: transparent;
+    border-left-color: var(--g1);
+    box-shadow: none;
+  }
+
+  .tab[aria-current="page"]::before {
+    content: "\25AE";
+    margin-right: var(--s2);
+    color: var(--g1);
+    text-shadow: var(--glow);
+  }
 }
 
 /* ── Pane ──────────────────────────────────────────────────────────────── */
 
 .shell__pane {
   position: relative;
-  padding: var(--s5) var(--s5) var(--s6);
+  flex: 1;
+  /* Clears the fixed chrome above and the pinned bar below. */
+  padding: calc(var(--nav-h) + var(--s5)) var(--s5) calc(var(--bar-h) + var(--s6));
+  /* The dot grid moved in here from the body: outside the window it framed
+     the page, inside it sits behind the session where it belongs. */
+  background-image: var(--dots);
+  background-size: var(--dots-size);
+}
+
+/*
+ * Content is centred within a cap rather than running the full width. The
+ * window is edge to edge; the reading is not.
+ */
+.shell__pane > * {
+  max-width: var(--maxw-pane);
+  margin-inline: auto;
 }
 
 main {
@@ -181,6 +362,43 @@ main {
 
 main > section + section {
   margin-top: var(--s7);
+}
+
+/* ── The pinned bar ────────────────────────────────────────────────────── */
+
+/*
+ * Console and status line together at the foot of the screen — tmux's command
+ * prompt and status bar, which is what they already were in spirit.
+ */
+.shell__bar {
+  position: fixed;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  z-index: 90;
+  background: var(--surface);
+  border-top: 1px solid var(--border);
+}
+
+.shell__bar > * {
+  max-width: var(--maxw-pane);
+  margin-inline: auto;
+}
+
+/*
+ * On a phone the bar unpins. A fixed input at the bottom of a small viewport
+ * fights the on-screen keyboard, and the vertical space is worth more than a
+ * feature nobody reaches for on a touch device.
+ */
+@media (max-width: 51.99rem) {
+  .shell__bar {
+    position: static;
+    border-top: none;
+  }
+
+  .shell__pane {
+    padding-bottom: var(--s6);
+  }
 }
 
 /* ── Status line ───────────────────────────────────────────────────────── */
@@ -193,16 +411,23 @@ main > section + section {
   display: flex;
   align-items: center;
   gap: var(--s4);
-  padding: var(--s2) var(--s4);
-  background: var(--surface);
-  border-top: 1px solid var(--border);
+  padding: var(--s2) var(--s5);
   font-family: var(--font-mono);
   font-size: var(--fs-xs);
   color: var(--muted);
 }
 
+/* Standing alone at the end of the document, it needs its own rule above. */
+@media (max-width: 51.99rem) {
+  .status {
+    border-top: 1px solid var(--border);
+    margin-top: var(--s6);
+  }
+}
+
 .status__path {
   color: var(--g1);
+  text-shadow: var(--glow);
   white-space: nowrap;
   overflow: hidden;
   text-overflow: ellipsis;
@@ -234,11 +459,13 @@ main > section + section {
 .status__session::before {
   content: "[ ";
   color: var(--g1);
+  text-shadow: var(--glow);
 }
 
 .status__session::after {
   content: " ]";
   color: var(--g1);
+  text-shadow: var(--glow);
 }
 
 /* Below this the hint competes with the path for room it does not have. */
