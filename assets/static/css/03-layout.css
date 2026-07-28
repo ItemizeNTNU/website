@@ -67,9 +67,19 @@ main > section + section {
 }
 
 .nav__brand::before {
-  content: "> ";
+  content: "$ ";
   color: var(--g1);
   font-weight: 400;
+}
+
+/*
+ * Root prompt for the board. A shell uses # for a privileged session and $ for
+ * an ordinary one, so this encodes the visitor's actual access rather than
+ * decorating the wordmark — and the audience reads it without being told.
+ */
+.nav__brand--root::before {
+  content: "# ";
+  color: var(--g-hi);
 }
 
 .nav__brand::after {

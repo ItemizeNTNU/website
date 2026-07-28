@@ -1,0 +1,249 @@
+/*
+ * Terminal chrome.
+ *
+ * The site already spoke in terminal idiom — a prompt, a mono face, a dot
+ * grid — but decoratively: the shell was a costume over an ordinary page. The
+ * pieces here are the ones that carry meaning.
+ *
+ * The hero is the argument. That brainfuck program is not ambient noise; it
+ * prints this organisation's name, so the front page shows it being typed,
+ * run, and producing the wordmark as its output. Same effect as before, now
+ * the point of the page rather than texture behind it.
+ */
+
+/* ── The terminal window ───────────────────────────────────────────────── */
+
+.term {
+  position: relative;
+  max-width: 46rem;
+  margin: 0 auto;
+  border: 1px solid var(--border-strong);
+  border-radius: var(--r);
+  background: rgba(13, 15, 20, 0.72);
+  box-shadow: var(--shadow-card), 0 0 60px rgba(60, 179, 79, 0.06);
+  overflow: hidden;
+  text-align: left;
+}
+
+.term__bar {
+  display: flex;
+  align-items: center;
+  gap: var(--s3);
+  padding: var(--s2) var(--s4);
+  background: rgba(255, 255, 255, 0.04);
+  border-bottom: 1px solid var(--border);
+  font-family: var(--font-mono);
+  font-size: var(--fs-xs);
+  color: var(--muted);
+}
+
+/* Three dots, but drawn in the palette rather than borrowed from macOS. */
+.term__dots {
+  display: flex;
+  gap: 6px;
+  flex-shrink: 0;
+}
+
+.term__dots i {
+  width: 9px;
+  height: 9px;
+  border-radius: 50%;
+  background: var(--border-strong);
+}
+
+.term__dots i:first-child {
+  background: rgba(60, 179, 79, 0.5);
+}
+
+.term__title {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.term__body {
+  padding: var(--s4) var(--s5) var(--s5);
+  font-family: var(--font-mono);
+  font-size: clamp(0.75rem, 1.6vw, 0.875rem);
+  line-height: 1.6;
+}
+
+/* A command the visitor is watching being run. */
+.term__cmd {
+  color: var(--dim);
+  margin: 0;
+}
+
+.term__cmd::before {
+  content: "$ ";
+  color: var(--g1);
+}
+
+.term__cmd + .term__cmd {
+  margin-top: var(--s3);
+}
+
+/*
+ * The program source. Wraps hard because it is one unbroken run of
+ * punctuation, and is dimmed so the output below it stays the focus.
+ */
+.term__src {
+  margin: var(--s2) 0 var(--s4);
+  color: var(--g2);
+  opacity: 0.75;
+  word-break: break-all;
+  white-space: pre-wrap;
+  min-height: 4.5em;
+  user-select: none;
+}
+
+/* The output: the wordmark itself. */
+.term__out {
+  margin: var(--s3) 0 var(--s4);
+  opacity: 0;
+  transition: opacity 0.4s ease-out;
+}
+
+.term__out[data-shown] {
+  opacity: 1;
+}
+
+.term__out {
+  position: relative;
+}
+
+.term__out img {
+  width: min(100%, 26rem);
+  height: auto;
+}
+
+/* The idle prompt the sequence finishes on. */
+.term__prompt::before {
+  content: "$ ";
+  color: var(--g1);
+}
+
+.term__prompt::after {
+  content: "▊";
+  color: var(--g1);
+  animation: cursor-blink 1.1s step-end infinite;
+}
+
+/* ── Corner brackets ───────────────────────────────────────────────────── */
+
+/*
+ * Cards get drawn corners rather than a plain rounded rectangle. Two
+ * pseudo-elements, opposite corners, so the shape reads as bracketed without
+ * needing four extra nodes.
+ */
+.card {
+  position: relative;
+}
+
+.card::before,
+.card::after {
+  content: "";
+  position: absolute;
+  width: 10px;
+  height: 10px;
+  border-color: var(--border-green);
+  border-style: solid;
+  opacity: 0;
+  transition: opacity 0.15s;
+  pointer-events: none;
+}
+
+.card::before {
+  top: -1px;
+  left: -1px;
+  border-width: 1px 0 0 1px;
+}
+
+.card::after {
+  bottom: -1px;
+  right: -1px;
+  border-width: 0 1px 1px 0;
+}
+
+.card--hover:hover::before,
+.card--hover:hover::after {
+  opacity: 1;
+}
+
+/* ── Status markers ────────────────────────────────────────────────────── */
+
+/*
+ * Square brackets rather than pills. A bracketed token is how a terminal
+ * marks state, and it costs nothing to say it in the reader's own idiom.
+ */
+.chip {
+  border: none;
+  border-radius: 0;
+  padding: 0;
+  font-size: var(--fs-xs);
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+}
+
+.chip::before {
+  content: "[ ";
+  color: var(--g1);
+}
+
+.chip::after {
+  content: " ]";
+  color: var(--g1);
+}
+
+/* ── Terminal-style inputs ─────────────────────────────────────────────── */
+
+/*
+ * A caret before each field. Purely typographic — the input keeps its own
+ * box, so nothing about focus or hit area changes.
+ */
+.field > label::before {
+  content: "❯ ";
+  color: var(--g1);
+}
+
+/* ── Section rules ─────────────────────────────────────────────────────── */
+
+/*
+ * The // marker already means "this section is addressable". The rule after
+ * it now fades out rather than running the full width, which stops a page of
+ * sections reading as a stack of boxes.
+ */
+.section-head {
+  border-bottom: none;
+  position: relative;
+  padding-bottom: var(--s3);
+}
+
+.section-head::after {
+  content: "";
+  position: absolute;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  height: 1px;
+  background: linear-gradient(
+    to right,
+    var(--border-green),
+    var(--border) 30%,
+    transparent
+  );
+}
+
+/* ── Reduced motion ────────────────────────────────────────────────────── */
+
+@media (prefers-reduced-motion: reduce) {
+  .term__prompt::after {
+    animation: none;
+  }
+
+  /* The sequence never runs, so the output is simply present. */
+  .term__out {
+    opacity: 1;
+    transition: none;
+  }
+}

@@ -1,6 +1,13 @@
 {{- define "nav" -}}
 <nav class="nav" aria-label="Hovedmeny">
-  <a class="nav__brand" href="/">itemize</a>
+  {{- /*
+    A shell shows # for root and $ for everyone else. The board has elevated
+    privileges on this site, so the prompt says so — real state, in the idiom
+    the audience already reads fluently.
+  */ -}}
+  <a class="nav__brand{{ if .User.IsStyret }} nav__brand--root{{ end }}" href="/"
+    >itemize</a
+  >
 
   {{- /* Rendered before the menu so the collapsed layout can order them;
          aria-controls ties it to the list for assistive technology. */}}
