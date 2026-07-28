@@ -6,6 +6,7 @@ import (
 	"net/http"
 
 	"github.com/ItemizeNTNU/website/content"
+	"github.com/ItemizeNTNU/website/internal/auth"
 	"github.com/ItemizeNTNU/website/internal/events"
 )
 
@@ -139,6 +140,7 @@ func (s *Server) NotFound(w http.ResponseWriter, r *http.Request) {
 func (s *Server) Routes(mux *http.ServeMux) {
 	mux.HandleFunc("GET /{$}", s.index)
 	mux.HandleFunc("GET /arrangementer", s.arrangementer)
+	mux.Handle("GET /profil", auth.RequireLogin(http.HandlerFunc(s.profil)))
 	s.registerStaticPages(mux)
 	s.registerRedirects(mux)
 

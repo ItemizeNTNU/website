@@ -53,10 +53,32 @@ Updating the board after a general assembly is a one-file edit to
 | `internal/fusionauth/`, `internal/discord/` | external API clients |
 | `internal/web/`, `internal/api/` | HTML and JSON handlers |
 | `old-website/` | the previous Sapper app, kept for reference only |
+| `docs/` | operational notes: authentication, FusionAuth setup |
 
 `assets/` and `content/` sit outside `internal/` because `//go:embed` cannot
 reference parent directories — and keeping them at the top level means a board
 member editing content never has to open a Go file.
+
+## Authentication
+
+Login runs against FusionAuth over OpenID Connect (authorization code + PKCE);
+the session is a sealed cookie with no server-side store. See
+[`docs/auth.md`](docs/auth.md).
+
+> **Open item — ID tokens are verified with HS256.**
+>
+> HS256 signs with a shared secret, which means anyone holding it can *mint*
+> tokens rather than only verify them. RS256 would leave the signing key with
+> FusionAuth alone. The switch has not been made yet because the FusionAuth
+> tenant is shared with other applications and it needs checking whether the
+> signing key is set per application or tenant-wide.
+>
+> Both code paths exist and are tested; `FUSION_AUTH_ID_TOKEN_ALG` selects one.
+> [`docs/auth.md`](docs/auth.md) has the migration steps and what to delete
+> afterwards. The relevant places carry `TODO(auth)` comments.
+
+FusionAuth admin steps live in
+[`docs/fusionauth-checklist.md`](docs/fusionauth-checklist.md).
 
 ## Testing
 

@@ -24,6 +24,7 @@ import (
 
 	"github.com/ItemizeNTNU/website/assets"
 	"github.com/ItemizeNTNU/website/internal/api"
+	"github.com/ItemizeNTNU/website/internal/auth"
 	"github.com/ItemizeNTNU/website/internal/config"
 	"github.com/ItemizeNTNU/website/internal/events"
 	"github.com/ItemizeNTNU/website/internal/httpx"
@@ -79,8 +80,20 @@ func run(devFlag bool) error {
 		return err
 	}
 
+	https := cfg.BaseURL.Scheme == "https"
+
+	sealer, err := auth.NewSealer(cfg.FusionAuth.Secret, https)
+	if err != nil {
+		return err
+	}
+	authn, err := auth.New(context.Background(), cfg, sealer, log)
+	if err != nil {
+		return err
+	}
+
 	mux := http.NewServeMux()
 	mux.HandleFunc("GET /healthz", healthz)
+	authn.Routes(mux)
 	assetServer.Register(mux)
 	site.Routes(mux)
 
@@ -88,7 +101,6 @@ func run(devFlag bool) error {
 		api.NewServer(repo, cfg.BaseURL.String(), log).Routes(mux)
 	}
 
-	https := cfg.BaseURL.Scheme == "https"
 	handler := httpx.Chain(mux,
 		httpx.RequestID,
 		httpx.Logger(log),
@@ -97,6 +109,9 @@ func run(devFlag bool) error {
 		httpx.Gzip,
 		httpx.TrailingSlash,
 		httpx.CookieRecipe,
+		// Before anything that renders a page, so every handler and template
+		// sees the signed-in member.
+		authn.Inject,
 		web.ClearFlash,
 	)
 

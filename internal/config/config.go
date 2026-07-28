@@ -40,6 +40,32 @@ type FusionAuth struct {
 	// APIToken authenticates server-to-server calls. Optional: when empty,
 	// registration and profile writes degrade to 503 but login still works.
 	APIToken string
+
+	// IDTokenAlg is the algorithm FusionAuth signs ID tokens with: "HS256" or
+	// "RS256".
+	//
+	// TODO(auth): default this to RS256 and delete the HS256 path once the
+	// FusionAuth application has been switched over. HS256 means the shared
+	// secret can mint tokens as well as verify them; RS256 means only
+	// FusionAuth can issue them. The change is a per-application setting, so
+	// it can be made without affecting the wiki or anything else on the same
+	// tenant. See docs/auth.md.
+	IDTokenAlg string
+
+	// IDTokenHMACSecret is the shared secret for HS256, when it is not the
+	// client secret. FusionAuth's own default is a separately generated HMAC
+	// key rather than the client secret the OIDC specification names, and the
+	// two are different values — using the wrong one fails every login.
+	IDTokenHMACSecret string
+}
+
+// IDTokenSecret returns the key that verifies an HS256 ID token, defaulting to
+// the client secret as the specification prescribes.
+func (f FusionAuth) IDTokenSecret() string {
+	if f.IDTokenHMACSecret != "" {
+		return f.IDTokenHMACSecret
+	}
+	return f.ClientSecret
 }
 
 // Mongo holds the database connection settings.
@@ -97,6 +123,9 @@ func Load() (*Config, error) {
 			ClientSecret: os.Getenv("FUSION_AUTH_CLIENT_SECRET"),
 			Secret:       os.Getenv("FUSION_AUTH_SECRET"),
 			APIToken:     os.Getenv("FUSION_AUTH_API_TOKEN"),
+			// HS256 is today's reality, not a preference. See the TODO above.
+			IDTokenAlg:        strings.ToUpper(envOr("FUSION_AUTH_ID_TOKEN_ALG", "HS256")),
+			IDTokenHMACSecret: os.Getenv("FUSION_AUTH_ID_TOKEN_HMAC_SECRET"),
 		},
 		Discord: Discord{
 			ClientID:     os.Getenv("DISCORD_CLIENT_ID"),
@@ -136,6 +165,13 @@ func Load() (*Config, error) {
 	case n < minSecretLen:
 		errs = append(errs, fmt.Errorf(
 			"FUSION_AUTH_SECRET must be at least %d bytes, got %d", minSecretLen, n))
+	}
+
+	switch cfg.FusionAuth.IDTokenAlg {
+	case "HS256", "RS256":
+	default:
+		errs = append(errs, fmt.Errorf(
+			"FUSION_AUTH_ID_TOKEN_ALG must be HS256 or RS256, got %q", cfg.FusionAuth.IDTokenAlg))
 	}
 
 	mongo, err := parseMongo(os.Getenv("MONGO_DB_URL"))
@@ -244,6 +280,7 @@ func (c *Config) LogValue() slog.Value {
 		slog.String("fusionauth_client_secret", redact(c.FusionAuth.ClientSecret)),
 		slog.String("session_secret", redact(c.FusionAuth.Secret)),
 		slog.String("fusionauth_api_token", redact(c.FusionAuth.APIToken)),
+		slog.String("id_token_alg", c.FusionAuth.IDTokenAlg),
 		slog.String("mongo_database", c.Mongo.Database),
 		slog.Bool("discord_enabled", c.Discord.Enabled()),
 		slog.String("discord_client_secret", redact(c.Discord.ClientSecret)),
