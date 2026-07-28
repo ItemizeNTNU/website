@@ -9,6 +9,7 @@ import (
 	"context"
 	"errors"
 	"flag"
+	"fmt"
 	"log/slog"
 	"net/http"
 	"os"
@@ -36,24 +37,41 @@ import (
 var version = "dev"
 
 func main() {
-	dev := flag.Bool("dev", false,
+	fromDisk := flag.Bool("dev", false,
 		"read templates, stylesheets and content from disk instead of the embedded copies")
+	check := flag.Bool("healthcheck", false,
+		"probe the running server and exit 0 if healthy (used by the container health check)")
 	flag.Parse()
 
-	if err := run(*dev); err != nil {
+	if *check {
+		os.Exit(healthcheck())
+	}
+
+	if err := run(*fromDisk); err != nil {
 		slog.Error("fatal", "err", err)
 		os.Exit(1)
 	}
 }
 
-func run(devFlag bool) error {
+// run starts the server.
+//
+// fromDisk is separate from cfg.Dev on purpose. They used to be the same
+// switch, which meant a container started without ENV=production — and
+// "development" is the default — tried to read templates and content from a
+// directory the image does not contain, and died with a confusing error about
+// a missing YAML file. They are two different questions:
+//
+//   - cfg.Dev: is this production? Governs TLS requirements, log format, and
+//     whether a .env file is read at all.
+//   - fromDisk: should assets be read from the working directory instead of
+//     the binary? Only ever true when a developer passes -dev.
+func run(fromDisk bool) error {
 	cfg, err := config.Load()
 	if err != nil {
 		return err
 	}
-	dev := cfg.Dev || devFlag
 
-	log := newLogger(dev)
+	log := newLogger(cfg.Dev)
 	slog.SetDefault(log)
 	log.Info("starting", "version", version, "config", cfg)
 
@@ -62,20 +80,20 @@ func run(devFlag bool) error {
 		return errors.New("timezone database unavailable: " + err.Error())
 	}
 
-	fsys := assets.FS(dev)
+	fsys := assets.FS(fromDisk)
 
-	assetServer, err := httpx.NewAssets(fsys, dev)
+	assetServer, err := httpx.NewAssets(fsys, fromDisk)
 	if err != nil {
 		return err
 	}
 
-	repo, disconnect, err := openEvents(cfg, log, dev)
+	repo, disconnect, err := openEvents(cfg, log, cfg.Dev)
 	if err != nil {
 		return err
 	}
 	defer disconnect()
 
-	site, err := web.NewServer(fsys, assetServer, repo, log, dev)
+	site, err := web.NewServer(fsys, assetServer, repo, log, fromDisk)
 	if err != nil {
 		return err
 	}
@@ -189,6 +207,34 @@ func openEvents(cfg *config.Config, log *slog.Logger, dev bool) (events.Reposito
 		}
 	}
 	return repo, disconnect, nil
+}
+
+// healthcheck probes the local server and reports whether it is serving.
+//
+// The container image has no shell and no curl — that is the point of a
+// distroless base — so the binary doubles as its own health probe.
+func healthcheck() int {
+	port := os.Getenv("PORT")
+	if port == "" {
+		port = os.Getenv("LISTEN")
+	}
+	if port == "" {
+		port = "3000"
+	}
+
+	client := &http.Client{Timeout: 3 * time.Second}
+	resp, err := client.Get("http://127.0.0.1:" + port + "/healthz")
+	if err != nil {
+		fmt.Fprintln(os.Stderr, "healthcheck:", err)
+		return 1
+	}
+	defer resp.Body.Close()
+
+	if resp.StatusCode != http.StatusOK {
+		fmt.Fprintln(os.Stderr, "healthcheck: status", resp.StatusCode)
+		return 1
+	}
+	return 0
 }
 
 func healthz(w http.ResponseWriter, r *http.Request) {

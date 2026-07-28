@@ -96,7 +96,28 @@ MONGO_TEST_URL=mongodb://localhost:27017/website_test go test ./...
 
 Pushes to `main` build and publish `ghcr.io/ItemizeNTNU/website:latest` and then
 trigger a redeploy webhook; `dev` publishes the `dev` tag. Every build is also
-tagged `sha-<short>`, so a rollback is a `docker pull` of the previous SHA.
+tagged `sha-<short>`, so a rollback is a `docker pull` of a known digest rather
+than archaeology through the registry.
+
+The image is `distroless/static` — no shell, no package manager — and about
+18 MB. Since everything is embedded there is nothing to mount alongside it. The
+container health check is the binary probing itself (`/website -healthcheck`),
+because there is no curl to call.
+
+`ENV` governs strictness, not asset loading:
+
+- `ENV=production` requires `BASE_URL` and `FUSION_AUTH_HOST` to be https, logs
+  as JSON, and ignores any `.env` file in the image.
+- Anything else relaxes the https requirement and logs as text — useful on a
+  staging host without a certificate.
+
+Assets are always served from inside the binary. Only the `-dev` flag reads
+them from the working directory, and that is for running from a checkout.
+
+A failed start leaves the previous container serving, so the server refuses to
+come up rather than run degraded: MongoDB must answer, and OIDC discovery must
+succeed (retried five times with backoff, since the identity provider and the
+site often start together).
 
 ## History
 

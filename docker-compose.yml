@@ -1,0 +1,39 @@
+services:
+  web:
+    build:
+      context: .
+      args:
+        VERSION: ${VERSION:-dev}
+    image: ghcr.io/itemizentnu/website:${TAG:-latest}
+    env_file:
+      - .env
+    environment:
+      ENV: ${ENV:-production}
+      MONGO_DB_URL: ${MONGO_DB_URL:-mongodb://mongo/website}
+    ports:
+      - '${LISTEN:-3000}:3000'
+    depends_on:
+      mongo:
+        condition: service_healthy
+    restart: unless-stopped
+
+  mongo:
+    # NOTE: the previous stack pinned mongo:4.4.8, which reached end of life in
+    # February 2024 — an unpatched database. Upgrading is a separate task from
+    # the rewrite and cannot be done in one jump: MongoDB only supports
+    # stepping one major version at a time, each with a featureCompatibility-
+    # Version bump, so 4.4 → 5.0 → 6.0 → 7.0 → 8.0 against a restored copy of
+    # the data first.
+    #
+    # This file names 8 because it is what a fresh deployment should use. If
+    # you are upgrading an existing volume, change this to 5.0 and walk it up.
+    image: mongo:8
+    volumes:
+      - './data/mongodb:/data/db'
+    healthcheck:
+      test: ['CMD', 'mongosh', '--quiet', '--eval', 'db.runCommand({ping:1}).ok']
+      interval: 10s
+      timeout: 5s
+      retries: 10
+      start_period: 20s
+    restart: unless-stopped

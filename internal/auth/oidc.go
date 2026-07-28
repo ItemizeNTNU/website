@@ -45,16 +45,41 @@ type flowState struct {
 	Expires  time.Time `json:"e"`
 }
 
+// discoveryAttempts is how many times startup will retry OIDC discovery.
+//
+// Failing to reach the identity provider is fatal — a deployment that comes up
+// unable to authenticate anybody should not be mistaken for a healthy one, and
+// a failed start simply leaves the previous container serving. But the two
+// services often start together, so a provider that is merely slow should not
+// look like one that is misconfigured.
+const discoveryAttempts = 5
+
 // New builds an Authenticator by discovering the provider's configuration.
 func New(ctx context.Context, cfg *config.Config, sealer *Sealer, log *slog.Logger) (*Authenticator, error) {
 	issuer := cfg.FusionAuth.Host.String()
 
-	provider, err := oidc.NewProvider(ctx, issuer)
-	if err != nil {
-		return nil, fmt.Errorf(
-			"OIDC discovery failed against %s — check that the issuer in "+
-				"%s/.well-known/openid-configuration matches this URL exactly: %w",
-			issuer, issuer, err)
+	var provider *oidc.Provider
+	var err error
+	for attempt := 1; ; attempt++ {
+		provider, err = oidc.NewProvider(ctx, issuer)
+		if err == nil {
+			break
+		}
+		if attempt == discoveryAttempts {
+			return nil, fmt.Errorf(
+				"OIDC discovery failed against %s after %d attempts — check that the "+
+					"issuer in %s/.well-known/openid-configuration matches this URL "+
+					"exactly, character for character: %w",
+				issuer, discoveryAttempts, issuer, err)
+		}
+		wait := time.Duration(attempt) * 2 * time.Second
+		log.Warn("OIDC discovery failed, retrying",
+			"issuer", issuer, "attempt", attempt, "retry_in", wait, "err", err)
+		select {
+		case <-ctx.Done():
+			return nil, ctx.Err()
+		case <-time.After(wait):
+		}
 	}
 
 	oidcCfg := &oidc.Config{

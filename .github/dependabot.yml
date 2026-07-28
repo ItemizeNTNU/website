@@ -1,0 +1,38 @@
+# Keeping the dependencies current is meant to be unattended. The whole point
+# of the rewrite is a surface small enough that this stays quiet: a handful of
+# Go modules, one base image and a few actions, against the previous stack's
+# fourteen runtime and twenty-four development packages.
+#
+# Minor and patch updates are grouped into one pull request per ecosystem.
+# That is what makes this survivable for a board that turns over annually —
+# the repository's history is otherwise dominated by one-at-a-time
+# "Bump X from A to B". Major versions still arrive on their own, so somebody
+# actually reads them.
+version: 2
+
+updates:
+  - package-ecosystem: gomod
+    directory: /
+    schedule:
+      interval: weekly
+    open-pull-requests-limit: 5
+    groups:
+      go-minor-patch:
+        update-types:
+          - minor
+          - patch
+
+  - package-ecosystem: docker
+    directory: /
+    schedule:
+      interval: weekly
+
+  - package-ecosystem: github-actions
+    directory: /
+    schedule:
+      interval: weekly
+    groups:
+      actions:
+        update-types:
+          - minor
+          - patch
