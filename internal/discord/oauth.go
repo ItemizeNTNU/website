@@ -130,6 +130,9 @@ func (c *Client) currentUser(ctx context.Context, accessToken string) (*User, er
 
 // GetUser reads an account by identifier, using the bot's own credentials.
 func (c *Client) GetUser(ctx context.Context, id string) (*User, error) {
+	if !ValidID(id) {
+		return nil, ErrInvalidID
+	}
 	var u User
 	if err := c.do(ctx, http.MethodGet, "/users/"+id, nil, &u); err != nil {
 		return nil, err

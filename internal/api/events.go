@@ -14,20 +14,28 @@ import (
 	"github.com/ItemizeNTNU/website/internal/auth"
 	"github.com/ItemizeNTNU/website/internal/events"
 	"github.com/ItemizeNTNU/website/internal/fusionauth"
+	"github.com/ItemizeNTNU/website/internal/httpx"
 	"github.com/ItemizeNTNU/website/internal/ical"
 )
 
 // Server holds the API's dependencies.
 type Server struct {
-	events  events.Repository
-	fusion  *fusionauth.Client
-	baseURL string
-	log     *slog.Logger
+	events      events.Repository
+	fusion      *fusionauth.Client
+	baseURL     string
+	signupLimit *httpx.RateLimiter
+	log         *slog.Logger
 }
 
 // NewServer builds the API handlers.
 func NewServer(repo events.Repository, fusion *fusionauth.Client, baseURL string, log *slog.Logger) *Server {
-	return &Server{events: repo, fusion: fusion, baseURL: baseURL, log: log}
+	return &Server{
+		events:      repo,
+		fusion:      fusion,
+		baseURL:     baseURL,
+		signupLimit: httpx.NewRateLimiter(5, time.Hour),
+		log:         log,
+	}
 }
 
 // Routes registers the API on mux.
@@ -42,8 +50,15 @@ func (s *Server) Routes(mux *http.ServeMux) {
 	mux.Handle("POST /api/checkin/{code}",
 		auth.RequireLoginAPI(http.HandlerFunc(s.postCheckIn)))
 
-	mux.HandleFunc("GET /api/user/{id}", s.getUser)
-	mux.HandleFunc("PUT /api/user", s.registerUser)
+	// Requires a login. The response carries an email address and a legal
+	// name, and identifiers leak into places members can see — so serving it
+	// to anybody, as the previous site did, made the directory readable to
+	// anyone who collected one.
+	mux.Handle("GET /api/user/{id}",
+		auth.RequireLoginAPI(http.HandlerFunc(s.getUser)))
+	// Rate limited for the same reason as the form: this causes FusionAuth to
+	// send mail to an address the caller chooses.
+	mux.Handle("PUT /api/user", s.signupLimit.Limit(http.HandlerFunc(s.registerUser)))
 
 	// Anything else under /api answers as JSON rather than falling through to
 	// the HTML 404 page, matching the previous behaviour.

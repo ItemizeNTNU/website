@@ -9,6 +9,8 @@ import (
 	"fmt"
 	"io"
 	"net/http"
+	"net/url"
+	"regexp"
 	"sort"
 	"time"
 )
@@ -22,6 +24,27 @@ var ErrNotConfigured = errors.New("FusionAuth API token is not configured")
 
 // ErrNotFound is returned when no such user exists.
 var ErrNotFound = errors.New("user not found")
+
+// ErrInvalidID is returned for an identifier that is not a FusionAuth user id.
+var ErrInvalidID = errors.New("not a valid user id")
+
+// uuidPattern matches the canonical form FusionAuth issues.
+//
+// Identifiers reach this package from a URL path, and Go's ServeMux unescapes
+// path segments after routing — so a percent-encoded "../" arrives intact.
+// Concatenated into the upstream URL that becomes a request to a different
+// FusionAuth endpoint, carrying the admin API key: /api/key lists API keys,
+// /api/user/search dumps the directory. A bare "?" is enough to append query
+// parameters to whatever call is being made.
+//
+// Escaping the segment (below) already prevents that. Checking the shape as
+// well means a malformed identifier is refused here rather than becoming a
+// request at all.
+var uuidPattern = regexp.MustCompile(
+	`^[0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{12}$`)
+
+// ValidID reports whether id is a well-formed FusionAuth user identifier.
+func ValidID(id string) bool { return uuidPattern.MatchString(id) }
 
 // Client talks to the FusionAuth user API.
 type Client struct {
@@ -76,8 +99,11 @@ func (c *Client) CreateUser(ctx context.Context, u User) (*User, error) {
 
 // GetUser fetches a user by identifier.
 func (c *Client) GetUser(ctx context.Context, id string) (*User, error) {
+	if !ValidID(id) {
+		return nil, ErrInvalidID
+	}
 	var out userEnvelope
-	if err := c.do(ctx, http.MethodGet, "/api/user/"+id, nil, &out); err != nil {
+	if err := c.do(ctx, http.MethodGet, "/api/user/"+url.PathEscape(id), nil, &out); err != nil {
 		return nil, err
 	}
 	return &out.User, nil
@@ -90,8 +116,11 @@ func (c *Client) GetUser(ctx context.Context, id string) (*User, error) {
 // literal nil in the map rather than omitting the field, and nothing on this
 // path may use omitempty.
 func (c *Client) PatchUser(ctx context.Context, id string, changes map[string]any) (*User, error) {
+	if !ValidID(id) {
+		return nil, ErrInvalidID
+	}
 	var out userEnvelope
-	err := c.do(ctx, http.MethodPatch, "/api/user/"+id,
+	err := c.do(ctx, http.MethodPatch, "/api/user/"+url.PathEscape(id),
 		map[string]any{"user": changes}, &out)
 	if err != nil {
 		return nil, err

@@ -60,6 +60,10 @@ type Sealer struct {
 // the cookie carries the Secure attribute; it must be false for plain-HTTP
 // development or the browser will refuse to store it.
 func NewSealer(secret string, secure bool) (*Sealer, error) {
+	// The CSRF cookie needs the same answer and cannot work it out from a
+	// request; see SetSecureCookies.
+	SetSecureCookies(secure)
+
 	key := sha256.Sum256([]byte(secret))
 	block, err := aes.NewCipher(key[:])
 	if err != nil {

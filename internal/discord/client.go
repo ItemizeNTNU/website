@@ -8,10 +8,12 @@ import (
 	"bytes"
 	"context"
 	"encoding/json"
+	"errors"
 	"fmt"
 	"io"
 	"log/slog"
 	"net/http"
+	"regexp"
 	"strconv"
 	"time"
 
@@ -28,6 +30,20 @@ const userAgent = "DiscordBot (https://itemize.no, 2.0)"
 // maxBody caps how much of a response we will read, so a misbehaving endpoint
 // cannot exhaust memory.
 const maxBody = 1 << 20
+
+// snowflakePattern matches a Discord identifier: decimal digits, nothing else.
+//
+// These identifiers are concatenated into request paths, and anything carrying
+// a slash, a dot segment or a question mark would reach a different endpoint
+// than intended. Checking the shape is cheaper and clearer than escaping every
+// call site, and a Discord id that is not all digits is malformed anyway.
+var snowflakePattern = regexp.MustCompile(`^[0-9]{1,25}$`)
+
+// ErrInvalidID is returned for an identifier that is not a Discord snowflake.
+var ErrInvalidID = errors.New("not a valid Discord id")
+
+// ValidID reports whether id is a well-formed Discord snowflake.
+func ValidID(id string) bool { return snowflakePattern.MatchString(id) }
 
 // Client is a Discord API client.
 type Client struct {

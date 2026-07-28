@@ -5,7 +5,6 @@ import (
 	"encoding/base64"
 	"html/template"
 	"net/http"
-	"strings"
 )
 
 // csrfCookie holds the token. It is readable by script — that is what the
@@ -14,6 +13,10 @@ const csrfCookie = "itemize_csrf"
 
 // CSRFField is the hidden input name carrying the token.
 const CSRFField = "_csrf"
+
+// maxFormBytes bounds a submitted form. The largest field on the site is an
+// event description capped at 2000 characters.
+const maxFormBytes = 64 << 10
 
 // CSRF protects state-changing requests.
 //
@@ -51,6 +54,12 @@ func CSRF(next http.Handler) http.Handler {
 			http.Error(w, "Skjemaet er utløpt. Last siden på nytt og prøv igjen.", http.StatusForbidden)
 			return
 		}
+		// Bound the body before parsing. ParseForm otherwise buffers up to
+		// Go's 10 MB default per request, which is a cheap way for one client
+		// to occupy a lot of memory across many connections. No form on this
+		// site is anywhere near this size.
+		r.Body = http.MaxBytesReader(w, r.Body, maxFormBytes)
+
 		// ParseForm has to run before reading the field, and doing it here
 		// means the handler's later call is a no-op rather than a re-read.
 		if err := r.ParseForm(); err != nil {
@@ -65,6 +74,21 @@ func CSRF(next http.Handler) http.Handler {
 		next.ServeHTTP(w, r)
 	})
 }
+
+// secureCookies records whether this deployment is served over TLS.
+//
+// It cannot be derived from the request. r.URL.Scheme is empty on the server
+// side — the request line carries a path, not an absolute URL — and r.TLS is
+// nil whenever TLS is terminated by a proxy in front of us, which is how this
+// site is actually deployed. Both checks therefore evaluate false in
+// production, and the cookie went out without the Secure attribute: readable
+// over any plaintext request to the same host.
+//
+// Set once at startup from BASE_URL, the same source the session cookie uses.
+var secureCookies bool
+
+// SetSecureCookies tells this package whether to mark cookies Secure.
+func SetSecureCookies(secure bool) { secureCookies = secure }
 
 // CSRFToken returns the token for this request, issuing one if needed.
 //
@@ -89,7 +113,7 @@ func CSRFToken(w http.ResponseWriter, r *http.Request) string {
 		// readable, and it is not a secret — it is only useful to a page that
 		// is already same-origin, which is exactly the case we permit.
 		HttpOnly: false,
-		Secure:   strings.HasPrefix(r.URL.Scheme, "https") || r.TLS != nil,
+		Secure:   secureCookies,
 		SameSite: http.SameSiteLaxMode,
 	})
 	return token
