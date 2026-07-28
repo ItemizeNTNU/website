@@ -1,0 +1,78 @@
+/*
+ * CRT overlay, and the guards on it.
+ *
+ * Loaded last on purpose: this is an overlay that has to sit above everything,
+ * and the accessibility guards below have to be able to switch off glow that
+ * earlier files set. It defines no utility of its own, so nothing here competes
+ * with 08-utilities.css.
+ */
+
+/*
+ * Film grain. The reference site plays a noise video for this; ours is an SVG
+ * feTurbulence as a data URI — no request, no decoder, and data: is already
+ * allowed by the CSP's img-src, so the policy needs no exception.
+ *
+ * Very faint. This lies over every paragraph on the site, not over a hero.
+ */
+body::after {
+  content: "";
+  position: fixed;
+  inset: 0;
+  z-index: 9999;
+  pointer-events: none;
+  opacity: 0.028;
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='140' height='140'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.85' numOctaves='3' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)'/%3E%3C/svg%3E");
+}
+
+/*
+ * A faint vignette, which is what a curved tube does to its own corners. Kept
+ * well below the point where it darkens anything being read.
+ */
+.shell__pane {
+  background-image: var(--dots),
+    radial-gradient(
+      ellipse at center,
+      transparent 55%,
+      rgba(0, 0, 0, 0.22) 100%
+    );
+  background-size: var(--dots-size), cover;
+  background-attachment: scroll, fixed;
+}
+
+/* ── Guards ────────────────────────────────────────────────────────────── */
+
+/*
+ * Someone who asked their system for sharper text has asked for the exact
+ * opposite of a phosphor halo. Drop all of it, and the grain with it.
+ */
+@media (prefers-contrast: more) {
+  *,
+  *::before,
+  *::after {
+    text-shadow: none !important;
+  }
+
+  body::after {
+    display: none;
+  }
+
+  .shell__pane {
+    background-image: none;
+  }
+}
+
+/*
+ * Forced-colours mode replaces the palette outright; an overlay and a glow are
+ * noise on top of a scheme the user chose deliberately.
+ */
+@media (forced-colors: active) {
+  body::after {
+    display: none;
+  }
+
+  *,
+  *::before,
+  *::after {
+    text-shadow: none !important;
+  }
+}

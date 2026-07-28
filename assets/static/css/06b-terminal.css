@@ -29,12 +29,14 @@
 .cmd::before {
   content: "$ ";
   color: var(--g1);
+  text-shadow: var(--glow-lg);
 }
 
 /* The board is root; see the session note in 03-layout.css. */
 .p-styret .cmd::before {
   content: "# ";
   color: var(--g-hi);
+  text-shadow: var(--glow-lg);
 }
 
 /* Lines that are part of the page's own output, never retyped. */
@@ -53,12 +55,14 @@
 .cmd[data-typing]::after {
   content: "▊";
   color: var(--g1);
+  text-shadow: var(--glow-lg);
   animation: cursor-blink 1.1s step-end infinite;
 }
 
 /* ── Front-page sequence ───────────────────────────────────────────────── */
 
 .hero__src {
+  text-shadow: var(--glow);
   margin: 0 0 var(--s4);
   font-family: var(--font-mono);
   font-size: clamp(0.7rem, 1.5vw, 0.8rem);
@@ -146,11 +150,13 @@
 .chip::before {
   content: "[ ";
   color: var(--g1);
+  text-shadow: var(--glow);
 }
 
 .chip::after {
   content: " ]";
   color: var(--g1);
+  text-shadow: var(--glow);
 }
 
 /* ── Terminal-style inputs ─────────────────────────────────────────────── */
@@ -177,19 +183,30 @@
   padding-bottom: var(--s3);
 }
 
+/*
+ * A drawn rule rather than a hairline: box-drawing characters are how a
+ * terminal separates things, and the run fades out so a page of sections does
+ * not read as a stack of boxes.
+ */
 .section-head::after {
-  content: "";
+  /*
+   * Long enough to outrun the widest header the pane cap allows (100rem), so
+   * the run is always clipped by overflow rather than simply running out —
+   * which would leave a hard stop partway along, where the mask is still most
+   * of the way opaque.
+   */
+  content: "────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────";
   position: absolute;
   left: 0;
   right: 0;
-  bottom: 0;
-  height: 1px;
-  background: linear-gradient(
-    to right,
-    var(--border-green),
-    var(--border) 30%,
-    transparent
-  );
+  bottom: -0.35em;
+  overflow: hidden;
+  white-space: nowrap;
+  font-family: var(--font-mono);
+  font-size: var(--fs-xs);
+  line-height: 1;
+  color: var(--border-green);
+  mask-image: linear-gradient(to right, #000, rgba(0, 0, 0, 0.25) 35%, transparent);
 }
 
 /* ── Reduced motion ────────────────────────────────────────────────────── */

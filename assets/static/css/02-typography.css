@@ -109,6 +109,9 @@ h3 {
 .prose address,
 .prose blockquote {
   font-family: var(--font-body);
+  /* Explicit, not incidental. Links inside a paragraph do glow — that is the
+     accent doing its job — but the running text never does. */
+  text-shadow: none;
 }
 
 .prose p,
@@ -161,6 +164,7 @@ h3 {
 
 /* Small uppercase mono label — roles, table headers, field names. */
 .eyebrow {
+  text-shadow: var(--glow);
   font-family: var(--font-mono);
   font-size: var(--fs-xs);
   font-weight: 700;
@@ -180,6 +184,7 @@ pre {
 }
 
 code {
+  text-shadow: var(--glow);
   background: rgba(0, 0, 0, 0.3);
   border: 1px solid rgba(255, 255, 255, 0.08);
   border-radius: var(--r-sm);

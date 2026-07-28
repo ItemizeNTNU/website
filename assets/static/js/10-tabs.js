@@ -12,6 +12,8 @@ itemize.ready(function () {
     active.scrollIntoView({ block: "nearest", inline: "nearest" });
   }
 
+  setUpMenu();
+
   document.addEventListener("keydown", function (e) {
     if (e.key !== "ArrowLeft" && e.key !== "ArrowRight") return;
     if (!shortcutAllowed(e)) return;
@@ -30,6 +32,47 @@ itemize.ready(function () {
     window.location.href = tabs[next].href;
   });
 });
+
+/*
+ * The menu, below the breakpoint.
+ *
+ * The list is the same markup as the wide strip; only its presentation differs.
+ * That means there is one set of links to keep correct, and the no-scripting
+ * case is simply the list rendering as it is.
+ */
+function setUpMenu() {
+  var button = document.getElementById("menu-btn");
+  var list = document.getElementById("tabs-list");
+  var tabs = list && list.closest(".tabs");
+  if (!button || !tabs) return;
+
+  function setOpen(open) {
+    button.setAttribute("aria-expanded", open ? "true" : "false");
+    if (open) {
+      tabs.setAttribute("data-open", "");
+    } else {
+      tabs.removeAttribute("data-open");
+    }
+  }
+
+  button.addEventListener("click", function () {
+    setOpen(button.getAttribute("aria-expanded") !== "true");
+  });
+
+  document.addEventListener("keydown", function (e) {
+    if (e.key !== "Escape") return;
+    if (button.getAttribute("aria-expanded") !== "true") return;
+    setOpen(false);
+    // Focus goes back where it came from, or it lands nowhere and the next Tab
+    // starts from the top of the document.
+    button.focus();
+  });
+
+  // Otherwise it is still open behind the next page on a slow connection.
+  tabs.addEventListener("click", function (e) {
+    if (e.target.closest("a")) setOpen(false);
+  });
+}
 
 /*
  * Whether a bare arrow key should be treated as a shortcut.

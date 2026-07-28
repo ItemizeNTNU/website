@@ -21,10 +21,29 @@ function runHeroSequence(src, out) {
   if (out) out.removeAttribute("data-shown");
   src.textContent = "";
 
+  var finished = false;
+  // Assigned below, but finish() may run before that: onHidden calls back
+  // synchronously when the page is already in the background.
+  var cancel = function () {};
+
+  // The wordmark is this program's output, so it stays hidden until the program
+  // has run — a stalled sequence would leave the front page without its logo.
+  function finish() {
+    if (finished) return;
+    finished = true;
+    src.textContent = program;
+    if (out) out.setAttribute("data-shown", "");
+    cancel();
+  }
+
+  cancel = itemize.onHidden(finish);
+  if (finished) return;
+
   var typed = 0;
   (function tick() {
+    if (finished) return;
     if (typed >= program.length) {
-      if (out) out.setAttribute("data-shown", "");
+      finish();
       return;
     }
     typed += 2 + Math.floor(Math.random() * 3);
@@ -81,20 +100,37 @@ function glitchReveal(el, startDelay) {
   var text = el.textContent.trim();
   if (!text || itemize.prefersReducedMotion()) return;
 
+  var finished = false;
+  var scrambling = null;
+  var revealing = null;
+  var cancel = function () {};
+
+  // Mid-reveal the element reads as line noise, and on the contact page that
+  // element is an email address. It never gets left that way.
+  function finish() {
+    finished = true;
+    clearInterval(scrambling);
+    clearInterval(revealing);
+    el.textContent = text;
+    cancel();
+  }
+
   el.textContent = scramble(text, 0);
-  var scrambling = setInterval(function () {
+  scrambling = setInterval(function () {
     el.textContent = scramble(text, 0);
   }, 80);
 
+  cancel = itemize.onHidden(finish);
+
   setTimeout(function () {
+    // The pause before the reveal outlives an early finish, so it has to check
+    // rather than start scrambling a settled element all over again.
+    if (finished) return;
     clearInterval(scrambling);
     var revealed = 0;
-    var revealing = setInterval(function () {
+    revealing = setInterval(function () {
       el.textContent = scramble(text, revealed);
-      if (++revealed > text.length) {
-        clearInterval(revealing);
-        el.textContent = text;
-      }
+      if (++revealed > text.length) finish();
     }, 35);
   }, startDelay);
 }

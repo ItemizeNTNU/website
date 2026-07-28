@@ -21,6 +21,30 @@ var itemize = (function () {
     );
   }
 
+  /*
+   * Runs fn as soon as the page stops being visible, or straight away if it
+   * already is not. Returns a function that cancels it.
+   *
+   * Every text animation here reveals content that is hidden until the
+   * animation reaches it, and a backgrounded tab has its timers throttled to a
+   * crawl and eventually frozen — so a run left half-finished leaves the page
+   * half-drawn. Nobody is watching an animation they cannot see, so each of
+   * them jumps to its end state instead and the page is whole on return.
+   */
+  function onHidden(fn) {
+    if (document.visibilityState === "hidden") {
+      fn();
+      return function () {};
+    }
+    function handler() {
+      if (document.visibilityState === "hidden") fn();
+    }
+    document.addEventListener("visibilitychange", handler);
+    return function () {
+      document.removeEventListener("visibilitychange", handler);
+    };
+  }
+
   function ready(fn) {
     if (document.readyState !== "loading") {
       fn();
@@ -37,6 +61,7 @@ var itemize = (function () {
 
   return {
     prefersReducedMotion: prefersReducedMotion,
+    onHidden: onHidden,
     ready: ready,
     all: all,
   };
