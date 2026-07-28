@@ -73,6 +73,12 @@
 
 /* ── /arrangementer ────────────────────────────────────────────────────── */
 
+/* Room between the board's form and the list it edits, so the two read as
+   separate things rather than one stack. */
+.p-arrangementer .admin {
+  margin: var(--s5) 0 var(--s7);
+}
+
 .events {
   display: grid;
   gap: var(--s5);
@@ -83,9 +89,12 @@
 
 .event dl {
   display: grid;
-  grid-template-columns: max-content 1fr;
+  /* A shared minimum keeps the value column aligned across cards even when
+     one of them has a longer label like "Registrering". */
+  grid-template-columns: minmax(7.5rem, max-content) 1fr;
   gap: var(--s2) var(--s5);
   margin: var(--s4) 0 0;
+  align-items: baseline;
 }
 
 .event dt {
@@ -132,10 +141,18 @@
   align-items: baseline;
   flex-wrap: wrap;
   gap: var(--s3);
+  padding-bottom: var(--s3);
+  border-bottom: 1px solid var(--border);
 }
 
 .event__header h3 {
   margin: 0;
+}
+
+.event__header h3::before {
+  content: "> ";
+  color: var(--g1);
+  text-shadow: var(--glow);
 }
 
 .event__admin {

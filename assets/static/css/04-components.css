@@ -368,7 +368,10 @@ details > summary::-webkit-details-marker {
 details > summary::after {
   content: "▾";
   margin-left: auto;
+  font-size: 1.75em;
+  line-height: 1;
   color: var(--g1);
+  text-shadow: var(--glow);
   transition: transform 0.2s;
 }
 
