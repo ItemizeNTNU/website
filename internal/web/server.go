@@ -8,6 +8,7 @@ import (
 	"github.com/ItemizeNTNU/website/content"
 	"github.com/ItemizeNTNU/website/internal/auth"
 	"github.com/ItemizeNTNU/website/internal/events"
+	"github.com/ItemizeNTNU/website/internal/fusionauth"
 )
 
 // Server renders the HTML side of the site.
@@ -19,13 +20,14 @@ type Server struct {
 	// say so rather than pretending the calendar is empty.
 	events   events.Repository
 	eventSvc *events.Service
+	fusion   *fusionauth.Client
 	baseURL  string
 	log      *slog.Logger
 	dev      bool
 }
 
 // NewServer parses the templates and loads the editable content.
-func NewServer(fsys fs.FS, assets AssetResolver, repo events.Repository, svc *events.Service, baseURL string, log *slog.Logger, dev bool) (*Server, error) {
+func NewServer(fsys fs.FS, assets AssetResolver, repo events.Repository, svc *events.Service, fusion *fusionauth.Client, baseURL string, log *slog.Logger, dev bool) (*Server, error) {
 	site, err := content.Load(dev)
 	if err != nil {
 		return nil, err
@@ -40,6 +42,7 @@ func NewServer(fsys fs.FS, assets AssetResolver, repo events.Repository, svc *ev
 		site:     site,
 		events:   repo,
 		eventSvc: svc,
+		fusion:   fusion,
 		baseURL:  baseURL,
 		log:      log,
 		dev:      dev,
@@ -167,6 +170,11 @@ func (s *Server) Routes(mux *http.ServeMux) {
 	mux.Handle("GET /innsjekk/{code}", styret(http.HandlerFunc(s.innsjekk)))
 	mux.Handle("GET /innsjekk-qr/{code}",
 		auth.RequireLogin(http.HandlerFunc(s.innsjekkQR)))
+
+	// Registration. Open to anyone, so it carries the CSRF check on its own
+	// rather than inheriting one from a role gate.
+	mux.HandleFunc("GET /registrer", s.registrer)
+	mux.Handle("POST /registrer", auth.CSRF(http.HandlerFunc(s.submitRegistration)))
 	s.registerStaticPages(mux)
 	s.registerRedirects(mux)
 

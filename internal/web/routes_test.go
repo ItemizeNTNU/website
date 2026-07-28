@@ -9,6 +9,7 @@ import (
 
 	"github.com/ItemizeNTNU/website/assets"
 	"github.com/ItemizeNTNU/website/internal/api"
+	"github.com/ItemizeNTNU/website/internal/fusionauth"
 	"github.com/ItemizeNTNU/website/internal/httpx"
 	"github.com/ItemizeNTNU/website/internal/web"
 )
@@ -31,7 +32,7 @@ func newMux(t *testing.T) *http.ServeMux {
 	if err != nil {
 		t.Fatalf("building assets: %v", err)
 	}
-	site, err := web.NewServer(fsys, assetServer, nil, nil, "https://itemize.no", log, false)
+	site, err := web.NewServer(fsys, assetServer, nil, nil, fusionauth.New("https://auth.example", ""), "https://itemize.no", log, false)
 	if err != nil {
 		t.Fatalf("building server: %v", err)
 	}
@@ -41,7 +42,7 @@ func newMux(t *testing.T) *http.ServeMux {
 	site.Routes(mux)
 	// The API registers a catch-all under /api/, which is the pattern most
 	// likely to collide with the site's own.
-	api.NewServer(nil, "https://itemize.no", log).Routes(mux)
+	api.NewServer(nil, fusionauth.New("https://auth.example", ""), "https://itemize.no", log).Routes(mux)
 	return mux
 }
 
@@ -55,7 +56,7 @@ func TestPagesRender(t *testing.T) {
 	// Every page that does not need a database or a signed-in user.
 	paths := []string{
 		"/", "/om-itemize", "/historie", "/for-bedrifter",
-		"/ressurser", "/utmelding", "/registrert", "/arrangementer",
+		"/ressurser", "/utmelding", "/registrert", "/arrangementer", "/registrer",
 	}
 	for _, path := range paths {
 		t.Run(path, func(t *testing.T) {
@@ -156,4 +157,67 @@ func contains(haystack, needle string) bool {
 		}
 	}
 	return false
+}
+
+// The registration form's conditional fields work with no JavaScript at all,
+// via `#type-x:checked ~ .typepick__fields > [data-when~="x"]` in the
+// stylesheet. That selector only reaches the fields if the radios are sibling
+// elements *preceding* the container — wrap them in a div for tidiness and
+// every conditional field silently disappears, with nothing failing to say so.
+//
+// This pins the structure the stylesheet depends on.
+func TestRegistrationConditionalFieldStructure(t *testing.T) {
+	mux := newMux(t)
+	rec := httptest.NewRecorder()
+	mux.ServeHTTP(rec, httptest.NewRequest(http.MethodGet, "/registrer", nil))
+	body := rec.Body.String()
+
+	radios := indexOf(body, `id="type-student"`)
+	container := indexOf(body, `class="typepick__fields"`)
+	switch {
+	case radios < 0:
+		t.Fatal("the membership-type radios are missing")
+	case container < 0:
+		t.Fatal("the conditional-field container is missing")
+	case radios > container:
+		t.Fatal("the radios come after .typepick__fields; the sibling selector " +
+			"cannot reach it and every conditional field will stay hidden")
+	}
+
+	// Each membership type needs at least one field that appears for it.
+	for _, want := range []string{
+		`data-when="student alumni"`, // study programme, shared
+		`data-when="student"`,
+		`data-when="alumni"`,
+		`data-when="employee"`,
+	} {
+		if !contains(body, want) {
+			t.Errorf("no field marked %s", want)
+		}
+	}
+
+	// All three radios must share the name, or the browser will not treat them
+	// as one group and more than one could be selected at once.
+	if n := count(body, `name="type"`); n != 3 {
+		t.Errorf(`found %d inputs named "type", want 3`, n)
+	}
+}
+
+func indexOf(haystack, needle string) int {
+	for i := 0; i+len(needle) <= len(haystack); i++ {
+		if haystack[i:i+len(needle)] == needle {
+			return i
+		}
+	}
+	return -1
+}
+
+func count(haystack, needle string) int {
+	n := 0
+	for i := 0; i+len(needle) <= len(haystack); i++ {
+		if haystack[i:i+len(needle)] == needle {
+			n++
+		}
+	}
+	return n
 }

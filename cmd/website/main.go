@@ -29,6 +29,7 @@ import (
 	"github.com/ItemizeNTNU/website/internal/config"
 	"github.com/ItemizeNTNU/website/internal/discord"
 	"github.com/ItemizeNTNU/website/internal/events"
+	"github.com/ItemizeNTNU/website/internal/fusionauth"
 	"github.com/ItemizeNTNU/website/internal/httpx"
 	"github.com/ItemizeNTNU/website/internal/store"
 	"github.com/ItemizeNTNU/website/internal/web"
@@ -106,7 +107,13 @@ func run(fromDisk bool) error {
 		eventSvc = events.NewService(repo, discordClient, log)
 	}
 
-	site, err := web.NewServer(fsys, assetServer, repo, eventSvc, cfg.BaseURL.String(), log, fromDisk)
+	fusionClient := fusionauth.New(cfg.FusionAuth.Host.String(), cfg.FusionAuth.APIToken)
+	if !fusionClient.Configured() {
+		log.Warn("no FusionAuth API token; registration will be unavailable")
+	}
+
+	site, err := web.NewServer(fsys, assetServer, repo, eventSvc, fusionClient,
+		cfg.BaseURL.String(), log, fromDisk)
 	if err != nil {
 		return err
 	}
@@ -129,7 +136,7 @@ func run(fromDisk bool) error {
 	site.Routes(mux)
 
 	if repo != nil {
-		api.NewServer(repo, cfg.BaseURL.String(), log).Routes(mux)
+		api.NewServer(repo, fusionClient, cfg.BaseURL.String(), log).Routes(mux)
 	}
 
 	handler := httpx.Chain(mux,

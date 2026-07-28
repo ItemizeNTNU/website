@@ -1,6 +1,10 @@
 package web
 
-import "net/http"
+import (
+	"net/http"
+
+	"github.com/ItemizeNTNU/website/internal/auth"
+)
 
 // staticPage describes a page whose content lives entirely in its template.
 type staticPage struct {
@@ -37,10 +41,6 @@ var staticPages = []staticPage{
 		title: "Ressurser",
 		desc:  "Lenker til CTF-plattformer, YouTube-kanaler og verktøy vi anbefaler.",
 	},
-	{
-		route: "/registrert", template: "registrert", navKey: "registrert",
-		title: "Vellykket brukerregistrering!",
-	},
 }
 
 func (s *Server) registerStaticPages(mux *http.ServeMux) {
@@ -48,6 +48,7 @@ func (s *Server) registerStaticPages(mux *http.ServeMux) {
 		mux.Handle("GET "+p.route, s.staticHandler(p))
 	}
 	mux.HandleFunc("GET /utmelding", s.utmelding)
+	mux.HandleFunc("GET /registrert", s.registrert)
 }
 
 func (s *Server) staticHandler(p staticPage) http.Handler {
@@ -68,6 +69,17 @@ const (
 		"Jeg bekrefter at jeg ønsker all brukerinformasjon slettet.\n\n" +
 		"Hilsen XXXX"
 )
+
+// registrert confirms a completed signup. Someone already signed in has no
+// business here, matching the previous site.
+func (s *Server) registrert(w http.ResponseWriter, r *http.Request) {
+	if auth.FromRequest(r) != nil {
+		http.Redirect(w, r, "/profil", http.StatusSeeOther)
+		return
+	}
+	s.render(w, r, http.StatusOK, "registrert",
+		s.page(r, "Vellykket brukerregistrering!", "registrert"))
+}
 
 type utmeldingView struct {
 	Page

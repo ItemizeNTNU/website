@@ -13,19 +13,21 @@ import (
 
 	"github.com/ItemizeNTNU/website/internal/auth"
 	"github.com/ItemizeNTNU/website/internal/events"
+	"github.com/ItemizeNTNU/website/internal/fusionauth"
 	"github.com/ItemizeNTNU/website/internal/ical"
 )
 
 // Server holds the API's dependencies.
 type Server struct {
 	events  events.Repository
+	fusion  *fusionauth.Client
 	baseURL string
 	log     *slog.Logger
 }
 
 // NewServer builds the API handlers.
-func NewServer(repo events.Repository, baseURL string, log *slog.Logger) *Server {
-	return &Server{events: repo, baseURL: baseURL, log: log}
+func NewServer(repo events.Repository, fusion *fusionauth.Client, baseURL string, log *slog.Logger) *Server {
+	return &Server{events: repo, fusion: fusion, baseURL: baseURL, log: log}
 }
 
 // Routes registers the API on mux.
@@ -39,6 +41,9 @@ func (s *Server) Routes(mux *http.ServeMux) {
 		auth.RequireRoleAPI(auth.RoleStyret)(http.HandlerFunc(s.getCheckIn)))
 	mux.Handle("POST /api/checkin/{code}",
 		auth.RequireLoginAPI(http.HandlerFunc(s.postCheckIn)))
+
+	mux.HandleFunc("GET /api/user/{id}", s.getUser)
+	mux.HandleFunc("PUT /api/user", s.registerUser)
 
 	// Anything else under /api answers as JSON rather than falling through to
 	// the HTML 404 page, matching the previous behaviour.
