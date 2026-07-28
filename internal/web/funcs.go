@@ -4,6 +4,8 @@ import (
 	"fmt"
 	"html/template"
 	"strings"
+
+	"github.com/ItemizeNTNU/website/internal/auth"
 )
 
 // AssetResolver maps a logical asset name to its public URL.
@@ -25,6 +27,7 @@ func Funcs(assets AssetResolver) template.FuncMap {
 		"emlfallback": func(addr string) string {
 			return obfuscateForHumans(addr)
 		},
+		"csrf":    auth.CSRFInput,
 		"dict":    dict,
 		"list":    func(v ...string) []string { return v },
 		"hasRole": hasRole,

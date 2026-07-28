@@ -1,0 +1,46 @@
+{{ define "content" }}
+{{- /*
+  Deleting has its own page rather than only a dialog, so it works with
+  scripting disabled and is honest about being irreversible. With scripting the
+  link is intercepted and the same wording appears in a dialog instead.
+*/ -}}
+<h1>Slett arrangement</h1>
+
+<div class="panel panel--error">
+  <p>
+    Er du sikker på at du vil slette dette arrangementet?<br />
+    Dette kan ikke angres.
+  </p>
+</div>
+
+<div class="card">
+  <h2 style="margin-top: 0">{{ .Event.Name }}</h2>
+  <dl>
+    <dt>Hvor</dt>
+    <dd>{{ .Event.Location.Name }}</dd>
+    <dt>Når</dt>
+    <dd><time datetime="{{ .Event.WhenISO }}">{{ .Event.When }}</time></dd>
+    {{- if .Event.Attendees }}
+    <dt>Innsjekkede</dt>
+    <dd>{{ .Event.Attendees }}</dd>
+    {{- end }}
+  </dl>
+</div>
+
+{{- if .Event.Attendees }}
+<div class="panel panel--warning">
+  <p>
+    Dette arrangementet har {{ .Event.Attendees }} registrerte oppmøter. De blir
+    slettet sammen med arrangementet.
+  </p>
+</div>
+{{- end }}
+
+<form method="post" action="/arrangementer/{{ .Event.HexID }}/slett">
+  {{ csrf .CSRF }}
+  <div class="form-actions">
+    <button type="submit" class="btn btn--danger">Ja, slett</button>
+    <a class="btn" href="/arrangementer">Avbryt</a>
+  </div>
+</form>
+{{ end }}

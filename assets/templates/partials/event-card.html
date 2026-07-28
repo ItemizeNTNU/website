@@ -1,16 +1,32 @@
 {{- /*
-  One event.
+  One event. Called with {"Event": …, "Styret": bool}.
 
   The field pairs are a <dl>, not a <table> — they are labels and values, not
   tabular data, and a description list gives the two-column grid for free while
   collapsing cleanly on a phone.
 */ -}}
 {{- define "event-card" -}}
-<li class="card event{{ if .Past }} event--past{{ end }}">
+{{- $e := .Event -}}
+<li class="card event{{ if $e.Past }} event--past{{ end }}">
+  {{- if .Styret }}
+  <div class="event__admin">
+    {{- if $e.HasCheckIn }}
+    <a class="btn btn--icon" href="/innsjekk/{{ $e.CheckIn.Code }}"
+      title="Innsjekk" aria-label="Innsjekk for {{ $e.Name }}"
+      >{{ template "icon" "qrcode" }}</a
+    >
+    {{- end }}
+    <a class="btn btn--icon" href="/arrangementer?rediger={{ $e.HexID }}#rediger"
+      title="Rediger" aria-label="Rediger {{ $e.Name }}"
+      >{{ template "icon" "cog" }}</a
+    >
+  </div>
+  {{- end }}
+
   <div class="event__header">
-    <h3>{{ .Name }}</h3>
-    {{- if .Past }}<span class="chip">Ferdig</span>{{ end }}
-    {{- if .Hidden }}
+    <h3>{{ $e.Name }}</h3>
+    {{- if $e.Past }}<span class="chip">Ferdig</span>{{ end }}
+    {{- if $e.Hidden }}
     <span class="chip" title="Skjult — bare styret ser dette"
       >{{ template "icon" "eye-off" }} Skjult</span
     >
@@ -20,33 +36,33 @@
   <dl>
     <dt>Hvor</dt>
     <dd>
-      {{- with .Location.URL -}}
-      <a href="{{ . }}" rel="noopener noreferrer">{{ $.Location.Name }}</a>
+      {{- with $e.Location.URL -}}
+      <a href="{{ . }}" rel="noopener noreferrer">{{ $e.Location.Name }}</a>
       {{- else -}}
-      {{ .Location.Name }}
+      {{ $e.Location.Name }}
       {{- end }}
     </dd>
 
     <dt>Når</dt>
-    <dd><time datetime="{{ .WhenISO }}">{{ .When }}</time></dd>
+    <dd><time datetime="{{ $e.WhenISO }}">{{ $e.When }}</time></dd>
 
-    {{- with .RegisterURL }}
+    {{- with $e.RegisterURL }}
     <dt>Registrering</dt>
     <dd><a href="{{ . }}" rel="noopener noreferrer">her</a></dd>
     {{- end }}
 
-    {{- with .CTF.Name }}
+    {{- with $e.CTF.Name }}
     <dt>CTF</dt>
     <dd>
-      {{- with $.CTF.URL -}}
-      <a href="{{ . }}" rel="noopener noreferrer">{{ $.CTF.Name }}</a>
+      {{- with $e.CTF.URL -}}
+      <a href="{{ . }}" rel="noopener noreferrer">{{ $e.CTF.Name }}</a>
       {{- else -}}
-      {{ $.CTF.Name }}
+      {{ $e.CTF.Name }}
       {{- end }}
     </dd>
     {{- end }}
 
-    {{- with .Info }}
+    {{- with $e.Info }}
     <dt>Info</dt>
     {{- /*
       Escaped, not raw. This is board-authored text that used to be injected as

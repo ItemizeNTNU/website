@@ -27,6 +27,7 @@ import (
 	"github.com/ItemizeNTNU/website/internal/api"
 	"github.com/ItemizeNTNU/website/internal/auth"
 	"github.com/ItemizeNTNU/website/internal/config"
+	"github.com/ItemizeNTNU/website/internal/discord"
 	"github.com/ItemizeNTNU/website/internal/events"
 	"github.com/ItemizeNTNU/website/internal/httpx"
 	"github.com/ItemizeNTNU/website/internal/store"
@@ -93,7 +94,19 @@ func run(fromDisk bool) error {
 	}
 	defer disconnect()
 
-	site, err := web.NewServer(fsys, assetServer, repo, log, fromDisk)
+	// A nil client means Discord is not configured: event sync is skipped and
+	// the site works without a bot token.
+	discordClient := discord.New(cfg.Discord, log)
+	if !discordClient.Enabled() {
+		log.Warn("Discord is not configured; events will not be announced there")
+	}
+
+	var eventSvc *events.Service
+	if repo != nil {
+		eventSvc = events.NewService(repo, discordClient, log)
+	}
+
+	site, err := web.NewServer(fsys, assetServer, repo, eventSvc, log, fromDisk)
 	if err != nil {
 		return err
 	}

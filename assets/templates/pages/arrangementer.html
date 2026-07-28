@@ -14,6 +14,10 @@
   <p>Her finner du oversikt over våre fremtidige arrangementer.</p>
 </div>
 
+{{- if .User.IsStyret }}
+{{ template "event-form" . }}
+{{- end }}
+
 {{- if .Unavailable }}
 <div class="panel panel--warning">
   <p>
@@ -34,7 +38,7 @@
 {{- else }}
 <ul class="events" style="list-style: none; padding: 0">
   {{- range .Events }}
-  {{ template "event-card" . }}
+  {{ template "event-card" dict "Event" . "Styret" $.User.IsStyret }}
   {{- end }}
 </ul>
 {{- end }}

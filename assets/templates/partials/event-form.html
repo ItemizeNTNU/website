@@ -1,0 +1,132 @@
+{{- /*
+  The board's event form.
+
+  A <details> disclosure rather than a scripted toggle: the browser gives the
+  open/closed state, keyboard support and aria-expanded for free. It is
+  rendered open when editing or when a submission was rejected, so the form
+  does not collapse and hide the errors.
+
+  An ordinary form post, so it works with scripting disabled.
+*/ -}}
+{{- define "event-form" -}}
+<details class="admin" id="rediger" {{ if .FormOpen }}open{{ end }}>
+  <summary>
+    {{ if .Editing }}Rediger arrangement{{ else }}Nytt arrangement{{ end }}
+  </summary>
+
+  <div class="details__body">
+    {{- with index .Errors "" }}
+    <div class="panel panel--error"><p>{{ . }}</p></div>
+    {{- end }}
+
+    <form method="post" action="/arrangementer#rediger">
+      {{ csrf .CSRF }}
+      <input type="hidden" name="id" value="{{ .Form.ID }}" />
+
+      <div class="field">
+        <label for="f-name">Navn</label>
+        <input id="f-name" name="name" value="{{ .Form.Name }}" required
+          {{ if index .Errors "name" }}aria-invalid="true"{{ end }} />
+        {{- with index .Errors "name" }}<p class="field__error">{{ . }}</p>{{ end }}
+      </div>
+
+      <div class="field">
+        <label for="f-location">Hvor</label>
+        <input id="f-location" name="location.name" value="{{ .Form.LocationName }}" required
+          {{ if index .Errors "location.name" }}aria-invalid="true"{{ end }} />
+        {{- with index .Errors "location.name" }}<p class="field__error">{{ . }}</p>{{ end }}
+      </div>
+
+      <div class="field">
+        <label for="f-location-url">Hvor-lenke</label>
+        <input id="f-location-url" name="location.url" type="url"
+          value="{{ .Form.LocationURL }}" placeholder="https://use.mazemap.com/…"
+          {{ if index .Errors "location.url" }}aria-invalid="true"{{ end }} />
+        <p class="field__hint">Valgfritt. For eksempel en Mazemap-lenke.</p>
+        {{- with index .Errors "location.url" }}<p class="field__error">{{ . }}</p>{{ end }}
+      </div>
+
+      <div class="field">
+        <label for="f-register">Registreringslenke</label>
+        <input id="f-register" name="register_url" type="url"
+          value="{{ .Form.RegisterURL }}"
+          {{ if index .Errors "register_url" }}aria-invalid="true"{{ end }} />
+        <p class="field__hint">Valgfritt. Lenke for påmelding.</p>
+        {{- with index .Errors "register_url" }}<p class="field__error">{{ . }}</p>{{ end }}
+      </div>
+
+      <div class="field">
+        <label for="f-date">Når</label>
+        {{- /* datetime-local submits wall-clock time with no zone; the server
+               reads it as Europe/Oslo. */}}
+        <input id="f-date" name="date" type="datetime-local"
+          value="{{ .Form.Date }}" required
+          {{ if index .Errors "date" }}aria-invalid="true"{{ end }} />
+        {{- with index .Errors "date" }}<p class="field__error">{{ . }}</p>{{ end }}
+      </div>
+
+      <div class="field">
+        <label for="f-duration">Varighet</label>
+        <input id="f-duration" name="duration" type="number" step="0.5" min="0"
+          value="{{ .Form.Duration }}" required
+          {{ if index .Errors "duration" }}aria-invalid="true"{{ end }} />
+        <p class="field__hint">Antall timer.</p>
+        {{- with index .Errors "duration" }}<p class="field__error">{{ . }}</p>{{ end }}
+      </div>
+
+      <div class="field">
+        <label for="f-ctf">CTF-navn</label>
+        <input id="f-ctf" name="ctf.name" value="{{ .Form.CTFName }}"
+          {{ if index .Errors "ctf.name" }}aria-invalid="true"{{ end }} />
+        {{- with index .Errors "ctf.name" }}<p class="field__error">{{ . }}</p>{{ end }}
+      </div>
+
+      <div class="field">
+        <label for="f-ctf-url">CTF-lenke</label>
+        <input id="f-ctf-url" name="ctf.url" type="url" value="{{ .Form.CTFURL }}"
+          {{ if index .Errors "ctf.url" }}aria-invalid="true"{{ end }} />
+        {{- with index .Errors "ctf.url" }}<p class="field__error">{{ . }}</p>{{ end }}
+      </div>
+
+      <div class="field">
+        <label for="f-info">Info</label>
+        <textarea id="f-info" name="info" required
+          {{ if index .Errors "info" }}aria-invalid="true"{{ end }}>{{ .Form.Info }}</textarea>
+        <p class="field__hint">
+          Vanlig tekst. Linjeskift beholdes; HTML blir vist som tekst.
+        </p>
+        {{- with index .Errors "info" }}<p class="field__error">{{ . }}</p>{{ end }}
+      </div>
+
+      <div class="check">
+        <input type="checkbox" id="f-hidden" name="hidden" value="1"
+          {{ if .Form.Hidden }}checked{{ end }} />
+        <label for="f-hidden">Skjult — bare styret ser arrangementet</label>
+      </div>
+
+      <div class="check">
+        <input type="checkbox" id="f-discord" name="discord" value="1"
+          {{ if .Form.Discord }}checked{{ end }} />
+        <label for="f-discord">Del på Discord</label>
+      </div>
+      <p class="field__hint">
+        Et skjult arrangement deles aldri på Discord, uansett hva som er huket
+        av her.
+      </p>
+
+      <div class="form-actions">
+        <button type="submit" class="btn btn--primary">
+          {{ if .Editing }}Oppdater{{ else }}Legg til{{ end }}
+        </button>
+        {{- if .Editing }}
+        <a class="btn" href="/arrangementer">Avbryt</a>
+        <a class="btn btn--danger" href="/arrangementer/{{ .Form.ID }}/slett"
+          data-confirm="Er du sikker på at du vil slette dette arrangementet?&#10;Dette kan ikke angres."
+          >Slett</a
+        >
+        {{- end }}
+      </div>
+    </form>
+  </div>
+</details>
+{{- end -}}
