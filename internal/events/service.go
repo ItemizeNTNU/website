@@ -7,6 +7,7 @@ import (
 	"errors"
 	"fmt"
 	"log/slog"
+	"time"
 
 	"go.mongodb.org/mongo-driver/v2/bson"
 
@@ -40,6 +41,26 @@ func NewService(repo Repository, syncer Syncer, log *slog.Logger) *Service {
 // operation that mostly worked.
 var ErrDiscordSync = errors.New("event saved, but Discord was not updated")
 
+// writeTimeout bounds a write that spans both Discord and the database.
+const writeTimeout = 20 * time.Second
+
+// detach returns a context that carries the deadline but not the cancellation
+// of its parent.
+//
+// A save touches two systems that cannot be rolled back together. Driving it
+// from the request context means a browser that gives up — a double-submitted
+// form, a closed tab, a flaky connection — cancels the operation wherever it
+// happens to be, and "context canceled" is what that looks like in the log.
+// The damage is not the failed request but the state it leaves: a Discord
+// event created whose identifier was never stored, so the next attempt creates
+// a second one and the first can no longer be reached.
+//
+// Once the work has started it runs to its own deadline. The visitor may never
+// see the outcome; the two systems still agree about it.
+func detach(ctx context.Context) (context.Context, context.CancelFunc) {
+	return context.WithTimeout(context.WithoutCancel(ctx), writeTimeout)
+}
+
 // Save creates or updates an event.
 //
 // Fields the form must not control are carried over from the stored event
@@ -47,6 +68,9 @@ var ErrDiscordSync = errors.New("event saved, but Discord was not updated")
 // because it is printed on QR codes and reassigning it would invalidate every
 // one already handed out.
 func (s *Service) Save(ctx context.Context, id bson.ObjectID, in *Event) (bson.ObjectID, error) {
+	ctx, cancel := detach(ctx)
+	defer cancel()
+
 	var existing *Event
 	if !id.IsZero() {
 		var err error
@@ -126,6 +150,9 @@ func (s *Service) syncDiscord(ctx context.Context, e *Event) error {
 
 // Delete removes an event and its Discord counterpart.
 func (s *Service) Delete(ctx context.Context, id bson.ObjectID) error {
+	ctx, cancel := detach(ctx)
+	defer cancel()
+
 	existing, err := s.repo.ByID(ctx, id)
 	if err != nil {
 		return err

@@ -74,8 +74,18 @@ type Attendance struct {
 	Registered time.Time `bson:"registered"`
 }
 
+// The accessors below take value receivers, not pointers, and that is
+// load-bearing rather than stylistic.
+//
+// Templates range over []Event, which yields values, and a value placed into a
+// map[string]any is boxed in an interface — which is not addressable. Go
+// templates cannot call a pointer-receiver method on a non-addressable value,
+// so every one of these would silently become unavailable and the page would
+// fail to render with "can't evaluate field". None of them mutate, so there is
+// nothing to gain from a pointer.
+
 // HexID renders the identifier for a URL or a form field.
-func (e *Event) HexID() string {
+func (e Event) HexID() string {
 	if e.ID.IsZero() {
 		return ""
 	}
@@ -83,28 +93,28 @@ func (e *Event) HexID() string {
 }
 
 // Past reports whether the event has finished.
-func (e *Event) Past() bool { return !e.End.IsZero() && e.End.Before(time.Now()) }
+func (e Event) Past() bool { return !e.End.IsZero() && e.End.Before(time.Now()) }
 
 // When renders the start time the way the site displays it.
-func (e *Event) When() string { return timefmt.Smart(e.Date) }
+func (e Event) When() string { return timefmt.Smart(e.Date) }
 
 // WhenISO renders the start time for a machine — the datetime attribute on a
 // <time> element.
-func (e *Event) WhenISO() string { return timefmt.ISO(e.Date) }
+func (e Event) WhenISO() string { return timefmt.ISO(e.Date) }
 
 // Attendees is the number of people checked in.
-func (e *Event) Attendees() int { return len(e.CheckIn.Attendances) }
+func (e Event) Attendees() int { return len(e.CheckIn.Attendances) }
 
 // HasCheckIn reports whether the event has a usable check-in code.
 //
 // The previous application seeded new events with the literal string "null"
 // before replacing it, so that value appears on disk and means "no code".
-func (e *Event) HasCheckIn() bool {
+func (e Event) HasCheckIn() bool {
 	return e.CheckIn.Code != "" && e.CheckIn.Code != "null"
 }
 
 // ComputeEnd derives the end time from the start and duration. Kept as a
 // method so the write path and the tests cannot disagree about it.
-func (e *Event) ComputeEnd() time.Time {
+func (e Event) ComputeEnd() time.Time {
 	return e.Date.Add(time.Duration(e.Duration * float64(time.Hour)))
 }
