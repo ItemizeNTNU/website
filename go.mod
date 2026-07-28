@@ -7,6 +7,7 @@ require (
 	go.mongodb.org/mongo-driver/v2 v2.8.0
 	golang.org/x/oauth2 v0.36.0
 	gopkg.in/yaml.v3 v3.0.1
+	rsc.io/qr v0.2.0
 )
 
 require (

@@ -33,6 +33,13 @@ func (s *Server) Routes(mux *http.ServeMux) {
 	mux.HandleFunc("GET /api/events", s.listEvents)
 	mux.HandleFunc("GET /api/events/ical", s.icalFeed)
 
+	// Reading the register exposes the check-in code and every attendee's
+	// identity, so it is board-only. Writing to it only needs to be somebody.
+	mux.Handle("GET /api/checkin/{code}",
+		auth.RequireRoleAPI(auth.RoleStyret)(http.HandlerFunc(s.getCheckIn)))
+	mux.Handle("POST /api/checkin/{code}",
+		auth.RequireLoginAPI(http.HandlerFunc(s.postCheckIn)))
+
 	// Anything else under /api answers as JSON rather than falling through to
 	// the HTML 404 page, matching the previous behaviour.
 	mux.HandleFunc("/api/", func(w http.ResponseWriter, r *http.Request) {

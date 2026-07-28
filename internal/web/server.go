@@ -17,13 +17,15 @@ type Server struct {
 	site     *content.Site
 	// events may be nil when the database is unreachable. Pages that need it
 	// say so rather than pretending the calendar is empty.
-	events events.Repository
-	log    *slog.Logger
-	dev    bool
+	events   events.Repository
+	eventSvc *events.Service
+	baseURL  string
+	log      *slog.Logger
+	dev      bool
 }
 
 // NewServer parses the templates and loads the editable content.
-func NewServer(fsys fs.FS, assets AssetResolver, repo events.Repository, log *slog.Logger, dev bool) (*Server, error) {
+func NewServer(fsys fs.FS, assets AssetResolver, repo events.Repository, svc *events.Service, baseURL string, log *slog.Logger, dev bool) (*Server, error) {
 	site, err := content.Load(dev)
 	if err != nil {
 		return nil, err
@@ -37,9 +39,16 @@ func NewServer(fsys fs.FS, assets AssetResolver, repo events.Repository, log *sl
 		assets:   assets,
 		site:     site,
 		events:   repo,
+		eventSvc: svc,
+		baseURL:  baseURL,
 		log:      log,
 		dev:      dev,
 	}, nil
+}
+
+// csrf issues (or reuses) the token for a page that carries a form.
+func (s *Server) csrf(w http.ResponseWriter, r *http.Request) string {
+	return auth.CSRFToken(w, r)
 }
 
 // page builds the data every template expects, so no handler has to remember
@@ -141,6 +150,23 @@ func (s *Server) Routes(mux *http.ServeMux) {
 	mux.HandleFunc("GET /{$}", s.index)
 	mux.HandleFunc("GET /arrangementer", s.arrangementer)
 	mux.Handle("GET /profil", auth.RequireLogin(http.HandlerFunc(s.profil)))
+
+	// Event administration. Board only; the CSRF check runs on the mutating
+	// routes, where a cross-site submission would otherwise be possible now
+	// that these are ordinary form posts rather than scripted JSON.
+	styret := auth.RequireRole(auth.RoleStyret, s.ErrorPage)
+	mux.Handle("POST /arrangementer",
+		styret(auth.CSRF(http.HandlerFunc(s.saveEvent))))
+	mux.Handle("GET /arrangementer/{id}/slett",
+		styret(http.HandlerFunc(s.confirmDelete)))
+	mux.Handle("POST /arrangementer/{id}/slett",
+		styret(auth.CSRF(http.HandlerFunc(s.deleteEvent))))
+
+	// Check-in. The board holds up the QR code; a member scanning it lands on
+	// the second route, which registers their attendance.
+	mux.Handle("GET /innsjekk/{code}", styret(http.HandlerFunc(s.innsjekk)))
+	mux.Handle("GET /innsjekk-qr/{code}",
+		auth.RequireLogin(http.HandlerFunc(s.innsjekkQR)))
 	s.registerStaticPages(mux)
 	s.registerRedirects(mux)
 
