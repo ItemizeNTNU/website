@@ -120,3 +120,7 @@ func quoteJSON(s string) string {
 func constantTimeEqual(a, b string) bool {
 	return subtle.ConstantTimeCompare([]byte(a), []byte(b)) == 1
 }
+
+// ConstantTimeEqual compares two tokens without leaking how much of a guess
+// was correct. Exported for callers that carry their own state parameter.
+func ConstantTimeEqual(a, b string) bool { return constantTimeEqual(a, b) }

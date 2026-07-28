@@ -2,13 +2,8 @@
 <h1>{{ .User.DisplayName }}</h1>
 
 <div class="profile">
-  <img
-    class="profile__avatar"
-    src="{{ .AvatarURL }}"
-    alt=""
-    width="192"
-    height="192"
-  />
+  <img class="profile__avatar" src="{{ .AvatarURL }}" alt=""
+    width="192" height="192" />
 
   <div>
     <dl>
@@ -25,19 +20,72 @@
       <dd class="mono">{{ . }}</dd>
       {{- end }}
 
+      <dt>Discord</dt>
+      <dd>
+        {{- if .Discord -}}
+        <code>{{ .Discord.Username }}</code>
+        {{- else -}}
+        <span class="muted">Mangler</span>
+        {{- end }}
+      </dd>
+
       {{- if .User.IsStyret }}
       <dt>Rolle</dt>
       <dd><span class="eyebrow">Styret</span></dd>
       {{- end }}
     </dl>
 
+    {{- if not .DiscordAvailable }}
     <div class="panel panel--info">
       <p>
-        Kobling mot Discord er ikke flyttet over til den nye nettsiden enda. Du
-        kan fortsatt bli med på serveren
+        Discord-kobling er ikke tilgjengelig akkurat nå. Du kan fortsatt bli med
+        på serveren <a href="{{ .Site.Contact.DiscordInvite }}" rel="noopener">her</a>.
+      </p>
+    </div>
+
+    {{- else if .Discord }}
+    {{- if not .Discord.IsMember }}
+    {{- /* The common case worth explaining: linking the account and joining
+           the server are two separate steps, and people routinely do the
+           first and forget the second. */}}
+    <div class="panel panel--warning">
+      <p>
+        Du har ikke blitt med i Discord-serveren enda. Trykk
+        <a href="{{ .Site.Contact.DiscordInvite }}" rel="noopener">her</a> for å
+        bli med, og trykk så «Oppdater» under for å få tilgang inne på serveren.
+      </p>
+    </div>
+    {{- end }}
+
+    <div class="row" style="margin-top: var(--s5)">
+      <form method="post" action="/profil/discord/oppdater">
+        {{ csrf .CSRF }}
+        <button type="submit" class="btn">
+          {{ template "icon" "sync" }} Oppdater
+        </button>
+      </form>
+      <form method="post" action="/profil/discord/koble-fra">
+        {{ csrf .CSRF }}
+        <button type="submit" class="btn btn--danger">
+          {{ template "icon" "trash" }} Koble fra
+        </button>
+      </form>
+    </div>
+
+    {{- else }}
+    <div class="panel panel--info">
+      <p>
+        Koble Discord-brukeren din til Itemize-brukeren for å få lesetilgang
+        inne på serveren. Du kan bli med på serveren
         <a href="{{ .Site.Contact.DiscordInvite }}" rel="noopener">her</a>.
       </p>
     </div>
+    <p>
+      <a class="btn btn--primary" href="/api/discord/link">
+        {{ template "icon" "discord" }} Koble til Discord
+      </a>
+    </p>
+    {{- end }}
 
     <div class="row" style="margin-top: var(--s6)">
       <a class="btn" href="/logout">Logg ut</a>

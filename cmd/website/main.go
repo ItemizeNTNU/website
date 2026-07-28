@@ -32,6 +32,7 @@ import (
 	"github.com/ItemizeNTNU/website/internal/fusionauth"
 	"github.com/ItemizeNTNU/website/internal/httpx"
 	"github.com/ItemizeNTNU/website/internal/store"
+	"github.com/ItemizeNTNU/website/internal/users"
 	"github.com/ItemizeNTNU/website/internal/web"
 )
 
@@ -112,8 +113,10 @@ func run(fromDisk bool) error {
 		log.Warn("no FusionAuth API token; registration will be unavailable")
 	}
 
+	discordSvc := users.NewDiscordService(discordClient, fusionClient, log)
+
 	site, err := web.NewServer(fsys, assetServer, repo, eventSvc, fusionClient,
-		cfg.BaseURL.String(), log, fromDisk)
+		discordSvc, cfg.BaseURL.String(), log, fromDisk)
 	if err != nil {
 		return err
 	}
