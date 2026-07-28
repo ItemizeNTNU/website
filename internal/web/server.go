@@ -5,11 +5,13 @@ import (
 	"log/slog"
 	"net/http"
 	"strings"
+	"time"
 
 	"github.com/ItemizeNTNU/website/content"
 	"github.com/ItemizeNTNU/website/internal/auth"
 	"github.com/ItemizeNTNU/website/internal/events"
 	"github.com/ItemizeNTNU/website/internal/fusionauth"
+	"github.com/ItemizeNTNU/website/internal/httpx"
 	"github.com/ItemizeNTNU/website/internal/users"
 )
 
@@ -27,8 +29,10 @@ type Server struct {
 	baseURL    string
 	// secureCookies mirrors whether the site is served over TLS.
 	secureCookies bool
-	log           *slog.Logger
-	dev           bool
+	// signupLimit throttles the endpoints that cause an email to be sent.
+	signupLimit *httpx.RateLimiter
+	log         *slog.Logger
+	dev         bool
 }
 
 // NewServer parses the templates and loads the editable content.
@@ -51,8 +55,10 @@ func NewServer(fsys fs.FS, assets AssetResolver, repo events.Repository, svc *ev
 		discordSvc:    discordSvc,
 		baseURL:       baseURL,
 		secureCookies: strings.HasPrefix(baseURL, "https://"),
-		log:           log,
-		dev:           dev,
+		// Generous for a person filling in a form, useless for a script.
+		signupLimit: httpx.NewRateLimiter(5, time.Hour),
+		log:         log,
+		dev:         dev,
 	}, nil
 }
 
@@ -179,9 +185,11 @@ func (s *Server) Routes(mux *http.ServeMux) {
 		auth.RequireLogin(http.HandlerFunc(s.innsjekkQR)))
 
 	// Registration. Open to anyone, so it carries the CSRF check on its own
-	// rather than inheriting one from a role gate.
+	// rather than inheriting one from a role gate — and a rate limit, because
+	// submitting it makes FusionAuth send mail to whatever address was given.
 	mux.HandleFunc("GET /registrer", s.registrer)
-	mux.Handle("POST /registrer", auth.CSRF(http.HandlerFunc(s.submitRegistration)))
+	mux.Handle("POST /registrer",
+		s.signupLimit.Limit(auth.CSRF(http.HandlerFunc(s.submitRegistration))))
 
 	// Discord account linking. The two GETs are the OAuth round trip, so they
 	// carry their own state parameter rather than a form token; the two writes

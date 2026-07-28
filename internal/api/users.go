@@ -33,6 +33,12 @@ func (s *Server) getUser(w http.ResponseWriter, r *http.Request) {
 	}
 
 	u, err := s.fusion.GetUser(r.Context(), r.PathValue("id"))
+	if errors.Is(err, fusionauth.ErrInvalidID) {
+		// Indistinguishable from "no such user", and answering differently
+		// would confirm the identifier format to anyone probing.
+		writeJSON(w, http.StatusNotFound, message{"User not found"})
+		return
+	}
 	if errors.Is(err, fusionauth.ErrNotFound) {
 		writeJSON(w, http.StatusNotFound, message{"User not found"})
 		return

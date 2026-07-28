@@ -15,6 +15,9 @@ import (
 // Discord answers 403 rather than 404, which reads as "not a member" if the
 // two are not told apart.
 func (c *Client) GuildMember(ctx context.Context, discordID string) (*GuildMember, error) {
+	if !ValidID(discordID) {
+		return nil, ErrInvalidID
+	}
 	var m GuildMember
 	err := c.do(ctx, http.MethodGet,
 		"/guilds/"+c.cfg.GuildID+"/members/"+discordID, nil, &m)
@@ -38,6 +41,9 @@ func (c *Client) GuildMember(ctx context.Context, discordID string) (*GuildMembe
 
 // AddMemberRole grants the member role.
 func (c *Client) AddMemberRole(ctx context.Context, discordID string) error {
+	if !ValidID(discordID) {
+		return ErrInvalidID
+	}
 	return c.do(ctx, http.MethodPut, c.rolePath(discordID), nil, nil)
 }
 
@@ -46,6 +52,9 @@ func (c *Client) AddMemberRole(ctx context.Context, discordID string) error {
 // Someone who has already left the guild, or already lost the role, is not an
 // error: the desired state has been reached either way.
 func (c *Client) RemoveMemberRole(ctx context.Context, discordID string) error {
+	if !ValidID(discordID) {
+		return ErrInvalidID
+	}
 	err := c.do(ctx, http.MethodDelete, c.rolePath(discordID), nil, nil)
 	if apiErr, ok := err.(*APIError); ok && apiErr.Status == http.StatusNotFound {
 		return nil

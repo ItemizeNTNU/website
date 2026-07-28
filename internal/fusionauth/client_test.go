@@ -15,6 +15,10 @@ import (
 // map iteration is deliberately random. Without sorting, the same rejected
 // registration shows a different message each time — untestable, and
 // bewildering when somebody reports it.
+// A realistic identifier: the client validates the shape, so the placeholders
+// this file used before would now be refused before any request is made.
+const testID = "00000000-1111-2222-3333-444444444444"
+
 func TestUserMessageIsDeterministic(t *testing.T) {
 	err := &APIError{
 		Status: 400,
@@ -61,12 +65,12 @@ func TestAuthorizationHeaderHasNoBearerPrefix(t *testing.T) {
 	var got string
 	srv := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		got = r.Header.Get("Authorization")
-		_, _ = io.WriteString(w, `{"user":{"id":"fa-1"}}`)
+		_, _ = io.WriteString(w, `{"user":{"id":"00000000-1111-2222-3333-444444444444"}}`)
 	}))
 	defer srv.Close()
 
 	c := New(srv.URL, "secret-api-key")
-	if _, err := c.GetUser(context.Background(), "fa-1"); err != nil {
+	if _, err := c.GetUser(context.Background(), testID); err != nil {
 		t.Fatal(err)
 	}
 	if got != "secret-api-key" {
@@ -79,7 +83,7 @@ func TestNotConfigured(t *testing.T) {
 	if c.Configured() {
 		t.Error("a client without a token reported itself configured")
 	}
-	if _, err := c.GetUser(context.Background(), "fa-1"); !errors.Is(err, ErrNotConfigured) {
+	if _, err := c.GetUser(context.Background(), testID); !errors.Is(err, ErrNotConfigured) {
 		t.Errorf("got %v, want ErrNotConfigured", err)
 	}
 }
@@ -91,7 +95,7 @@ func TestNotFound(t *testing.T) {
 	defer srv.Close()
 
 	c := New(srv.URL, "token")
-	if _, err := c.GetUser(context.Background(), "nobody"); !errors.Is(err, ErrNotFound) {
+	if _, err := c.GetUser(context.Background(), testID); !errors.Is(err, ErrNotFound) {
 		t.Errorf("got %v, want ErrNotFound", err)
 	}
 }
@@ -125,12 +129,12 @@ func TestPatchSendsExplicitNull(t *testing.T) {
 	var raw []byte
 	srv := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		raw, _ = io.ReadAll(r.Body)
-		_, _ = io.WriteString(w, `{"user":{"id":"fa-1"}}`)
+		_, _ = io.WriteString(w, `{"user":{"id":"00000000-1111-2222-3333-444444444444"}}`)
 	}))
 	defer srv.Close()
 
 	c := New(srv.URL, "token")
-	_, err := c.PatchUser(context.Background(), "fa-1",
+	_, err := c.PatchUser(context.Background(), testID,
 		map[string]any{"data": map[string]any{"discord": nil}})
 	if err != nil {
 		t.Fatal(err)

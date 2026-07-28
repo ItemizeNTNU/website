@@ -140,12 +140,37 @@ func TrailingSlash(next http.Handler) http.Handler {
 		p := r.URL.Path
 		if len(p) > 1 && strings.HasSuffix(p, "/") {
 			target := *r.URL
-			target.Path = strings.TrimRight(p, "/")
+			target.Path = collapseLeadingSlashes(strings.TrimRight(p, "/"))
+			if target.Path == "" {
+				target.Path = "/"
+			}
 			http.Redirect(w, r, target.RequestURI(), http.StatusMovedPermanently)
 			return
 		}
 		next.ServeHTTP(w, r)
 	})
+}
+
+// collapseLeadingSlashes reduces a run of leading slashes to one.
+//
+// Without this the middleware is an open redirect. A request for
+// "//evil.example/" is parsed server-side with the whole thing as the path —
+// ParseRequestURI does not treat a leading "//" as an authority the way
+// url.Parse does — so trimming the trailing slash yields "//evil.example",
+// which as a Location header is a protocol-relative URL. The browser resolves
+// it against the current scheme and leaves the site.
+//
+// This runs before the mux, so it cannot rely on ServeMux's own path
+// cleaning: by the time that happens the redirect has already been sent.
+func collapseLeadingSlashes(p string) string {
+	i := 0
+	for i < len(p) && p[i] == '/' {
+		i++
+	}
+	if i <= 1 {
+		return p
+	}
+	return p[i-1:]
 }
 
 // isNonPage reports whether a path serves something other than a rendered
