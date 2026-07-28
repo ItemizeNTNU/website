@@ -101,8 +101,10 @@
   margin: 0;
 }
 
-/* Board-authored text: newlines are meaningful, HTML is not. */
-.event dd.info {
+/* Board-authored text: newlines are meaningful, HTML is not.
+   Named event__info rather than .info so it cannot collide with the status
+   utility of that name, which would tint the description blue. */
+.event dd.event__info {
   white-space: pre-wrap;
 }
 

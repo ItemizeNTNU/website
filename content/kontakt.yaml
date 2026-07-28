@@ -9,9 +9,8 @@ membership_email: drift@itemize.no
 
 org_number: "925 906 824" # i hermetegn, ellers tolkes det som et tall
 
-# Merk: den gamle nettsiden hadde to ulike Discord-invitasjoner — denne, og
-# discord.gg/3NAzCuA i bunnteksten. Denne brukes alle andre steder, så den
-# er valgt her. Bekreft gjerne at den andre kan pensjoneres.
+# Den gamle nettsiden hadde to ulike Discord-invitasjoner. Den andre,
+# discord.gg/3NAzCuA, sto kun i bunnteksten og er pensjonert.
 discord_invite: https://discord.com/invite/gWJdXbW8Sg
 
 bylaws_url: https://cloud.itemize.no/f/62583

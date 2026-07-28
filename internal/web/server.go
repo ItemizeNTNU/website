@@ -6,6 +6,7 @@ import (
 	"net/http"
 
 	"github.com/ItemizeNTNU/website/content"
+	"github.com/ItemizeNTNU/website/internal/events"
 )
 
 // Server renders the HTML side of the site.
@@ -13,12 +14,15 @@ type Server struct {
 	renderer *Renderer
 	assets   AssetResolver
 	site     *content.Site
-	log      *slog.Logger
-	dev      bool
+	// events may be nil when the database is unreachable. Pages that need it
+	// say so rather than pretending the calendar is empty.
+	events events.Repository
+	log    *slog.Logger
+	dev    bool
 }
 
 // NewServer parses the templates and loads the editable content.
-func NewServer(fsys fs.FS, assets AssetResolver, log *slog.Logger, dev bool) (*Server, error) {
+func NewServer(fsys fs.FS, assets AssetResolver, repo events.Repository, log *slog.Logger, dev bool) (*Server, error) {
 	site, err := content.Load(dev)
 	if err != nil {
 		return nil, err
@@ -27,7 +31,14 @@ func NewServer(fsys fs.FS, assets AssetResolver, log *slog.Logger, dev bool) (*S
 	if err != nil {
 		return nil, err
 	}
-	return &Server{renderer: renderer, assets: assets, site: site, log: log, dev: dev}, nil
+	return &Server{
+		renderer: renderer,
+		assets:   assets,
+		site:     site,
+		events:   repo,
+		log:      log,
+		dev:      dev,
+	}, nil
 }
 
 // page builds the data every template expects, so no handler has to remember
@@ -127,11 +138,18 @@ func (s *Server) NotFound(w http.ResponseWriter, r *http.Request) {
 // linked to.
 func (s *Server) Routes(mux *http.ServeMux) {
 	mux.HandleFunc("GET /{$}", s.index)
+	mux.HandleFunc("GET /arrangementer", s.arrangementer)
 	s.registerStaticPages(mux)
 	s.registerRedirects(mux)
 
 	// Everything that does not match a more specific pattern.
-	mux.HandleFunc("GET /", s.NotFound)
+	//
+	// Registered for all methods, not just GET. A GET-only catch-all conflicts
+	// with the API's own "/api/" fallback — that pattern has the more specific
+	// path but matches more methods, so ServeMux can rank neither above the
+	// other and panics at registration. Matching every method also means a
+	// stray POST to a dead URL gets the 404 page rather than a bare 405.
+	mux.HandleFunc("/", s.NotFound)
 }
 
 func (s *Server) index(w http.ResponseWriter, r *http.Request) {
