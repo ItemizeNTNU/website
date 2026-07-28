@@ -31,7 +31,7 @@ func newMux(t *testing.T) *http.ServeMux {
 	if err != nil {
 		t.Fatalf("building assets: %v", err)
 	}
-	site, err := web.NewServer(fsys, assetServer, nil, nil, log, false)
+	site, err := web.NewServer(fsys, assetServer, nil, nil, "https://itemize.no", log, false)
 	if err != nil {
 		t.Fatalf("building server: %v", err)
 	}

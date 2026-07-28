@@ -1,0 +1,53 @@
+{{ define "content" }}
+<h1>Innsjekk</h1>
+
+<div class="prose">
+  <p>
+    <strong>{{ .Event.Name }}</strong><br />
+    <time datetime="{{ .Event.WhenISO }}" class="muted">{{ .Event.When }}</time>
+  </p>
+</div>
+
+{{- /* White plate with a quiet zone: a themed QR code is a scanner problem in
+       a crowded room, so the design lives around the code rather than in it. */}}
+<div class="qr-plate">{{ .QR }}</div>
+
+<p class="checkin-code" data-glitch>{{ .Code }}</p>
+
+<p class="text-center muted">
+  <a href="{{ .ScanURL }}">{{ .ScanURL }}</a>
+</p>
+
+<details>
+  <summary>Oppmøte ({{ .Event.Attendees }})</summary>
+  <div class="details__body">
+    {{- if .Event.CheckIn.Attendances }}
+    <div class="table-wrap">
+      <table class="attendance">
+        <caption class="visually-hidden">
+          Registrerte oppmøter for {{ .Event.Name }}
+        </caption>
+        <thead>
+          <tr>
+            <th scope="col">Navn</th>
+            <th scope="col">Profil-id</th>
+            <th scope="col">Innsjekket</th>
+          </tr>
+        </thead>
+        <tbody>
+          {{- range .Event.CheckIn.Attendances }}
+          <tr>
+            <td>{{ .Name }}</td>
+            <td class="mono">{{ .UserID }}</td>
+            <td>{{ smartTime .Registered }}</td>
+          </tr>
+          {{- end }}
+        </tbody>
+      </table>
+    </div>
+    {{- else }}
+    <p class="muted">Ingen har sjekket inn enda.</p>
+    {{- end }}
+  </div>
+</details>
+{{ end }}

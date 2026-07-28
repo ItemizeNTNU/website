@@ -1,0 +1,14 @@
+{{ define "content" }}
+<div class="receipt">
+  {{- /* The previous site's entire response to a scan was ":)". Keeping it —
+         it is the right amount of ceremony for something you glance at while
+         walking through a door — but with the event named, so you can tell you
+         scanned the right poster. */}}
+  <p class="receipt__face">{{ if .OK }}:){{ else }}:({{ end }}</p>
+
+  <h1>{{ .Event.Name }}</h1>
+  <p class="{{ if not .OK }}error{{ end }}">{{ .Message }}</p>
+
+  <p><a class="btn btn--ghost" href="/arrangementer">Til arrangementer</a></p>
+</div>
+{{ end }}

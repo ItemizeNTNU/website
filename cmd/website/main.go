@@ -106,7 +106,7 @@ func run(fromDisk bool) error {
 		eventSvc = events.NewService(repo, discordClient, log)
 	}
 
-	site, err := web.NewServer(fsys, assetServer, repo, eventSvc, log, fromDisk)
+	site, err := web.NewServer(fsys, assetServer, repo, eventSvc, cfg.BaseURL.String(), log, fromDisk)
 	if err != nil {
 		return err
 	}

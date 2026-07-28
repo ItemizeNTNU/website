@@ -19,12 +19,13 @@ type Server struct {
 	// say so rather than pretending the calendar is empty.
 	events   events.Repository
 	eventSvc *events.Service
+	baseURL  string
 	log      *slog.Logger
 	dev      bool
 }
 
 // NewServer parses the templates and loads the editable content.
-func NewServer(fsys fs.FS, assets AssetResolver, repo events.Repository, svc *events.Service, log *slog.Logger, dev bool) (*Server, error) {
+func NewServer(fsys fs.FS, assets AssetResolver, repo events.Repository, svc *events.Service, baseURL string, log *slog.Logger, dev bool) (*Server, error) {
 	site, err := content.Load(dev)
 	if err != nil {
 		return nil, err
@@ -39,6 +40,7 @@ func NewServer(fsys fs.FS, assets AssetResolver, repo events.Repository, svc *ev
 		site:     site,
 		events:   repo,
 		eventSvc: svc,
+		baseURL:  baseURL,
 		log:      log,
 		dev:      dev,
 	}, nil
@@ -159,6 +161,12 @@ func (s *Server) Routes(mux *http.ServeMux) {
 		styret(http.HandlerFunc(s.confirmDelete)))
 	mux.Handle("POST /arrangementer/{id}/slett",
 		styret(auth.CSRF(http.HandlerFunc(s.deleteEvent))))
+
+	// Check-in. The board holds up the QR code; a member scanning it lands on
+	// the second route, which registers their attendance.
+	mux.Handle("GET /innsjekk/{code}", styret(http.HandlerFunc(s.innsjekk)))
+	mux.Handle("GET /innsjekk-qr/{code}",
+		auth.RequireLogin(http.HandlerFunc(s.innsjekkQR)))
 	s.registerStaticPages(mux)
 	s.registerRedirects(mux)
 
