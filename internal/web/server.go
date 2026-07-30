@@ -82,9 +82,13 @@ func (s *Server) page(r *http.Request, title, navKey string) Page {
 		}
 	}
 	return Page{
-		Title:     title,
-		Nav:       navKey,
-		BodyClass: "p-" + navKey,
+		Title: title,
+		Nav:   navKey,
+		// t-modern activates the look layer in 09-theme-modern.css, which
+		// restyles the site as a floating modern terminal window. Its rules
+		// are scoped to body.t-modern so the layer can be compared against
+		// the plain base by removing the class alone.
+		BodyClass: "p-" + navKey + " t-modern",
 		NavItems:  NavItems,
 		Path:      shellPath(r.URL.Path),
 		Site:      site,
