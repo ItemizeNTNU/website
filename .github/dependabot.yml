@@ -36,3 +36,18 @@ updates:
         update-types:
           - minor
           - patch
+
+  # The legacy Sapper app under old-website/ is reference-only and frozen; it
+  # never runs in production (.dockerignore keeps it out of the image). Its
+  # package-lock.json still feeds the dependency graph, though, so without
+  # this block Dependabot would file security-update PRs against code nobody
+  # ships. Zero PR limit stops version updates; the wildcard ignore stops
+  # security updates as well. Its Dockerfile needs no entry — the docker
+  # ecosystem above only scans /, and directory scanning is not recursive.
+  - package-ecosystem: npm
+    directory: /old-website
+    schedule:
+      interval: monthly
+    open-pull-requests-limit: 0
+    ignore:
+      - dependency-name: "*"
