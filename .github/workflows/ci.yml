@@ -116,4 +116,5 @@ jobs:
           TOKEN: ${{ secrets.DEPLOY_UPDATE_TOKEN }}
         # -f so a failing webhook fails the job. The previous pipeline used
         # `curl -i`, which reported success even when the deploy never fired.
-        run: curl -fsS -X POST -H "Authorization: Bearer $TOKEN" "$URL"
+        run: |
+          curl -fsS -X POST -H "Authorization: Bearer $TOKEN" "$URL"
