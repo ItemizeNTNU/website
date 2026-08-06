@@ -410,6 +410,7 @@ main > section + section {
 .status {
   display: flex;
   align-items: center;
+  justify-content: space-between;
   gap: var(--s4);
   padding: var(--s2) var(--s5);
   font-family: var(--font-mono);
@@ -434,7 +435,6 @@ main > section + section {
 }
 
 .status__hint {
-  margin-inline: auto;
   display: flex;
   align-items: center;
   gap: var(--s1);
@@ -451,7 +451,6 @@ main > section + section {
 }
 
 .status__session {
-  margin-left: auto;
   white-space: nowrap;
   color: var(--dim);
 }
