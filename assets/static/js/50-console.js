@@ -29,7 +29,10 @@ itemize.ready(function () {
 
     echo(out, raw);
     run(raw, out);
-    out.scrollIntoView({ block: "nearest" });
+    // FIX: Scroll the very last line/child inside your output element into view
+    if (out.lastElementChild) {
+      out.lastElementChild.scrollIntoView({ behavior: "smooth", block: "nearest" });
+    }
   });
 
   // Up and down walk the history, as a shell does. These only fire while the
