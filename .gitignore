@@ -34,6 +34,3 @@ Thumbs.db
 [Dd]esktop.ini
 
 *.log
-
-# Note: the legacy Sapper app under old-website/ carries its own .gitignore
-# (node_modules, __sapper__). Nothing Node-related belongs in this file.
