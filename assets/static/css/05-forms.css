@@ -1,0 +1,264 @@
+/* Forms. */
+
+/*
+ * The window runs edge to edge; a form does not follow it out there. A text
+ * field a metre wide is harder to fill in than one at reading width, and a
+ * label pinned to the far left of a control on the far right stops reading as
+ * a pair.
+ *
+ * Scoped to main so it never reaches the console, which lives in the bar and
+ * is sized by it.
+ */
+main form {
+  max-width: 62rem;
+}
+
+input,
+textarea,
+select {
+  width: 100%;
+  padding: var(--s2) var(--s3);
+  background: rgba(255, 255, 255, 0.05);
+  border: 1px solid var(--border);
+  border-radius: var(--r);
+  color: var(--text);
+  font-size: var(--fs-base);
+  transition: border-color 0.15s, box-shadow 0.15s, background-color 0.15s;
+}
+
+input:hover,
+textarea:hover,
+select:hover {
+  border-color: var(--border-strong);
+}
+
+input:focus,
+textarea:focus,
+select:focus {
+  outline: none;
+  background: rgba(255, 255, 255, 0.06);
+  border-color: var(--border-green);
+  box-shadow: 0 0 0 3px rgba(60, 179, 79, 0.12);
+}
+
+input:focus-visible,
+textarea:focus-visible,
+select:focus-visible {
+  outline: var(--focus);
+  outline-offset: var(--focus-offset);
+}
+
+input::placeholder,
+textarea::placeholder {
+  color: var(--muted);
+}
+
+input:disabled,
+textarea:disabled,
+select:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+textarea {
+  min-height: 8rem;
+  resize: vertical;
+  line-height: 1.6;
+}
+
+select {
+  appearance: none;
+  padding-right: var(--s7);
+  background-image: var(--svg-arrow);
+  background-repeat: no-repeat;
+  background-position: right var(--s4) top 50%;
+  background-size: 0.65em auto;
+  cursor: pointer;
+}
+
+label {
+  cursor: pointer;
+}
+
+fieldset {
+  border: none;
+  margin: 0;
+  padding: 0;
+}
+
+legend {
+  padding: 0;
+  font-family: var(--font-mono);
+  font-size: var(--fs-sm);
+  color: var(--dim);
+}
+
+/* ── Field rows ────────────────────────────────────────────────────────── */
+
+.field {
+  display: grid;
+  gap: var(--s1);
+  margin-bottom: var(--s5);
+}
+
+.field > label {
+  font-family: var(--font-mono);
+  font-size: var(--fs-sm);
+  color: var(--dim);
+}
+
+.field__hint {
+  margin: 0;
+  font-size: var(--fs-sm);
+  color: var(--muted);
+}
+
+.field__error {
+  margin: 0;
+  font-size: var(--fs-sm);
+  color: var(--error);
+}
+
+.field:has(.field__error) input,
+.field:has(.field__error) select,
+.field:has(.field__error) textarea,
+.field input[aria-invalid="true"],
+.field select[aria-invalid="true"],
+.field textarea[aria-invalid="true"] {
+  border-color: var(--error-bd);
+}
+
+@media (min-width: 48rem) {
+  .field {
+    grid-template-columns: 14rem 1fr;
+    align-items: baseline;
+    column-gap: var(--s5);
+  }
+
+  .field__hint,
+  .field__error {
+    grid-column: 2;
+  }
+}
+
+/* ── Checkbox and radio ────────────────────────────────────────────────── */
+
+.check {
+  display: flex;
+  align-items: center;
+  gap: var(--s3);
+  margin-bottom: var(--s4);
+}
+
+input[type="checkbox"],
+input[type="radio"] {
+  appearance: none;
+  width: 1.1em;
+  height: 1.1em;
+  flex-shrink: 0;
+  margin: 0;
+  padding: 0;
+  background: rgba(255, 255, 255, 0.05);
+  border: 1px solid var(--border-strong);
+  cursor: pointer;
+  display: grid;
+  place-content: center;
+}
+
+input[type="checkbox"] {
+  border-radius: var(--r-sm);
+}
+
+input[type="radio"] {
+  border-radius: 50%;
+}
+
+input[type="checkbox"]::before {
+  content: "";
+  width: 0.6em;
+  height: 0.6em;
+  transform: scale(0);
+  transition: transform 0.1s ease-out;
+  background: var(--on-green);
+  clip-path: polygon(14% 44%, 0 65%, 50% 100%, 100% 16%, 80% 0%, 43% 62%);
+}
+
+input[type="radio"]::before {
+  content: "";
+  width: 0.5em;
+  height: 0.5em;
+  border-radius: 50%;
+  transform: scale(0);
+  transition: transform 0.1s ease-out;
+  background: var(--on-green);
+}
+
+input[type="checkbox"]:checked,
+input[type="radio"]:checked {
+  background: var(--g1);
+  border-color: var(--g1);
+}
+
+input[type="checkbox"]:checked::before,
+input[type="radio"]:checked::before {
+  transform: scale(1);
+}
+
+/* ── Member type picker ────────────────────────────────────────────────── */
+
+/*
+ * The registration form's conditional fields, without JavaScript.
+ *
+ * A radio group plus the sibling combinator does what the old fetch-driven
+ * form did: display:none takes the inactive fields out of the tab order and
+ * the accessibility tree, so no extra scripting is needed to keep them out of
+ * a keyboard user's way.
+ *
+ * Hidden inputs still submit, so the server must select the fields for the
+ * chosen type rather than trusting whatever arrives.
+ */
+/*
+ * The radios must be siblings of .typepick__fields for the combinator below
+ * to reach them, so they are direct children laid out with flex rather than
+ * nested inside a wrapper.
+ */
+.typepick {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: var(--s2);
+  margin-bottom: var(--s5);
+}
+
+.typepick__label {
+  flex: 0 0 100%;
+  font-family: var(--font-mono);
+  font-size: var(--fs-sm);
+  color: var(--dim);
+}
+
+.typepick > input[type="radio"] + label {
+  margin-right: var(--s5);
+}
+
+.typepick__fields {
+  flex: 0 0 100%;
+  margin-top: var(--s5);
+}
+
+.typepick__fields > [data-when] {
+  display: none;
+}
+
+#type-student:checked ~ .typepick__fields > [data-when~="student"],
+#type-employee:checked ~ .typepick__fields > [data-when~="employee"],
+#type-alumni:checked ~ .typepick__fields > [data-when~="alumni"] {
+  display: grid;
+}
+
+.form-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--s3);
+  margin-top: var(--s6);
+}

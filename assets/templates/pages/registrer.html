@@ -1,0 +1,152 @@
+{{ define "content" }}
+<h1>Registrer deg og bli medlem!</h1>
+
+<div class="prose">
+  <p>
+    Ønsker du å bli medlem av Itemize NTNU? Itemize NTNU er åpen for studenter
+    og ansatte ved NTNU Trondheim, samt tidligere alumni.
+  </p>
+  <p>
+    Som medlem har du mulighet for å bli med på Discord-serveren vår, hvor all
+    intern kommunikasjon foregår, samt mulighet for å bli med på prosjekter
+    eller stemme ved generalforsamling.
+  </p>
+</div>
+
+{{- if .Unavailable }}
+<div class="panel panel--warning">
+  <p>
+    Registrering er dessverre utilgjengelig akkurat nå. Send oss en e-post på
+    {{ template "email" .Site.Contact.Email }} i mellomtiden, så ordner vi det.
+  </p>
+</div>
+{{- end }}
+
+{{- with index .Errors "" }}
+<div class="panel panel--error"><p>{{ . }}</p></div>
+{{- end }}
+
+<form method="post" action="/registrer">
+  {{ csrf .CSRF }}
+
+  <div class="field">
+    <label for="r-name">Fullt navn</label>
+    <input id="r-name" name="fullName" value="{{ index .Form "fullName" }}"
+      autocomplete="name" required
+      {{ if index .Errors "fullName" }}aria-invalid="true"{{ end }} />
+    <p class="field__hint">Fullt navn kan kun settes en gang.</p>
+    {{- with index .Errors "fullName" }}<p class="field__error">{{ . }}</p>{{ end }}
+  </div>
+
+  <div class="field">
+    <label for="r-email">E-postadresse</label>
+    <input id="r-email" name="email" type="email" value="{{ index .Form "email" }}"
+      autocomplete="email" required
+      {{ if index .Errors "email" }}aria-invalid="true"{{ end }} />
+    <p class="field__hint">
+      Ikke bruk stud-adressen din — den mister du tilgang til når du er ferdig.
+    </p>
+    {{- with index .Errors "email" }}<p class="field__error">{{ . }}</p>{{ end }}
+  </div>
+
+  <div class="field">
+    <label for="r-display">Visningsnavn</label>
+    <input id="r-display" name="displayName" value="{{ index .Form "displayName" }}"
+      autocomplete="nickname" required
+      {{ if index .Errors "displayName" }}aria-invalid="true"{{ end }} />
+    <p class="field__hint">
+      Ditt navn på nettsiden og i e-poster. Dette kan endres senere.
+    </p>
+    {{- with index .Errors "displayName" }}<p class="field__error">{{ . }}</p>{{ end }}
+  </div>
+
+  {{- /*
+    The conditional fields, without any JavaScript.
+
+    The radios have to be siblings of .typepick__fields for the sibling
+    combinator in the stylesheet to reach them, which is why they are direct
+    children here rather than wrapped.
+
+    display:none takes the inactive fields out of the tab order and the
+    accessibility tree, so no scripting is needed to keep them out of a
+    keyboard user's way. They do still submit, though — the server reads only
+    the fields belonging to the chosen type rather than trusting what arrives.
+  */}}
+  <div class="typepick" role="radiogroup" aria-labelledby="typepick-label">
+    <span class="typepick__label" id="typepick-label">Medlemstype</span>
+
+    <input type="radio" name="type" id="type-student" value="student"
+      {{ if eq .Type "student" }}checked{{ end }} />
+    <label for="type-student">Student</label>
+
+    <input type="radio" name="type" id="type-employee" value="employee"
+      {{ if eq .Type "employee" }}checked{{ end }} />
+    <label for="type-employee">Ansatt</label>
+
+    <input type="radio" name="type" id="type-alumni" value="alumni"
+      {{ if eq .Type "alumni" }}checked{{ end }} />
+    <label for="type-alumni">Alumni</label>
+
+    <div class="typepick__fields">
+      <p class="field__hint" data-when="student">Student ved NTNU Trondheim.</p>
+      <p class="field__hint" data-when="employee">Ansatt ved NTNU.</p>
+      <p class="field__hint" data-when="alumni">Tidligere Itemize-medlem.</p>
+
+      <div class="field" data-when="student alumni">
+        <label for="r-program">Studieprogram</label>
+        <input id="r-program" name="study.program"
+          value="{{ index .Form "study.program" }}"
+          {{ if index .Errors "study.program" }}aria-invalid="true"{{ end }} />
+        {{- with index .Errors "study.program" }}<p class="field__error">{{ . }}</p>{{ end }}
+      </div>
+
+      <div class="field" data-when="student">
+        <label for="r-year">Studieår</label>
+        <input id="r-year" name="study.year" type="number" min="1" max="100"
+          value="{{ index .Form "study.year" }}"
+          {{ if index .Errors "study.year" }}aria-invalid="true"{{ end }} />
+        <p class="field__hint">
+          Nåværende progresjonsår i studiet. Vanligvis mellom 1 og 5.
+        </p>
+        {{- with index .Errors "study.year" }}<p class="field__error">{{ . }}</p>{{ end }}
+      </div>
+
+      <div class="field" data-when="student">
+        <label for="r-finish">Forventet ferdig år</label>
+        <input id="r-finish" name="study.expectedFinishYear" type="number"
+          min="{{ .MinFinish }}" max="{{ .MaxFinish }}"
+          value="{{ index .Form "study.expectedFinishYear" }}"
+          {{ if index .Errors "study.expectedFinishYear" }}aria-invalid="true"{{ end }} />
+        <p class="field__hint">
+          Hvilket år regner du med å være ferdig med studiet ditt?
+        </p>
+        {{- with index .Errors "study.expectedFinishYear" }}<p class="field__error">{{ . }}</p>{{ end }}
+      </div>
+
+      <div class="field" data-when="alumni">
+        <label for="r-join">Medlemsår</label>
+        <input id="r-join" name="alumni.joinYear" type="number" min="2014"
+          max="{{ .MaxJoinYear }}" value="{{ index .Form "alumni.joinYear" }}"
+          {{ if index .Errors "alumni.joinYear" }}aria-invalid="true"{{ end }} />
+        <p class="field__hint">
+          Hvis du er tidligere alumni, hvilket år ble du først med i Itemize?
+        </p>
+        {{- with index .Errors "alumni.joinYear" }}<p class="field__error">{{ . }}</p>{{ end }}
+      </div>
+
+      <div class="field" data-when="employee">
+        <label for="r-title">Tittel</label>
+        <input id="r-title" name="employee.title"
+          value="{{ index .Form "employee.title" }}"
+          {{ if index .Errors "employee.title" }}aria-invalid="true"{{ end }} />
+        <p class="field__hint">Fyll ut best beskrivende jobbtittel.</p>
+        {{- with index .Errors "employee.title" }}<p class="field__error">{{ . }}</p>{{ end }}
+      </div>
+    </div>
+  </div>
+
+  <div class="form-actions">
+    <button type="submit" class="btn btn--primary btn--lg">Registrer</button>
+  </div>
+</form>
+{{ end }}

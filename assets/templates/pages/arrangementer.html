@@ -1,0 +1,53 @@
+{{ define "content" }}
+<div class="row">
+  <h1 class="flush-bottom">Arrangementer</h1>
+  <a
+    class="push-right"
+    href="/api/events/ical"
+    title="Abonner på kalenderen"
+    aria-label="Abonner på kalenderen"
+    >{{ template "icon" "calendar-check" }}</a
+  >
+</div>
+
+<div class="prose">
+  <p>Her finner du oversikt over våre fremtidige arrangementer.</p>
+</div>
+
+{{- if .User.IsStyret }}
+{{ template "event-form" . }}
+{{- end }}
+
+{{- if .Unavailable }}
+<div class="panel panel--warning">
+  <p>
+    Vi får ikke hentet arrangementene akkurat nå. Prøv igjen om litt — eller
+    sjekk <a href="{{ .Site.Contact.DiscordInvite }}" rel="noopener">Discord</a>
+    i mellomtiden.
+  </p>
+</div>
+{{- else if not .Events }}
+<p class="events__empty">
+  {{- if .ShowOld -}}
+  Vi har ingen arrangementer å vise.
+  {{- else -}}
+  Det ser ikke ut som vi har noen planlagte arrangementer annonsert enda. Kom
+  gjerne tilbake igjen senere 🙃
+  {{- end }}
+</p>
+{{- else }}
+<ul class="events">
+  {{- range .Events }}
+  {{ template "event-card" dict "Event" . "Styret" $.User.IsStyret }}
+  {{- end }}
+</ul>
+{{- end }}
+
+<p class="row gap-top">
+  {{- if .ShowOld }}
+  <a class="btn btn--ghost" href="/arrangementer">Skjul tidligere</a>
+  {{- else }}
+  <a class="btn btn--ghost" href="/arrangementer?old=1">Vis tidligere</a>
+  {{- end }}
+</p>
+{{ end }}

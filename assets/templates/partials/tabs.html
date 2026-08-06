@@ -1,0 +1,67 @@
+{{- /*
+  The window's tabs.
+
+  Plain links, not an ARIA tablist. role="tablist" promises same-document panels
+  a screen reader can move between without navigating; these go to separate
+  documents, so claiming it would be a lie. The ← / → shortcut in 10-tabs.js is
+  a real keyboard shortcut over real links rather than a fake tab widget.
+
+  One list, two presentations. Wide: a strip across the chrome. Narrow: a menu
+  the button opens, because a scrolling strip on a phone shows two destinations
+  and hides the rest behind a drag.
+*/ -}}
+{{- define "tabs" -}}
+<div class="chrome">
+  <div class="chrome__inner">
+    <span class="chrome__dots" aria-hidden="true"><i></i><i></i><i></i></span>
+
+    {{- /* Only reachable below the breakpoint; the path keeps the chrome
+           saying where you are once the tabs are hidden. */}}
+    <button
+      class="menu-btn"
+      type="button"
+      id="menu-btn"
+      aria-expanded="false"
+      aria-controls="tabs-list"
+    >
+      <span class="menu-btn__path">{{ .Path }}</span>
+      <span class="menu-btn__icon" aria-hidden="true"></span>
+      <span class="visually-hidden">Meny</span>
+    </button>
+
+    <nav class="tabs" aria-label="Hovedmeny">
+      <ul class="tabs__list" id="tabs-list">
+        {{- range .NavItems }}
+        <li>
+          <a
+            class="tab"
+            href="{{ .Href }}"
+            data-tab
+            {{ if eq .Key $.Nav }}aria-current="page"{{ end }}
+            >{{ .Label }}</a
+          >
+        </li>
+        {{- end }}
+      </ul>
+    </nav>
+
+    <div class="chrome__actions">
+      {{- if .User }}
+      <a href="/profil" title="Profil"
+        ><span class="visually-hidden">Profil</span
+        >{{ template "icon" "user" }}</a
+      >
+      <a href="/logout" title="Logg ut"
+        ><span class="visually-hidden">Logg ut</span
+        >{{ template "icon" "sign-out" }}</a
+      >
+      {{- else }}
+      <a href="/login" title="Logg inn"
+        ><span class="visually-hidden">Logg inn</span
+        >{{ template "icon" "lock" }}</a
+      >
+      {{- end }}
+    </div>
+  </div>
+</div>
+{{- end -}}

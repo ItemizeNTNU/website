@@ -1,0 +1,204 @@
+/*
+ * Typography — three faces, three jobs.
+ *
+ * VT323 is the signature voice but it has one weight, no italic and a small
+ * x-height, so it is confined to display sizes. JetBrains Mono carries the
+ * interface chrome. Prose is set in a real text face, because /historie is
+ * seven hundred words of Norwegian and legibility wins there.
+ *
+ * All three are self-hosted: routing visitors to a font CDN would leak their
+ * IP to a third party, which is not something this particular organisation
+ * should be doing. Run scripts/fetch-fonts.sh to populate assets/static/fonts;
+ * until then every stack falls back cleanly to a system face.
+ */
+
+@font-face {
+  font-family: "VT323";
+  src: url("/assets/fonts/vt323-latin-400.woff2") format("woff2");
+  font-weight: 400;
+  font-style: normal;
+  font-display: swap;
+}
+
+@font-face {
+  font-family: "JetBrains Mono";
+  src: url("/assets/fonts/jetbrains-mono-latin-400.woff2") format("woff2");
+  font-weight: 400;
+  font-style: normal;
+  font-display: swap;
+}
+
+@font-face {
+  font-family: "JetBrains Mono";
+  src: url("/assets/fonts/jetbrains-mono-latin-700.woff2") format("woff2");
+  font-weight: 700;
+  font-style: normal;
+  font-display: swap;
+}
+
+@font-face {
+  font-family: "IBM Plex Sans";
+  src: url("/assets/fonts/ibm-plex-sans-latin-400.woff2") format("woff2");
+  font-weight: 400;
+  font-style: normal;
+  font-display: swap;
+}
+
+@font-face {
+  font-family: "IBM Plex Sans";
+  src: url("/assets/fonts/ibm-plex-sans-latin-600.woff2") format("woff2");
+  font-weight: 600;
+  font-style: normal;
+  font-display: swap;
+}
+
+/*
+ * Mono is the default voice now that the page is a terminal; the readable face
+ * is reserved for the places where it earns its keep.
+ *
+ * /historie is around seven hundred words of Norwegian and /om-itemize is not
+ * far behind. Monospace across that much text measurably slows reading and
+ * reads as a wall, and those are exactly the pages a prospective member
+ * actually reads — so paragraphs and list items inside .prose keep IBM Plex
+ * Sans while everything else goes mono.
+ */
+body {
+  font-family: var(--font-mono);
+  font-size: var(--fs-base);
+  line-height: var(--lh-body);
+  color: var(--text);
+  /* Mono ligatures fuse -> and != into glyphs that read oddly mid-sentence. */
+  font-variant-ligatures: none;
+  -webkit-font-smoothing: antialiased;
+}
+
+h1,
+h2,
+h3,
+h4 {
+  font-family: var(--font-mono);
+  font-weight: 700;
+  line-height: var(--lh-tight);
+  letter-spacing: -0.01em;
+  text-wrap: balance;
+}
+
+h1 {
+  font-size: var(--fs-h1);
+  margin-bottom: var(--s5);
+}
+
+h2 {
+  font-size: var(--fs-h2);
+  margin: var(--s7) 0 var(--s4);
+}
+
+h3 {
+  font-size: var(--fs-h3);
+  margin: var(--s5) 0 var(--s3);
+}
+
+/* ── Prose ─────────────────────────────────────────────────────────────── */
+
+.prose {
+  max-width: var(--measure);
+}
+
+.prose p,
+.prose li,
+.prose address,
+.prose blockquote {
+  font-family: var(--font-body);
+  /* Explicit, not incidental. Links inside a paragraph do glow — that is the
+     accent doing its job — but the running text never does. */
+  text-shadow: none;
+}
+
+.prose p,
+.prose ul,
+.prose ol {
+  margin: 0 0 var(--s4);
+}
+
+.prose > :last-child {
+  margin-bottom: 0;
+}
+
+.prose strong,
+.prose b {
+  font-weight: 600;
+}
+
+.prose ul,
+.prose ol {
+  padding-left: 1.4em;
+}
+
+.prose li {
+  /*
+   * The custom bullet from the previous site. ::marker can be coloured where
+   * list-style-type alone cannot; the shorthand stays as a fallback.
+   */
+  list-style: var(--bullet);
+  padding-left: 0.1em;
+}
+
+.prose li::marker {
+  content: var(--bullet);
+  color: var(--g1);
+}
+
+.prose li + li {
+  margin-top: var(--s2);
+}
+
+/* ── Display ───────────────────────────────────────────────────────────── */
+
+.display {
+  font-family: var(--font-display);
+  font-size: var(--fs-display);
+  font-weight: 400;
+  line-height: 0.9;
+  letter-spacing: 0.02em;
+}
+
+/* Small uppercase mono label — roles, table headers, field names. */
+.eyebrow {
+  text-shadow: var(--glow);
+  font-family: var(--font-mono);
+  font-size: var(--fs-xs);
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: var(--track-cap);
+  color: var(--g1);
+}
+
+/* ── Code ──────────────────────────────────────────────────────────────── */
+
+code,
+kbd,
+samp,
+pre {
+  font-family: var(--font-mono);
+  font-size: 0.9em;
+}
+
+code {
+  text-shadow: var(--glow);
+  background: rgba(0, 0, 0, 0.3);
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  border-radius: var(--r-sm);
+  padding: 0.1em 0.4em;
+  color: var(--g-hi);
+  overflow-wrap: break-word;
+}
+
+code.block,
+pre {
+  display: block;
+  padding: var(--s4);
+  white-space: pre-wrap;
+  overflow-x: auto;
+  line-height: 1.5;
+  color: var(--text);
+}

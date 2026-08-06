@@ -1,0 +1,591 @@
+/*
+ * Layout — the terminal window that is the page.
+ *
+ * The window is a frame around a normally-scrolling document, not a fixed pane
+ * with its own scrollbar. That distinction is what keeps the sticky chrome, the
+ * #anchor jumps on /ressurser and every responsive breakpoint working: those
+ * queries are viewport-based, so a narrow inner pane inside a wide window would
+ * have picked the wide layout for a container that could not hold it.
+ */
+
+/*
+ * Cross-document view transitions. The browser cross-fades between pages with
+ * no script, no history handling and nothing to get wrong; where it is not
+ * supported this line does nothing and navigation is ordinary. That is the
+ * whole reason to prefer it to intercepting clicks and swapping content by
+ * hand.
+ */
+@view-transition {
+  navigation: auto;
+}
+
+body {
+  margin: 0;
+  min-height: 100vh;
+  background-color: var(--bg);
+}
+
+.skiplink {
+  position: absolute;
+  left: -9999px;
+}
+
+.skiplink:focus {
+  left: var(--s4);
+  top: var(--s2);
+  z-index: 9999;
+  background: var(--surface);
+  border: 1px solid var(--border-green);
+  border-radius: var(--r);
+  padding: var(--s2) var(--s4);
+  color: var(--text);
+}
+
+/* ── The window ────────────────────────────────────────────────────────── */
+
+/*
+ * The window is the viewport. No margin, no radius, no border — a terminal
+ * fills the screen, and the moment it floats on a background it reads as a
+ * widget on a page instead.
+ */
+.shell {
+  min-height: 100vh;
+  display: flex;
+  flex-direction: column;
+}
+
+/* ── Chrome ────────────────────────────────────────────────────────────── */
+
+.chrome {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  z-index: 100;
+  display: flex;
+  align-items: center;
+  gap: var(--s3);
+  min-height: var(--nav-h);
+  padding: 0 var(--s5);
+  background: var(--surface);
+  border-bottom: 1px solid var(--border);
+}
+
+.chrome__inner {
+  display: flex;
+  align-items: center;
+  gap: var(--s3);
+  width: 100%;
+  max-width: var(--maxw-pane);
+  margin-inline: auto;
+}
+
+.chrome__dots {
+  display: flex;
+  gap: 6px;
+  flex-shrink: 0;
+}
+
+.chrome__dots i {
+  width: 9px;
+  height: 9px;
+  border-radius: 50%;
+  background: var(--border-strong);
+}
+
+/* Only the live one glows, so it reads as a status light rather than
+   borrowed window decoration. */
+.chrome__dots i:first-child {
+  background: var(--g1);
+  box-shadow: var(--glow);
+}
+
+.chrome__actions {
+  display: flex;
+  align-items: center;
+  gap: var(--s2);
+  margin-left: auto;
+  flex-shrink: 0;
+}
+
+.chrome__actions a {
+  display: inline-flex;
+  padding: var(--s2);
+  color: var(--dim);
+  border-radius: var(--r);
+  transition: color 0.15s, background-color 0.15s;
+}
+
+.chrome__actions a:hover {
+  color: var(--g1);
+  background: rgba(60, 179, 79, 0.1);
+}
+
+/* ── Tabs ──────────────────────────────────────────────────────────────── */
+
+/*
+ * Wide: a strip across the chrome, scrolling if it has to.
+ */
+.tabs {
+  min-width: 0;
+  flex: 1;
+  overflow-x: auto;
+  overflow-y: hidden;
+  scrollbar-width: none;
+  -webkit-overflow-scrolling: touch;
+  /* Fades the right edge so the strip reads as scrollable when it overflows. */
+  mask-image: linear-gradient(to right, #000 calc(100% - 2rem), transparent);
+}
+
+/* The button belongs to the narrow layout only. */
+.menu-btn {
+  display: none;
+}
+
+.tabs::-webkit-scrollbar {
+  display: none;
+}
+
+.tabs__list {
+  display: flex;
+  align-items: stretch;
+  gap: 0;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+  width: max-content;
+}
+
+.tab {
+  display: flex;
+  align-items: center;
+  height: var(--nav-h);
+  padding: 0 var(--s4);
+  font-family: var(--font-mono);
+  font-size: var(--fs-sm);
+  color: var(--muted);
+  text-decoration: none;
+  white-space: nowrap;
+  border-bottom: 2px solid transparent;
+  transition: color 0.15s, background-color 0.15s, border-color 0.15s;
+}
+
+.tab:hover {
+  color: var(--text);
+  background: rgba(255, 255, 255, 0.03);
+}
+
+.tab[aria-current="page"] {
+  color: var(--text);
+  background: rgba(60, 179, 79, 0.07);
+  border-bottom-color: var(--g1);
+  box-shadow: inset 0 -1px 12px rgba(60, 179, 79, 0.12);
+}
+
+/* ── Menu, below the breakpoint ────────────────────────────────────────── */
+
+/*
+ * A scrolling strip on a phone shows two destinations and hides the rest behind
+ * a drag. The menu shows all six at once, which is the whole job of navigation.
+ *
+ * Gated on html[data-js]: without scripting there is no toggle to press, so the
+ * list simply renders and every destination stays reachable.
+ */
+@media (max-width: 51.99rem) {
+  .chrome {
+    padding: 0 var(--s4);
+  }
+
+  .chrome__dots {
+    display: none;
+  }
+
+  html[data-js] .menu-btn {
+    display: flex;
+    align-items: center;
+    gap: var(--s3);
+    height: var(--nav-h);
+    padding: 0;
+    font-family: var(--font-mono);
+    font-size: var(--fs-sm);
+    color: var(--dim);
+    cursor: pointer;
+  }
+
+  .menu-btn__path {
+    color: var(--g1);
+    text-shadow: var(--glow);
+  }
+
+  /* Three bars, drawn rather than shipped as an icon. */
+  .menu-btn__icon,
+  .menu-btn__icon::before,
+  .menu-btn__icon::after {
+    display: block;
+    width: 16px;
+    height: 2px;
+    background: currentColor;
+  }
+
+  .menu-btn__icon {
+    position: relative;
+  }
+
+  .menu-btn__icon::before,
+  .menu-btn__icon::after {
+    content: "";
+    position: absolute;
+    left: 0;
+  }
+
+  .menu-btn__icon::before {
+    top: -5px;
+  }
+
+  .menu-btn__icon::after {
+    top: 5px;
+  }
+
+  /* Open: the bars become a cross. */
+  .menu-btn[aria-expanded="true"] .menu-btn__icon {
+    background: transparent;
+  }
+
+  .menu-btn[aria-expanded="true"] .menu-btn__icon::before {
+    top: 0;
+    transform: rotate(45deg);
+  }
+
+  .menu-btn[aria-expanded="true"] .menu-btn__icon::after {
+    top: 0;
+    transform: rotate(-45deg);
+  }
+
+  /*
+   * The listing drops below the chrome as a panel rather than growing it. The
+   * chrome is position:fixed, so it is already the containing block — nothing
+   * else has to change to anchor this. The insets are zero and the panel still
+   * spans the full width: offsets resolve against the containing block's
+   * padding box, and the chrome's padding box reaches its edges.
+   */
+  html[data-js] .tabs {
+    position: absolute;
+    top: 100%;
+    left: 0;
+    right: 0;
+    flex: none;
+    overflow: visible;
+    mask-image: none;
+    background: var(--surface);
+    border-bottom: 1px solid var(--border);
+    box-shadow: var(--shadow-card);
+    /*
+     * display:none, never a transform. A menu moved offscreen is still
+     * focusable — the previous site let keyboard users tab into an invisible
+     * panel, and that is not coming back with the menu.
+     */
+    display: none;
+  }
+
+  html[data-js] .tabs[data-open] {
+    display: block;
+  }
+
+  /*
+   * Without scripting there is no toggle, so the list renders in full and the
+   * chrome becomes as tall as six destinations. Pinned, that would sit on top
+   * of the first screenful — so it goes back into the flow, and the pane stops
+   * reserving height for a bar that is no longer floating above it.
+   */
+  html:not([data-js]) .chrome {
+    position: static;
+  }
+
+  html:not([data-js]) .shell__pane {
+    padding-top: var(--s5);
+  }
+
+  .tabs__list {
+    flex-direction: column;
+    align-items: stretch;
+    width: auto;
+    padding: var(--s2) 0;
+  }
+
+  .tab {
+    height: auto;
+    padding: var(--s3) var(--s4) var(--s3) var(--s5);
+    border-bottom: none;
+    border-left: 2px solid transparent;
+  }
+
+  /* The listing marks the current entry the way a terminal would. */
+  .tab[aria-current="page"] {
+    border-bottom-color: transparent;
+    border-left-color: var(--g1);
+    box-shadow: none;
+  }
+
+  .tab[aria-current="page"]::before {
+    content: "\25AE";
+    margin-right: var(--s2);
+    color: var(--g1);
+    text-shadow: var(--glow);
+  }
+}
+
+/* ── Pane ──────────────────────────────────────────────────────────────── */
+
+.shell__pane {
+  position: relative;
+  flex: 1;
+  /* Clears the fixed chrome above and the pinned bar below. */
+  padding: calc(var(--nav-h) + var(--s5)) var(--s5) calc(var(--bar-h) + var(--s6));
+  /* The dot grid moved in here from the body: outside the window it framed
+     the page, inside it sits behind the session where it belongs. */
+  background-image: var(--dots);
+  background-size: var(--dots-size);
+}
+
+/*
+ * Content is centred within a cap rather than running the full width. The
+ * window is edge to edge; the reading is not.
+ */
+.shell__pane > * {
+  max-width: var(--maxw-pane);
+  margin-inline: auto;
+}
+
+main {
+  display: block;
+}
+
+main > section + section {
+  margin-top: var(--s7);
+}
+
+/* ── The pinned bar ────────────────────────────────────────────────────── */
+
+/*
+ * Console and status line together at the foot of the screen — tmux's command
+ * prompt and status bar, which is what they already were in spirit.
+ */
+.shell__bar {
+  position: fixed;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  z-index: 90;
+  background: var(--surface);
+  border-top: 1px solid var(--border);
+}
+
+.shell__bar > * {
+  max-width: var(--maxw-pane);
+  margin-inline: auto;
+}
+
+/*
+ * On a phone the bar unpins. A fixed input at the bottom of a small viewport
+ * fights the on-screen keyboard, and the vertical space is worth more than a
+ * feature nobody reaches for on a touch device.
+ */
+@media (max-width: 51.99rem) {
+  .shell__bar {
+    position: static;
+    border-top: none;
+  }
+
+  .shell__pane {
+    padding-bottom: var(--s6);
+  }
+}
+
+/* ── Status line ───────────────────────────────────────────────────────── */
+
+/*
+ * The shape a tmux or vim status bar takes: where you are, how to move, who you
+ * are. Every field is real state.
+ */
+.status {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--s4);
+  padding: var(--s2) var(--s5);
+  font-family: var(--font-mono);
+  font-size: var(--fs-xs);
+  color: var(--muted);
+}
+
+/* Standing alone at the end of the document, it needs its own rule above. */
+@media (max-width: 51.99rem) {
+  .status {
+    border-top: 1px solid var(--border);
+    margin-top: var(--s6);
+  }
+}
+
+.status__path {
+  color: var(--g1);
+  text-shadow: var(--glow);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.status__hint {
+  display: flex;
+  align-items: center;
+  gap: var(--s1);
+  white-space: nowrap;
+}
+
+.status__hint kbd {
+  font-family: inherit;
+  font-size: inherit;
+  padding: 0 0.35em;
+  border: 1px solid var(--border);
+  border-radius: var(--r-sm);
+  color: var(--dim);
+}
+
+.status__session {
+  white-space: nowrap;
+  color: var(--dim);
+}
+
+.status__session::before {
+  content: "[ ";
+  color: var(--g1);
+  text-shadow: var(--glow);
+}
+
+.status__session::after {
+  content: " ]";
+  color: var(--g1);
+  text-shadow: var(--glow);
+}
+
+/* Below this the hint competes with the path for room it does not have. */
+@media (max-width: 39.99rem) {
+  .status__hint {
+    display: none;
+  }
+
+  .status__session {
+    margin-left: auto;
+  }
+}
+
+/* ── Footer, as pane output ────────────────────────────────────────────── */
+
+.footer {
+  padding: 0;
+  background: none;
+  border: none;
+  margin-top: var(--s4);
+}
+
+.footer__inner {
+  max-width: none;
+  margin: 0;
+  display: grid;
+  gap: var(--s6);
+  grid-template-columns: 1fr;
+  align-items: start;
+}
+
+@media (min-width: 52rem) {
+  .footer__inner {
+    grid-template-columns: 1fr auto 1fr;
+  }
+
+  .footer__logo {
+    justify-self: center;
+  }
+
+  .footer__socials {
+    justify-self: end;
+    text-align: right;
+  }
+}
+
+.footer h2 {
+  font-size: var(--fs-xs);
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: var(--track-cap);
+  color: var(--g1);
+  margin: 0 0 var(--s4);
+}
+
+.footer address {
+  font-style: normal;
+  color: var(--muted);
+}
+
+.footer__logo img {
+  width: 160px;
+  height: auto;
+  opacity: 0.9;
+}
+
+.footer__block + .footer__block {
+  margin-top: var(--s5);
+}
+
+.footer__label {
+  font-family: var(--font-mono);
+  font-size: var(--fs-xs);
+  text-transform: uppercase;
+  letter-spacing: var(--track-cap);
+  color: var(--muted);
+  display: block;
+}
+
+.footer__socials ul {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: flex;
+  flex-direction: column;
+  gap: var(--s3);
+}
+
+.footer__socials li {
+  display: flex;
+  align-items: center;
+  gap: var(--s3);
+}
+
+@media (min-width: 52rem) {
+  .footer__socials li {
+    justify-content: flex-end;
+  }
+}
+
+.footer__socials a {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--s3);
+  color: var(--muted);
+  text-decoration: none;
+  transition: color 0.2s;
+}
+
+.footer__socials a:hover {
+  color: var(--g1);
+}
+
+/* ── Cursor keyframe ───────────────────────────────────────────────────── */
+
+@keyframes cursor-blink {
+  0%,
+  100% {
+    opacity: 1;
+  }
+  50% {
+    opacity: 0;
+  }
+}

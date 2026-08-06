@@ -1,0 +1,83 @@
+{{- /*
+  The layout. Pages contribute only {{define}} blocks that override the
+  {{block}} defaults below; this file is the template that gets executed.
+
+  The whole page is one terminal window: chrome holding the tabs, a pane holding
+  the session, a status line underneath. The document scrolls normally — the
+  window is a frame around it rather than a fixed viewport — which is what keeps
+  the sticky chrome, the #anchor jumps on /ressurser and every responsive
+  breakpoint working unchanged.
+
+  lang is "nb": the content is Norwegian bokmål.
+*/ -}}
+<!doctype html>
+<html lang="nb">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <meta name="theme-color" content="#181b23" />
+    <title>
+      {{- block "title" . }}{{ with .Title }}{{ . }} – Itemize NTNU{{ else }}Itemize NTNU{{ end }}{{ end -}}
+    </title>
+    {{- with .Desc }}
+    <meta name="description" content="{{ . }}" />
+    {{- end }}
+
+    {{- range $font := (list "fonts/ibm-plex-sans-latin-400.woff2" "fonts/jetbrains-mono-latin-400.woff2") }}
+    {{- if hasAsset $font }}
+    <link
+      rel="preload"
+      as="font"
+      type="font/woff2"
+      crossorigin
+      href="{{ asset $font }}"
+    />
+    {{- end }}
+    {{- end }}
+
+    <link rel="stylesheet" href="{{ asset "app.css" }}" />
+    <link rel="icon" href="/icon.svg" type="image/svg+xml" />
+    <link rel="apple-touch-icon" href="/logo-192.png" />
+    <link rel="manifest" href="/manifest.json" />
+    <link
+      rel="alternate"
+      type="text/calendar"
+      title="Itemize Arrangementer"
+      href="/api/events/ical"
+    />
+
+    {{- /* Not deferred: sets the flag the stylesheet uses to decide what only
+           exists with scripting, before the first paint. */}}
+    <script src="{{ asset "boot.js" }}"></script>
+    {{- block "head" . }}{{ end }}
+  </head>
+
+  <body class="{{ .BodyClass }}">
+    <a class="skiplink" href="#main">Hopp til innhold</a>
+
+    {{ template "icons" . }}
+
+    <div class="shell">
+      {{ template "tabs" . }}
+
+      <div class="shell__pane">
+        {{ template "command" .Command }}
+
+        <main id="main">{{ block "content" . }}{{ end }}</main>
+
+        {{ template "footer" . }}
+      </div>
+
+      {{- /* Pinned together at the foot of the screen on a wide viewport, and
+             unpinned back into the document flow on a narrow one. */}}
+      <div class="shell__bar">
+        {{ template "console" . }} {{ template "status" . }}
+      </div>
+    </div>
+
+    {{ template "toasts" . }} {{ template "dialog" . }}
+
+    <script src="{{ asset "app.js" }}" defer></script>
+    {{- block "scripts" . }}{{ end }}
+  </body>
+</html>

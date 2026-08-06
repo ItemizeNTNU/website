@@ -1,0 +1,99 @@
+/* Utilities. Last in load order so they win. */
+
+.visually-hidden {
+  position: absolute !important;
+  width: 1px;
+  height: 1px;
+  margin: -1px;
+  padding: 0;
+  overflow: hidden;
+  clip: rect(0 0 0 0);
+  clip-path: inset(50%);
+  white-space: nowrap;
+  border: 0;
+}
+
+.muted {
+  color: var(--muted);
+}
+
+.dim {
+  color: var(--dim);
+}
+
+.text-center {
+  text-align: center;
+}
+
+.mono {
+  font-family: var(--font-mono);
+}
+
+.nowrap {
+  white-space: nowrap;
+}
+
+.stack > * + * {
+  margin-top: var(--s4);
+}
+
+.row {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: var(--s3);
+}
+
+.push-right {
+  margin-left: auto;
+}
+
+.success {
+  color: var(--success);
+}
+
+.warning {
+  color: var(--warning);
+}
+
+.info {
+  color: var(--info);
+}
+
+.error {
+  color: var(--error);
+}
+
+/*
+ * Email addresses are assembled by app.js from an encoded attribute so the
+ * plain string never appears in the HTML source. The <noscript> fallback is
+ * styled to match so the page reads the same either way.
+ */
+.eml {
+  font-family: var(--font-mono);
+  overflow-wrap: anywhere;
+}
+
+/*
+ * Spacing utilities, replacing inline style attributes.
+ *
+ * Those attributes never took effect in production: the Content-Security-
+ * Policy allows style-src 'self' and no 'unsafe-inline', which blocks a style
+ * attribute as surely as it blocks a <style> block. The layout only looked
+ * correct in review, where the policy is easy to overlook.
+ */
+.flush-top {
+  margin-top: 0;
+}
+
+.flush-bottom {
+  margin-bottom: 0;
+}
+
+.gap-top {
+  margin-top: var(--s6);
+}
+
+.gap-top-sm {
+  margin-top: var(--s5);
+}

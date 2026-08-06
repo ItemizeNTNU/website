@@ -1,0 +1,61 @@
+{{ define "title" }}Itemize NTNU{{ end }}
+
+{{ define "content" }}
+<section class="hero">
+  {{- /*
+    The front page is the program running.
+
+    That brainfuck source prints "Itemize NTNU" — it always did, but it used to
+    drift behind the logo as texture. Here it is typed out, run, and the
+    wordmark is its output.
+
+    No window of its own: the page already is one. The sequence runs straight in
+    the pane, which makes the front page the plainest statement of the idea
+    rather than a special case nested inside it.
+
+    The whole sequence is present in the markup, so without scripting it reads
+    as a finished session rather than a broken one.
+  */ -}}
+  <p class="cmd cmd--static">cat hello.bf</p>
+  <div class="hero__src" id="bf" aria-hidden="true">{{ .Brainfuck }}</div>
+
+  <p class="cmd cmd--static">bf hello.bf</p>
+  <h1 class="hero__out logo-glitch" id="hero-out" data-shown>
+    <span class="visually-hidden">Itemize NTNU</span>
+    <img class="l-red" src="/logo.png" alt="" aria-hidden="true" />
+    <img src="/logo.png" alt="" aria-hidden="true" />
+    <img class="l-blue" src="/logo.png" alt="" aria-hidden="true" />
+  </h1>
+
+  <p class="lead">
+    Vi er en studentorganisasjon ved NTNU Trondheim som digger
+    informasjonssikkerhet og CTFer.
+  </p>
+
+  <ul class="questions">
+    <li>Er du interessert i informasjonssikkerhet?</li>
+    <li>Vil du lære mer om snill hacking?</li>
+    <li>
+      Liker du å holde på med
+      <a
+        href="https://ctftime.org/ctf-wtf/"
+        rel="noopener"
+        title="Capture The Flag er konkurranser som omhandler forskjellige aspekter av IT-sikkerhet, og er en god måte å lære seg noen av de praktiske skilza man bruker som «etisk hacker» 😎&#10;Trykk for mer info."
+        >CTFer</a
+      >?
+    </li>
+    <li>Vil du være med på NTNU Trondheim's CTF lag?</li>
+  </ul>
+
+  <p>
+    <a class="btn btn--primary btn--lg" href="/registrer">Bli medlem her!</a>
+  </p>
+</section>
+
+<p class="outro">
+  Du kan finne en liste over fremtidige arrangementer
+  <a href="/arrangementer">her</a>.<br />
+  Følg oss også gjerne på
+  <a href="https://www.facebook.com/ItemizeNTNU" rel="noopener">facebook</a>.
+</p>
+{{ end }}

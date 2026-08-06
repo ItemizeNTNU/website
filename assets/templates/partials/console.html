@@ -1,0 +1,28 @@
+{{- /*
+  The command line.
+
+  An enhancement, never the only way anywhere: every page it can reach is also a
+  tab. It is marked data-js-only so it does not render as a dead input without
+  scripting, and it is deliberately not autofocused — autofocus steals keyboard
+  scrolling from someone who came to read.
+*/ -}}
+{{- define "console" -}}
+<div class="console" data-js-only>
+  <div class="console__out" id="console-out" aria-live="polite"></div>
+
+  <form class="console__form" id="console-form" autocomplete="off">
+    <label class="visually-hidden" for="console-in">Kommando</label>
+    <span class="console__prompt" aria-hidden="true">$</span>
+    <input
+      class="console__in"
+      id="console-in"
+      name="command"
+      type="text"
+      spellcheck="false"
+      autocapitalize="off"
+      autocorrect="off"
+      placeholder="skriv 'help'"
+    />
+  </form>
+</div>
+{{- end -}}

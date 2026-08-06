@@ -1,0 +1,77 @@
+{{- /*
+  One event. Called with {"Event": …, "Styret": bool}.
+
+  The field pairs are a <dl>, not a <table> — they are labels and values, not
+  tabular data, and a description list gives the two-column grid for free while
+  collapsing cleanly on a phone.
+*/ -}}
+{{- define "event-card" -}}
+{{- $e := .Event -}}
+<li class="card event{{ if $e.Past }} event--past{{ end }}">
+  {{- if .Styret }}
+  <div class="event__admin">
+    {{- if $e.HasCheckIn }}
+    <a class="btn btn--icon" href="/innsjekk/{{ $e.CheckIn.Code }}"
+      title="Innsjekk" aria-label="Innsjekk for {{ $e.Name }}"
+      >{{ template "icon" "qrcode" }}</a
+    >
+    {{- end }}
+    <a class="btn btn--icon" href="/arrangementer?rediger={{ $e.HexID }}#rediger"
+      title="Rediger" aria-label="Rediger {{ $e.Name }}"
+      >{{ template "icon" "cog" }}</a
+    >
+  </div>
+  {{- end }}
+
+  <div class="event__header">
+    <h3>{{ $e.Name }}</h3>
+    {{- if $e.Past }}<span class="chip">Ferdig</span>{{ end }}
+    {{- if $e.Hidden }}
+    <span class="chip" title="Skjult — bare styret ser dette"
+      >{{ template "icon" "eye-off" }} Skjult</span
+    >
+    {{- end }}
+  </div>
+
+  <dl>
+    <dt>Hvor</dt>
+    <dd>
+      {{- with $e.Location.URL -}}
+      <a href="{{ . }}" rel="noopener noreferrer">{{ $e.Location.Name }}</a>
+      {{- else -}}
+      {{ $e.Location.Name }}
+      {{- end }}
+    </dd>
+
+    <dt>Når</dt>
+    <dd><time datetime="{{ $e.WhenISO }}">{{ $e.When }}</time></dd>
+
+    {{- with $e.RegisterURL }}
+    <dt>Registrering</dt>
+    <dd><a href="{{ . }}" rel="noopener noreferrer">her</a></dd>
+    {{- end }}
+
+    {{- with $e.CTF.Name }}
+    <dt>CTF</dt>
+    <dd>
+      {{- with $e.CTF.URL -}}
+      <a href="{{ . }}" rel="noopener noreferrer">{{ $e.CTF.Name }}</a>
+      {{- else -}}
+      {{ $e.CTF.Name }}
+      {{- end }}
+    </dd>
+    {{- end }}
+
+    {{- with $e.Info }}
+    <dt>Info</dt>
+    {{- /*
+      Escaped, not raw. This is board-authored text that used to be injected as
+      HTML, which made a compromised board account into stored cross-site
+      scripting against every visitor. Line breaks — the only thing anyone
+      actually used it for — are preserved by white-space: pre-wrap.
+    */}}
+    <dd class="event__info">{{ . }}</dd>
+    {{- end }}
+  </dl>
+</li>
+{{- end -}}

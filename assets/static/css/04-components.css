@@ -1,0 +1,477 @@
+/* Components — cards, buttons, panels, tables, disclosures, dialogs. */
+
+/* ── Buttons ───────────────────────────────────────────────────────────── */
+
+.btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: var(--s2);
+  padding: var(--s2) var(--s5);
+  font-family: var(--font-mono);
+  font-size: var(--fs-sm);
+  font-weight: 700;
+  line-height: 1.6;
+  text-decoration: none;
+  white-space: nowrap;
+  cursor: pointer;
+  border: 1px solid var(--border);
+  border-radius: var(--r);
+  background: var(--card);
+  color: var(--text);
+  transition: background-color 0.15s, border-color 0.15s, box-shadow 0.15s,
+    color 0.15s;
+}
+
+.btn:hover {
+  background: var(--card-hover);
+  border-color: var(--border-strong);
+  color: var(--text);
+}
+
+.btn--primary {
+  background: var(--g1);
+  border-color: var(--g1);
+  color: var(--on-green);
+}
+
+.btn--primary:hover {
+  background: var(--g-hi);
+  border-color: var(--g-hi);
+  color: var(--on-green);
+  box-shadow: 0 0 16px rgba(60, 179, 79, 0.3);
+}
+
+/* A green ring on a green fill is invisible. */
+.btn--primary:focus-visible {
+  outline-color: var(--text);
+}
+
+.btn--ghost {
+  background: transparent;
+  border-color: var(--border-green);
+  color: var(--g1);
+}
+
+.btn--ghost:hover {
+  background: rgba(60, 179, 79, 0.1);
+  color: var(--g-hi);
+}
+
+.btn--danger {
+  background: transparent;
+  border-color: var(--error-bd);
+  color: var(--error);
+}
+
+.btn--danger:hover {
+  background: var(--error-bg);
+  border-color: var(--error);
+  color: var(--error);
+}
+
+.btn--lg {
+  font-size: var(--fs-lg);
+  padding: var(--s3) var(--s6);
+}
+
+.btn--block {
+  width: 100%;
+}
+
+.btn--icon {
+  padding: var(--s2);
+}
+
+.btn:disabled,
+.btn[aria-busy="true"] {
+  opacity: 0.55;
+  cursor: not-allowed;
+}
+
+/* ── Icons ─────────────────────────────────────────────────────────────── */
+
+.icon {
+  width: 1em;
+  height: 1em;
+  flex-shrink: 0;
+  vertical-align: -0.125em;
+  fill: currentColor;
+}
+
+.icon--lg {
+  width: 1.35em;
+  height: 1.35em;
+}
+
+/* ── Cards ─────────────────────────────────────────────────────────────── */
+
+.card {
+  position: relative;
+  background: var(--card);
+  border: 1px solid var(--border);
+  border-radius: var(--r);
+  padding: var(--s5);
+  transition: border-color 0.15s, box-shadow 0.15s, transform 0.12s;
+}
+
+.card--hover:hover {
+  border-color: var(--border-green);
+  box-shadow: var(--shadow-glow);
+  transform: translateY(-1px);
+}
+
+.grid {
+  display: grid;
+  gap: var(--s4);
+  grid-template-columns: 1fr;
+}
+
+@media (min-width: 40rem) {
+  .grid--people {
+    grid-template-columns: repeat(auto-fill, minmax(15rem, 1fr));
+  }
+}
+
+@media (min-width: 64rem) {
+  .grid--links {
+    grid-template-columns: 1fr 1fr;
+  }
+}
+
+/* The window is edge to edge now, so a third column finally fits. */
+@media (min-width: 96rem) {
+  .grid--links {
+    grid-template-columns: repeat(3, 1fr);
+  }
+}
+
+/* ── Section header ────────────────────────────────────────────────────── */
+
+/*
+ * The // marker is reserved for headings that are jump targets, so it means
+ * "this section has an address" rather than being decoration.
+ */
+.section-head {
+  display: flex;
+  align-items: baseline;
+  gap: 0.5em;
+  padding-bottom: var(--s3);
+  margin: var(--s8) 0 var(--s5);
+  border-bottom: 1px solid var(--border);
+  scroll-margin-top: calc(var(--nav-h) + var(--s4));
+}
+
+.section-head::before {
+  content: "//";
+  flex-shrink: 0;
+  color: var(--g1);
+  font-family: var(--font-mono);
+  font-weight: 700;
+  font-size: 0.85em;
+  letter-spacing: -0.05em;
+}
+
+.section-head h2 {
+  margin: 0;
+  font-size: var(--fs-base);
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: var(--track-cap);
+}
+
+/* ── Jump navigation ───────────────────────────────────────────────────── */
+
+.jumpnav {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--s2);
+  list-style: none;
+  margin: 0 0 var(--s6);
+  padding: 0;
+}
+
+.jumpnav a {
+  display: inline-block;
+  padding: var(--s1) var(--s3);
+  font-family: var(--font-mono);
+  font-size: var(--fs-sm);
+  color: var(--dim);
+  text-decoration: none;
+  border: 1px solid var(--border);
+  border-radius: var(--r-pill);
+  transition: border-color 0.15s, color 0.15s;
+}
+
+.jumpnav a:hover {
+  border-color: var(--border-green);
+  color: var(--g1);
+}
+
+/* ── Person card ───────────────────────────────────────────────────────── */
+
+.person__role {
+  display: block;
+  margin-bottom: var(--s1);
+}
+
+.person__name {
+  font-weight: 600;
+}
+
+.person__mail {
+  display: block;
+  margin-top: var(--s1);
+  font-family: var(--font-mono);
+  font-size: var(--fs-sm);
+  color: var(--muted-strong);
+  overflow-wrap: anywhere;
+}
+
+/* ── Link card ─────────────────────────────────────────────────────────── */
+
+.link-card__title {
+  font-family: var(--font-mono);
+  font-weight: 700;
+  color: var(--g1);
+  text-decoration: none;
+}
+
+.link-card__title:hover {
+  color: var(--g-hi);
+  text-decoration: underline;
+}
+
+.link-card__title::after {
+  content: " ↗";
+  font-size: 0.8em;
+  opacity: 0.6;
+}
+
+.link-card p {
+  margin: var(--s2) 0 0;
+  font-size: var(--fs-sm);
+  line-height: 1.6;
+  color: var(--muted-strong);
+}
+
+/* ── Panels (alerts, callouts) ─────────────────────────────────────────── */
+
+.panel {
+  border: 1px solid var(--border);
+  border-left-width: 3px;
+  border-radius: var(--r);
+  padding: var(--s4) var(--s5);
+  margin: var(--s5) 0;
+  /* A panel is a sentence to read, so it keeps to the reading column rather
+     than following the window out to the edge of a wide screen. */
+  max-width: 62rem;
+}
+
+.panel--success {
+  background: var(--success-bg);
+  border-color: var(--success-bd);
+  border-left-color: var(--success);
+}
+
+.panel--error {
+  background: var(--error-bg);
+  border-color: var(--error-bd);
+  border-left-color: var(--error);
+}
+
+.panel--info {
+  background: var(--info-bg);
+  border-color: var(--info-bd);
+  border-left-color: var(--info);
+}
+
+.panel--warning {
+  background: var(--warning-bg);
+  border-color: var(--warning-bd);
+  border-left-color: var(--warning);
+}
+
+/* Terminal-style block, for the resignation email template. */
+.terminal {
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: var(--r);
+  padding: var(--s5);
+  font-family: var(--font-mono);
+  font-size: var(--fs-sm);
+  white-space: pre-wrap;
+  overflow-x: auto;
+}
+
+/* ── Tables ────────────────────────────────────────────────────────────── */
+
+.table-wrap {
+  overflow-x: auto;
+}
+
+table {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: var(--fs-sm);
+}
+
+thead th {
+  font-family: var(--font-mono);
+  font-size: var(--fs-xs);
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+  color: var(--muted);
+  text-align: left;
+}
+
+th,
+td {
+  padding: var(--s3) var(--s4);
+  border-bottom: 1px solid var(--border);
+}
+
+tbody tr:nth-child(odd) {
+  background: rgba(255, 255, 255, 0.02);
+}
+
+tbody tr:hover {
+  background: rgba(255, 255, 255, 0.05);
+}
+
+/* ── Disclosure ────────────────────────────────────────────────────────── */
+
+details {
+  border: 1px solid var(--border);
+  border-radius: var(--r);
+  background: var(--card);
+}
+
+details > summary {
+  display: flex;
+  align-items: center;
+  gap: var(--s3);
+  padding: var(--s4) var(--s5);
+  cursor: pointer;
+  font-family: var(--font-mono);
+  font-size: var(--fs-sm);
+  font-weight: 700;
+  list-style: none;
+  border-radius: var(--r);
+}
+
+details > summary::-webkit-details-marker {
+  display: none;
+}
+
+details > summary::after {
+  content: "▾";
+  margin-left: auto;
+  font-size: 1.75em;
+  line-height: 1;
+  color: var(--g1);
+  text-shadow: var(--glow);
+  transition: transform 0.2s;
+}
+
+details[open] > summary::after {
+  transform: rotate(180deg);
+}
+
+details > summary:hover {
+  color: var(--g1);
+}
+
+details > .details__body {
+  padding: 0 var(--s5) var(--s5);
+  border-top: 1px solid var(--border);
+  padding-top: var(--s5);
+}
+
+/* ── Dialog ────────────────────────────────────────────────────────────── */
+
+dialog {
+  max-width: min(90vw, 32rem);
+  padding: 0;
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: var(--r-lg);
+  color: var(--text);
+}
+
+dialog::backdrop {
+  background: var(--overlay);
+}
+
+.dialog__header {
+  padding: var(--s5);
+  border-bottom: 1px solid var(--border);
+  font-family: var(--font-mono);
+  font-weight: 700;
+}
+
+.dialog__body {
+  padding: var(--s5);
+  white-space: pre-wrap;
+}
+
+.dialog__footer {
+  display: flex;
+  justify-content: flex-end;
+  gap: var(--s3);
+  padding: var(--s4) var(--s5);
+  border-top: 1px solid var(--border);
+}
+
+/* ── Toasts ────────────────────────────────────────────────────────────── */
+
+.toasts {
+  position: fixed;
+  right: var(--s4);
+  bottom: var(--s4);
+  z-index: 200;
+  display: flex;
+  flex-direction: column;
+  gap: var(--s3);
+  max-width: min(90vw, 24rem);
+}
+
+.toast {
+  padding: var(--s3) var(--s4);
+  border: 1px solid var(--border);
+  border-left-width: 3px;
+  border-radius: var(--r);
+  background: var(--surface);
+  box-shadow: var(--shadow-card);
+  font-size: var(--fs-sm);
+}
+
+.toast--success {
+  border-left-color: var(--success);
+}
+
+.toast--error {
+  border-left-color: var(--error);
+}
+
+.toast--info {
+  border-left-color: var(--info);
+}
+
+.toast--warning {
+  border-left-color: var(--warning);
+}
+
+/* ── Chips ─────────────────────────────────────────────────────────────── */
+
+.chip {
+  display: inline-block;
+  padding: 0 var(--s2);
+  font-family: var(--font-mono);
+  font-size: var(--fs-xs);
+  color: var(--muted);
+  border: 1px solid var(--border);
+  border-radius: var(--r-pill);
+  vertical-align: middle;
+}

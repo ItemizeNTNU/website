@@ -1,0 +1,81 @@
+{{- define "footer" -}}
+{{- /*
+  Inside the window the footer is output, not chrome. Introducing it with the
+  command that would produce it keeps it part of the session instead of adding
+  a second frame below the first — and the content is unchanged, so it stays as
+  findable as it was.
+*/ -}}
+<p class="cmd cmd--static">cat kontakt.txt</p>
+<footer class="footer">
+  <h2 class="visually-hidden">Bunntekst</h2>
+  <div class="footer__inner">
+    <div>
+      <h2>Kontakt oss</h2>
+
+      <div class="footer__block">
+        <span class="footer__label">E-post</span>
+        {{ template "email" .Site.Contact.Email }}
+      </div>
+
+      <div class="footer__block">
+        <span class="footer__label">Lokasjon</span>
+        <address>
+          {{- range $i, $line := .Site.Contact.AddressShort }}
+          {{- if $i }}<br />{{ end }}{{ $line }}
+          {{- end }}
+        </address>
+      </div>
+
+      <div class="footer__block">
+        <span class="footer__label">Organisasjonsnummer</span>
+        <span class="mono">{{ .Site.Contact.OrgNumber }}</span>
+      </div>
+    </div>
+
+    <div class="footer__logo">
+      <a href="/"><img src="/logo.png" alt="Itemize NTNU" width="180" /></a>
+    </div>
+
+    <div class="footer__socials">
+      <h2>Følg oss</h2>
+      <ul>
+        {{- range .Site.Socials }}
+        <li>
+          <a href="{{ .URL }}" rel="me noopener">
+            {{ template "icon" .Icon }}
+            <span>{{ .Label }}</span>
+          </a>
+        </li>
+        {{- end }}
+      </ul>
+    </div>
+  </div>
+</footer>
+{{- end -}}
+
+{{- /*
+  An email address, never as plain text in the source.
+
+  The address is emitted rotated by thirteen places in data-eml with an empty
+  link body; app.js reverses it, fills in the text and attaches the mailto.
+  data-glitch makes it resolve out of noise as it arrives — the reveal and the
+  obfuscation are the same mechanism, so the effect costs nothing extra.
+
+  The <noscript> copy keeps the address reachable without scripting, written
+  so a human can read it but a pattern match for user@host cannot.
+*/ -}}
+{{- /*
+  data-eml goes on the inner span, not the anchor: the anchor's textContent
+  also contains the <noscript> text, so a script checking whether the anchor
+  is empty would always find content and never fill anything in.
+
+  There is deliberately no href in the markup. An anchor without one is not a
+  link and is not focusable, which is the honest rendering when no mailto is
+  available; the script adds it along with the address.
+*/ -}}
+{{- define "email" -}}
+<a class="eml"
+  ><span data-eml="{{ eml . }}" data-glitch></span
+  ><noscript>{{ emlfallback . }}</noscript></a
+>
+{{- end -}}

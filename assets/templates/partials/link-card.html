@@ -1,0 +1,23 @@
+{{- define "link-card" -}}
+<li class="card card--hover link-card">
+  <a class="link-card__title" href="{{ .URL }}" rel="noopener noreferrer"
+    >{{ .Title }}</a
+  >
+  {{- range .Paragraphs }}
+  <p>{{ .HTML }}</p>
+  {{- end }}
+  {{- with .HiddenNote }}
+  {{- /*
+    Deliberately present in the source and deliberately not on the page: this
+    is a fragment of a CTF flag, and finding it is the point.
+
+    It stays hidden because 00-reset.css forces [hidden] to display:none with
+    !important. The user-agent rule for [hidden] has the lowest possible
+    specificity, so without that override a single rule setting `display` on a
+    paragraph inside a card — say `.link-card p { display: block }` — would put
+    the flag on screen. Do not remove either half of this.
+  */}}
+  <p id="flag-part" hidden>{{ . }}</p>
+  {{- end }}
+</li>
+{{- end -}}

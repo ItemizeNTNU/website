@@ -1,0 +1,217 @@
+/*
+ * Effects.
+ *
+ * Three moving things on the whole site: the brainfuck stream and the glitching
+ * logo on the front page, and one text-reveal per page. Plus the blinking
+ * cursor after the wordmark. Everything else is still. Restraint is what keeps
+ * this reading as a design rather than a costume.
+ *
+ * Deliberately not ported from the theme prototype: the full-viewport opacity
+ * flicker, which animates at roughly 6.7 Hz — inside the band that triggers
+ * photosensitive seizures — and the permanent chromatic text-shadow wobble,
+ * which destroys legibility and pins a compositor repaint forever.
+ */
+
+
+/* ── Hero ──────────────────────────────────────────────────────────────── */
+
+.hero {
+  text-align: center;
+}
+
+/*
+ * Scanlines belong to the window. Now that the window is the page they cover
+ * the whole pane, which is the point — but they stay very faint, because this
+ * is laid over every paragraph on the site rather than over a hero.
+ */
+.shell__pane::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+  z-index: 2;
+  pointer-events: none;
+  background: repeating-linear-gradient(
+    0deg,
+    transparent 0 2px,
+    rgba(0, 0, 0, 0.035) 2px 3px
+  );
+}
+
+/*
+ * The program stream now lives inside the frame — see 06b-terminal.css. The
+ * rules that used to position it as a layer behind the hero are gone rather
+ * than left to fight the new ones: an id selector outranks a class, so the
+ * leftovers silently pulled the program out of the frame and dragged it across
+ * the commands above it.
+ */
+
+
+/* ── Glitching logo ────────────────────────────────────────────────────── */
+
+/*
+ * Chromatic aberration from three stacked copies of the wordmark. Each colour
+ * layer stays fully clipped away for ninety per cent of its cycle, so the
+ * effect is a one-second tear roughly every ten seconds rather than constant
+ * motion.
+ */
+.logo-glitch {
+  position: relative;
+  display: inline-block;
+  width: min(90%, 30rem);
+  margin: 0 auto var(--s6);
+}
+
+.logo-glitch img {
+  width: 100%;
+  height: auto;
+}
+
+.logo-glitch img.l-red,
+.logo-glitch img.l-blue {
+  position: absolute;
+  top: 0;
+  pointer-events: none;
+}
+
+.logo-glitch img.l-red {
+  left: 3px;
+  filter: drop-shadow(-2px 0 red);
+  animation: glitch-1 10s infinite linear alternate-reverse;
+}
+
+.logo-glitch img.l-blue {
+  left: -3px;
+  filter: drop-shadow(-2px 0 blue);
+  animation: glitch-2 10s infinite linear alternate-reverse;
+}
+
+@keyframes glitch-1 {
+  0%,
+  90% {
+    clip-path: polygon(0 0, 100% 0, 100% 0, 0 0);
+  }
+  91% {
+    clip-path: polygon(0 12%, 100% 12%, 100% 20%, 0 20%);
+  }
+  92% {
+    clip-path: polygon(0 63%, 100% 63%, 100% 68%, 0 68%);
+  }
+  93% {
+    clip-path: polygon(0 31%, 100% 31%, 100% 39%, 0 39%);
+  }
+  94% {
+    clip-path: polygon(0 78%, 100% 78%, 100% 83%, 0 83%);
+  }
+  95% {
+    clip-path: polygon(0 5%, 100% 5%, 100% 11%, 0 11%);
+  }
+  96% {
+    clip-path: polygon(0 45%, 100% 45%, 100% 52%, 0 52%);
+  }
+  97% {
+    clip-path: polygon(0 88%, 100% 88%, 100% 94%, 0 94%);
+  }
+  98% {
+    clip-path: polygon(0 22%, 100% 22%, 100% 27%, 0 27%);
+  }
+  99%,
+  100% {
+    clip-path: polygon(0 0, 100% 0, 100% 0, 0 0);
+  }
+}
+
+@keyframes glitch-2 {
+  0%,
+  90% {
+    clip-path: polygon(0 0, 100% 0, 100% 0, 0 0);
+  }
+  91% {
+    clip-path: polygon(0 55%, 100% 55%, 100% 61%, 0 61%);
+  }
+  92% {
+    clip-path: polygon(0 9%, 100% 9%, 100% 16%, 0 16%);
+  }
+  93% {
+    clip-path: polygon(0 71%, 100% 71%, 100% 77%, 0 77%);
+  }
+  94% {
+    clip-path: polygon(0 36%, 100% 36%, 100% 41%, 0 41%);
+  }
+  95% {
+    clip-path: polygon(0 84%, 100% 84%, 100% 90%, 0 90%);
+  }
+  96% {
+    clip-path: polygon(0 18%, 100% 18%, 100% 24%, 0 24%);
+  }
+  97% {
+    clip-path: polygon(0 48%, 100% 48%, 100% 56%, 0 56%);
+  }
+  98% {
+    clip-path: polygon(0 66%, 100% 66%, 100% 72%, 0 72%);
+  }
+  99%,
+  100% {
+    clip-path: polygon(0 0, 100% 0, 100% 0, 0 0);
+  }
+}
+
+/* ── QR plate ──────────────────────────────────────────────────────────── */
+
+/*
+ * A QR code on a dark background is a scanner-reliability problem at a busy
+ * event, so the code stays black on white with a quiet zone and the design
+ * expresses itself in the plate around it.
+ */
+.qr-plate {
+  width: max-content;
+  max-width: min(80vw, 340px);
+  margin: var(--s6) auto;
+  padding: var(--s5);
+  background: #fff;
+  border-radius: var(--r);
+}
+
+.qr-plate svg {
+  display: block;
+  width: 100%;
+  height: auto;
+  shape-rendering: crispEdges;
+}
+
+/* ── Reduced motion ────────────────────────────────────────────────────── */
+
+/*
+ * CSS cannot stop a JavaScript-driven text animation, so the brainfuck stream
+ * and the text reveal check prefers-reduced-motion themselves in app.js. This
+ * block covers everything declarative.
+ */
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+    scroll-behavior: auto !important;
+  }
+
+  .logo-glitch img.l-red,
+  .logo-glitch img.l-blue {
+    display: none;
+  }
+
+  .nav__brand::after {
+    animation: none;
+    opacity: 1;
+  }
+
+  /*
+   * The terminal sequence is not hidden here, only left un-animated. The
+   * markup already contains the finished session — program, output and all —
+   * and the script simply does not clear it. Hiding it would remove content
+   * rather than motion, which is not what the preference asks for.
+   */
+  .shell__pane::after {
+    display: none;
+  }
+}

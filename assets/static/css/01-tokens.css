@@ -1,0 +1,126 @@
+/*
+ * Design tokens.
+ *
+ * The palette comes from the terminal theme; the status colours were retuned
+ * for the darker, cooler background. The originals were chosen against the old
+ * #353033 and fall below 4.5:1 on #181b23 — the values here clear it.
+ */
+
+:root {
+  /* ── brand ── */
+  --g1: #3cb34f;
+  --g2: #2d8c40;
+  --g3: #1a5c2a;
+  --g-hi: #6ed47e;
+
+  /*
+   * Text on a green fill. White over --g1 is about 2.6:1 and fails AA at any
+   * size; near-black clears 7:1 and reads sharper besides.
+   */
+  --on-green: #10160f;
+
+  /* ── surfaces ── */
+  --bg: #181b23;
+  --surface: #1f2330;
+  --card: #252a36;
+  --card-hover: #2a3040;
+  --border: rgba(255, 255, 255, 0.1);
+  --border-strong: rgba(255, 255, 255, 0.16);
+  --border-green: rgba(60, 179, 79, 0.35);
+  --overlay: rgba(13, 15, 20, 0.6);
+
+  /* ── text ── */
+  --text: #f0f2f8;
+  --dim: rgba(240, 242, 248, 0.75);
+  --muted: rgba(240, 242, 248, 0.55); /* on --bg / --surface only */
+  --muted-strong: rgba(240, 242, 248, 0.72); /* on --card, keeps 4.5:1 */
+
+  /* ── status ── */
+  --error: #f87171;
+  --error-bg: rgba(239, 68, 68, 0.1);
+  --error-bd: rgba(239, 68, 68, 0.3);
+  --warning: #fbbf24;
+  --warning-bg: rgba(202, 138, 4, 0.12);
+  --warning-bd: rgba(202, 138, 4, 0.32);
+  --info: #60a5fa;
+  --info-bg: rgba(59, 130, 246, 0.1);
+  --info-bd: rgba(59, 130, 246, 0.3);
+  --success: #7ecc8d;
+  --success-bg: rgba(60, 179, 79, 0.1);
+  --success-bd: rgba(60, 179, 79, 0.3);
+
+  /* ── type ── */
+  --font-display: "VT323", "JetBrains Mono", ui-monospace, monospace;
+  --font-mono: "JetBrains Mono", ui-monospace, SFMono-Regular, Menlo, Consolas,
+    monospace;
+  --font-body: "IBM Plex Sans", -apple-system, BlinkMacSystemFont, "Segoe UI",
+    Roboto, "Noto Sans", sans-serif;
+
+  --fs-xs: 0.75rem;
+  --fs-sm: 0.875rem;
+  --fs-base: 1rem;
+  --fs-lg: 1.125rem;
+  --fs-h3: 1.25rem;
+  --fs-h2: 1.5rem;
+  --fs-h1: clamp(1.75rem, 1.2rem + 2vw, 2.5rem);
+  --fs-display: clamp(2.75rem, 1.5rem + 6vw, 6rem);
+
+  --lh-tight: 1.2;
+  --lh-body: 1.7;
+  --track-cap: 0.1em;
+
+  /* ── space (4px base) ── */
+  --s1: 0.25rem;
+  --s2: 0.5rem;
+  --s3: 0.75rem;
+  --s4: 1rem;
+  --s5: 1.5rem;
+  --s6: 2rem;
+  --s7: 3rem;
+  --s8: 4.5rem;
+
+  /* ── geometry ── */
+  --r-sm: 4px;
+  --r: 6px;
+  --r-lg: 10px;
+  --r-pill: 99px;
+  /*
+   * The window is the viewport now; this caps the content inside it so an
+   * ultrawide monitor does not put the status line's two ends a metre apart.
+   *
+   * rem, not em. An em resolves against the element's own font size, so the
+   * same token would cap the 12px status line at 1200px and the 14px console
+   * at 1400px — the bar's contents would each centre to a different width and
+   * visibly fail to line up with the pane above them.
+   */
+  --maxw-pane: 100rem;
+  --measure: 68ch;
+  --nav-h: 48px;
+  /* Height of the pinned console + status bar, so the pane can clear it. */
+  --bar-h: 66px;
+
+  /* ── effect ── */
+  --focus: 2px solid var(--g1);
+  --focus-offset: 2px;
+  --shadow-card: 0 4px 20px rgba(0, 0, 0, 0.25);
+  --shadow-glow: 0 0 0 1px var(--border-green), 0 4px 20px rgba(60, 179, 79, 0.08);
+  --dots: radial-gradient(circle, rgba(255, 255, 255, 0.045) 1px, transparent 1px);
+  --dots-size: 28px 28px;
+
+  /*
+   * Phosphor glow — the one thing taken from the reference site, whose
+   * effects.css layers three shadows of its accent colour on everything.
+   *
+   * Applied to green and chrome only. A halo over seven hundred words of
+   * Norwegian is the difference between atmosphere and eye strain, and those
+   * are the pages somebody deciding whether to join actually reads.
+   */
+  --glow: 0 0 6px rgba(60, 179, 79, 0.55), 0 0 18px rgba(60, 179, 79, 0.25);
+  --glow-lg: 0 0 7px rgba(60, 179, 79, 0.6), 0 0 25px rgba(60, 179, 79, 0.3),
+    0 0 40px rgba(60, 179, 79, 0.15);
+  --glow-soft: 0 0 8px rgba(240, 242, 248, 0.18);
+  --bullet: "» ";
+
+  /* Chevron for <select>, inlined so it needs no extra request. */
+  --svg-arrow: url("data:image/svg+xml;charset=US-ASCII,%3Csvg%20xmlns%3D%22http%3A%2F%2Fwww.w3.org%2F2000%2Fsvg%22%20width%3D%22292.4%22%20height%3D%22292.4%22%3E%3Cpath%20fill%3D%22%23f0f2f8%22%20d%3D%22M287%2069.4a17.6%2017.6%200%200%200-13-5.4H18.4c-5%200-9.3%201.8-12.9%205.4A17.6%2017.6%200%200%200%200%2082.2c0%205%201.8%209.3%205.4%2012.9l128%20127.9c3.6%203.6%207.8%205.4%2012.8%205.4s9.2-1.8%2012.8-5.4L287%2095c3.5-3.5%205.4-7.8%205.4-12.8%200-5-1.9-9.2-5.5-12.8z%22%2F%3E%3C%2Fsvg%3E");
+}

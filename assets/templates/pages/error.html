@@ -1,0 +1,8 @@
+{{ define "content" }}
+<div class="error-page">
+  <p class="error-page__status" data-glitch>{{ .Status }}</p>
+  <p class="eyebrow">// {{ .StatusText }}</p>
+  <p class="error-page__message">{{ .Message }}</p>
+  <p><a class="btn btn--ghost" href="/">Tilbake til forsiden</a></p>
+</div>
+{{ end }}
