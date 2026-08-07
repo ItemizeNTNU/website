@@ -8,31 +8,31 @@
 # the repository's history is otherwise dominated by one-at-a-time
 # "Bump X from A to B". Major versions still arrive on their own, so somebody
 # actually reads them.
-# version: 2
+version: 2
 
-# updates:
-#   - package-ecosystem: gomod
-#     directory: /
-#     schedule:
-#       interval: weekly
-#     open-pull-requests-limit: 5
-#     groups:
-#       go-minor-patch:
-#         update-types:
-#           - minor
-#           - patch
+updates:
+  - package-ecosystem: gomod
+    directory: /
+    schedule:
+      interval: weekly
+    open-pull-requests-limit: 5
+    groups:
+      go-minor-patch:
+        update-types:
+          - minor
+          - patch
 
-#   - package-ecosystem: docker
-#     directory: /
-#     schedule:
-#       interval: weekly
+  - package-ecosystem: docker
+    directory: /
+    schedule:
+      interval: weekly
 
-#   - package-ecosystem: github-actions
-#     directory: /
-#     schedule:
-#       interval: weekly
-#     groups:
-#       actions:
-#         update-types:
-#           - minor
-#           - patch
+  - package-ecosystem: github-actions
+    directory: /
+    schedule:
+      interval: weekly
+    groups:
+      actions:
+        update-types:
+          - minor
+          - patch

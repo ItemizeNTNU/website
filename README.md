@@ -52,7 +52,6 @@ Updating the board after a general assembly is a one-file edit to
 | `internal/users/` | registration and profile |
 | `internal/fusionauth/`, `internal/discord/` | external API clients |
 | `internal/web/`, `internal/api/` | HTML and JSON handlers |
-| `old-website/` | the previous Sapper app, kept for reference only |
 | `docs/` | operational notes: authentication, FusionAuth setup |
 
 `assets/` and `content/` sit outside `internal/` because `//go:embed` cannot
@@ -141,5 +140,6 @@ no longer be kept current by a board that turns over every year. The rewrite
 trades framework features for longevity: standard library only where it counts,
 a handful of dependencies, and no build step to rot.
 
-The old application is preserved under [`old-website/`](old-website/) for
-reference. It is not built, deployed, or maintained.
+The old application was kept under `old-website/` for reference until August
+2026 and remains available in git history. It is not built, deployed, or
+maintained.
