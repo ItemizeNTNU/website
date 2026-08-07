@@ -15,6 +15,9 @@ data/
 /vendor/
 /coverage.*
 
+# Claude Code
+.claude/
+
 # Editors
 .idea/
 .vscode/*
