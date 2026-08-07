@@ -8,11 +8,17 @@
 # the repository's history is otherwise dominated by one-at-a-time
 # "Bump X from A to B". Major versions still arrive on their own, so somebody
 # actually reads them.
+#
+# Updates open against dev rather than main, so they land where the rest of the
+# work does and reach main through the usual pull request. Dependabot reads this
+# file from the default branch regardless, so target-branch has to be set here
+# on main to take effect. Security updates are exempt and still arrive on main.
 version: 2
 
 updates:
   - package-ecosystem: gomod
     directory: /
+    target-branch: dev
     schedule:
       interval: weekly
     open-pull-requests-limit: 5
@@ -24,11 +30,13 @@ updates:
 
   - package-ecosystem: docker
     directory: /
+    target-branch: dev
     schedule:
       interval: weekly
 
   - package-ecosystem: github-actions
     directory: /
+    target-branch: dev
     schedule:
       interval: weekly
     groups:
