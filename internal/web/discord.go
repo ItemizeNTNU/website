@@ -1,10 +1,12 @@
 package web
 
 import (
+	"context"
 	"crypto/rand"
 	"encoding/base64"
 	"errors"
 	"net/http"
+	"time"
 
 	"github.com/ItemizeNTNU/website/internal/auth"
 	"github.com/ItemizeNTNU/website/internal/discord"
@@ -13,6 +15,17 @@ import (
 
 // discordStateCookie carries the OAuth state across the round trip to Discord.
 const discordStateCookie = "itemize_discord_state"
+
+// discordTimeout bounds one trip through the linking flow.
+//
+// r.Context() carries no deadline of its own — http.Server's WriteTimeout does
+// not cancel it — so without this the handler waits for however long Discord
+// and FusionAuth between them decide to take. Each of these calls touches
+// Discord two or three times plus FusionAuth twice, and thirty seconds is
+// comfortably more than that needs while staying inside the server's
+// sixty-second WriteTimeout. Past it the member sees an error and can press the
+// button again, which is better than a goroutine held open indefinitely.
+const discordTimeout = 30 * time.Second
 
 // discordCallbackPath is registered with Discord as the redirect URI and must
 // match byte for byte.
@@ -79,7 +92,10 @@ func (s *Server) discordCallback(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	link, err := s.discordSvc.Complete(r.Context(), user.ID,
+	ctx, cancel := context.WithTimeout(r.Context(), discordTimeout)
+	defer cancel()
+
+	link, err := s.discordSvc.Complete(ctx, user.ID,
 		r.URL.Query().Get("code"), s.discordRedirectURI())
 	switch {
 	case errors.Is(err, discord.ErrDenied):
@@ -109,7 +125,10 @@ func (s *Server) discordCallback(w http.ResponseWriter, r *http.Request) {
 func (s *Server) discordRefresh(w http.ResponseWriter, r *http.Request) {
 	user := auth.FromRequest(r)
 
-	link, err := s.discordSvc.Refresh(r.Context(), user.ID)
+	ctx, cancel := context.WithTimeout(r.Context(), discordTimeout)
+	defer cancel()
+
+	link, err := s.discordSvc.Refresh(ctx, user.ID)
 	switch {
 	case errors.Is(err, users.ErrNotLinked):
 		SetFlash(w, "error", "Du har ingen Discord-konto koblet.")
@@ -136,7 +155,10 @@ func (s *Server) discordRefresh(w http.ResponseWriter, r *http.Request) {
 func (s *Server) discordUnlink(w http.ResponseWriter, r *http.Request) {
 	user := auth.FromRequest(r)
 
-	switch err := s.discordSvc.Unlink(r.Context(), user.ID); {
+	ctx, cancel := context.WithTimeout(r.Context(), discordTimeout)
+	defer cancel()
+
+	switch err := s.discordSvc.Unlink(ctx, user.ID); {
 	case errors.Is(err, users.ErrNotLinked):
 		SetFlash(w, "error", "Du har ingen Discord-konto koblet.")
 	case err != nil:

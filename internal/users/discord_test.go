@@ -159,18 +159,22 @@ func TestCompleteRecordsMembershipTruthfully(t *testing.T) {
 			if block["id"] != testDiscordID {
 				t.Errorf("stored discord id = %v, want %q", block["id"], testDiscordID)
 			}
-			// Note what this pins in the two "unknown" cases: isMember is
-			// written as false, and MembershipUnknown is not written at all.
-			// The distinction the Link carries therefore survives exactly one
-			// response — the next page load reads the record back through
-			// CurrentLink and tells the member they have not joined.
-			if block["isMember"] != tt.wantMember {
+			// A real answer is stored; a failed check writes no isMember at
+			// all. Omitting the key from the merge patch is what keeps our own
+			// outage from being recorded as a fact about the member: writing
+			// false would outlive the one response that carries
+			// MembershipUnknown, because the next page load reads the record
+			// back through CurrentLink, which has no such field.
+			value, present := block["isMember"]
+			if tt.wantUnknown {
+				if present {
+					t.Errorf("stored isMember = %v after a failed membership check; "+
+						"a guess written here is read back as settled on every "+
+						"later page load", value)
+				}
+			} else if value != tt.wantMember {
 				t.Errorf("stored isMember = %v, want %v — the profile reads this "+
-					"back on every page load", block["isMember"], tt.wantMember)
-			}
-			if _, stored := block["membershipUnknown"]; stored {
-				t.Error("membershipUnknown reached storage; if that is now " +
-					"deliberate, CurrentLink has to read it back")
+					"back on every page load", value, tt.wantMember)
 			}
 		})
 	}
@@ -510,6 +514,52 @@ func TestRefreshReconcilesTheStoredLink(t *testing.T) {
 	}
 	if log.index(callGetUser) > log.index(callAccount) {
 		t.Errorf("Discord was asked before the stored id was read: %v", log.all())
+	}
+}
+
+// A membership check that could not be made is not an answer, and it must not
+// be allowed to demote a member who is known to be in the guild.
+//
+// This is the case the whole distinction exists for: the member is in the
+// server, presses «Oppdater» while our bot token is rejected, and the record
+// says isMember:true. Writing false would replace that with a guess which
+// CurrentLink reads back as settled on every later page load, so the profile
+// would tell them to go and join a server they never left — over an outage
+// that is ours and that they cannot do anything about.
+func TestAFailedMembershipCheckDoesNotDemoteAKnownMember(t *testing.T) {
+	log := &callLog{}
+	api := newDiscordAPI(log)
+	api.inGuild = true
+	api.memberStatus = http.StatusForbidden // the bot is missing the intent
+	fusion := newFusionAPI(log).withLink(testDiscordID, "Kari N", "an-avatar", true)
+	svc := linkService(t, api, fusion)
+
+	link, err := svc.Refresh(context.Background(), testUserID)
+	if err != nil {
+		t.Fatalf("refreshing failed: %v — a failed membership check must not cost "+
+			"the member their link", err)
+	}
+	if !link.MembershipUnknown {
+		t.Error("MembershipUnknown = false after the check could not be made; the " +
+			"profile would blame the member for an outage of ours")
+	}
+
+	block, ok := discordBlock(t, fusion.lastPatch(t))
+	if !ok {
+		t.Fatal("data.discord was not written as an object")
+	}
+	if value, present := block["isMember"]; present {
+		t.Fatalf("isMember was written as %v from a check that never got an answer; "+
+			"the stored true is what keeps the member out of the \"go and join\" "+
+			"message on the next page load", value)
+	}
+
+	// What the profile reads on the next page load is the record as it stands
+	// after the patch. With isMember absent from a merge patch, that is still
+	// the true FusionAuth already held.
+	if current := CurrentLink(&fusion.user); current == nil || !current.IsMember {
+		t.Errorf("the stored link reads back as %+v, want a member — this is the "+
+			"value the profile page renders from", current)
 	}
 }
 

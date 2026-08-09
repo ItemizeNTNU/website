@@ -66,6 +66,16 @@ func (s *DiscordService) Complete(ctx context.Context, userID, code, redirectURI
 	if err != nil {
 		return nil, err
 	}
+	// Nothing checks that this Discord account is not already linked to another
+	// member, and store writes without reading what is there first. The stored
+	// links do not collide — each patch touches only its own FusionAuth record,
+	// so no other member's link is detached — but the guild role is granted and
+	// withdrawn by Discord id alone, guild-wide. Two members sharing one Discord
+	// account therefore share one role: when either presses "fjern kobling",
+	// Unlink calls RemoveMemberRole on that id and the other member loses their
+	// access while their own profile still shows the account as linked and them
+	// as a guild member. Enforcing uniqueness needs a FusionAuth user search on
+	// data.discord.id, so it is left as a product decision rather than done here.
 	return s.store(ctx, userID, account)
 }
 
@@ -122,15 +132,23 @@ func (s *DiscordService) store(ctx context.Context, userID string, account *disc
 		MembershipUnknown: unknown,
 	}
 
+	stored := map[string]any{
+		"id":       link.ID,
+		"username": link.Username,
+		"avatar":   link.Avatar,
+	}
+	// Only a real answer is written. A failed check says nothing about this
+	// member, and storing it as isMember:false would turn our own outage into a
+	// permanent "has not joined": the next page load reads the record back
+	// through CurrentLink, which has no notion of the check having failed, and
+	// tells them to join a server they may already be in. Leaving the key out
+	// of the merge patch keeps whatever was last known in place instead.
+	if !unknown {
+		stored["isMember"] = link.IsMember
+	}
+
 	changes := map[string]any{
-		"data": map[string]any{
-			"discord": map[string]any{
-				"id":       link.ID,
-				"username": link.Username,
-				"avatar":   link.Avatar,
-				"isMember": link.IsMember,
-			},
-		},
+		"data":     map[string]any{"discord": stored},
 		"imageUrl": link.Avatar,
 	}
 	if _, err := s.fusion.PatchUser(ctx, userID, changes); err != nil {

@@ -172,8 +172,16 @@ func TestDurationBoundaries(t *testing.T) {
 			"scientific notation is parsed and then rejected by the ceiling",
 			"1e3", "Varighet kan ikke være større enn 168.", 1000,
 		},
-		{"infinity is above the ceiling", "Inf", "Varighet kan ikke være større enn 168.", math.Inf(1)},
-		{"negative infinity is below the floor", "-Inf", "Varighet kan ikke være mindre enn 0.", math.Inf(-1)},
+		// ParseFloat accepts these spellings, but no range check can hold them:
+		// NaN compares false against both bounds and infinity is not a length of
+		// time. They are refused as "not a number" rather than as out of range,
+		// and the returned duration falls back to zero like any other value that
+		// could not be read.
+		{"infinity is not a number", "Inf", "Varighet må være et tall.", 0},
+		{"negative infinity is not a number either", "-Inf", "Varighet må være et tall.", 0},
+		{"the long spelling of infinity", "infinity", "Varighet må være et tall.", 0},
+		{"NaN is not a number", "NaN", "Varighet må være et tall.", 0},
+		{"the spelling of NaN is not significant", "nan", "Varighet må være et tall.", 0},
 	}
 
 	for _, tt := range tests {
@@ -189,24 +197,37 @@ func TestDurationBoundaries(t *testing.T) {
 	}
 }
 
-// "NaN" parses as a float, and NaN compares false against both bounds, so it
-// slips through untouched. ComputeEnd then produces an end time in the
-// eighteenth century, which reads as an event that finished long ago.
+// "NaN" and "Inf" parse as floats, and the range check cannot catch them — NaN
+// compares false against both bounds, and neither is a length of time. The
+// browser's number input will not submit them, but the endpoint accepts any
+// form body, so the guard has to be in the validation rather than the markup.
 //
-// This pins the current behaviour rather than endorsing it: it is a real hole
-// in the validation, reported alongside these tests. If the range check ever
-// learns about NaN, this test is the one to delete.
-func TestDurationNaNIsCurrentlyAccepted(t *testing.T) {
-	ev, verr := FromForm(formWith(t, "duration", "NaN"))
+// The consequence of letting one through is what this test really protects
+// against: ComputeEnd multiplies the duration by an hour, and for NaN that is
+// the minimum int64, which puts the end of the event in 1733. Past() then
+// reports it finished, and the event disappears from the listing the moment the
+// board saves it — with no error to explain where it went.
+func TestNonFiniteDurationsAreRejectedBeforeTheyReachTheEndTime(t *testing.T) {
+	for _, value := range []string{"NaN", "nan", "Inf", "+Inf", "-Inf", "infinity"} {
+		t.Run(value, func(t *testing.T) {
+			ev, verr := FromForm(formWith(t, "duration", value))
 
-	if msg, ok := verr["duration"]; ok {
-		t.Skipf("NaN is now rejected with %q — the hole this test documented has been closed", msg)
-	}
-	if !math.IsNaN(ev.Duration) {
-		t.Fatalf("duration = %v, want NaN", ev.Duration)
-	}
-	if end := ev.ComputeEnd(); !end.Before(ev.Date) {
-		t.Errorf("end = %v, expected the nonsensical value NaN produces; the consequence of accepting it is what makes this a bug", end)
+			if verr["duration"] == "" {
+				t.Fatalf("duration %q was accepted; the saved event's end time would "+
+					"be nonsense and the board would never see it in the listing", value)
+			}
+			if math.IsNaN(ev.Duration) || math.IsInf(ev.Duration, 0) {
+				t.Fatalf("duration %q came back as %v; a rejected value must not be "+
+					"carried into the event at all", value, ev.Duration)
+			}
+			// The end time is derived, so a refused duration has to leave it at the
+			// start rather than somewhere in the eighteenth century.
+			if end := ev.ComputeEnd(); !end.Equal(ev.Date) {
+				t.Errorf("end = %v, want the unchanged start %v — an end time before "+
+					"the start reads as an event that has already finished",
+					end, ev.Date)
+			}
+		})
 	}
 }
 

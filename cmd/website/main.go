@@ -11,6 +11,7 @@ import (
 	"flag"
 	"fmt"
 	"log/slog"
+	"net"
 	"net/http"
 	"os"
 	"os/signal"
@@ -237,16 +238,21 @@ func openEvents(cfg *config.Config, log *slog.Logger, dev bool) (events.Reposito
 // The container image has no shell and no curl — that is the point of a
 // distroless base — so the binary doubles as its own health probe.
 func healthcheck() int {
-	port := os.Getenv("PORT")
-	if port == "" {
-		port = os.Getenv("LISTEN")
+	// The same call the server makes, so the probe can never disagree with
+	// what was bound.
+	addr, err := config.ResolveAddr()
+	if err != nil {
+		fmt.Fprintln(os.Stderr, "healthcheck:", err)
+		return 1
 	}
-	if port == "" {
-		port = "3000"
+	target, err := probeURL(addr)
+	if err != nil {
+		fmt.Fprintln(os.Stderr, "healthcheck:", err)
+		return 1
 	}
 
 	client := &http.Client{Timeout: 3 * time.Second}
-	resp, err := client.Get("http://127.0.0.1:" + port + "/healthz")
+	resp, err := client.Get(target)
 	if err != nil {
 		fmt.Fprintln(os.Stderr, "healthcheck:", err)
 		return 1
@@ -258,6 +264,29 @@ func healthcheck() int {
 		return 1
 	}
 	return 0
+}
+
+// probeURL turns a listen address into a URL that reaches the server from
+// inside its own container.
+//
+// The address is split rather than concatenated: LISTEN=:3000 and
+// PORT=0.0.0.0:3000 both bind, and pasting either after "http://127.0.0.1:"
+// produced a URL that will not even parse, so -healthcheck exited 1 forever
+// and the container was reported unhealthy while serving normally.
+func probeURL(addr string) (string, error) {
+	host, port, err := net.SplitHostPort(addr)
+	if err != nil {
+		return "", fmt.Errorf("cannot probe listen address %q: %w", addr, err)
+	}
+	// A wildcard bind is not an address to connect to. It answers on loopback,
+	// which is the only interface the probe shares with the server for certain.
+	switch host {
+	case "", "0.0.0.0":
+		host = "127.0.0.1"
+	case "::":
+		host = "::1"
+	}
+	return "http://" + net.JoinHostPort(host, port) + "/healthz", nil
 }
 
 func healthz(w http.ResponseWriter, r *http.Request) {

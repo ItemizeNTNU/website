@@ -688,14 +688,87 @@ func TestRegisterUserSurfacesUpstreamRejections(t *testing.T) {
 	}
 }
 
-// A directory that answers with a server error still has to produce something
-// the member can act on rather than a blank failure.
-//
-// Only the message and the envelope are asserted, deliberately. The status this
-// currently produces is discussed in the report: FusionAuth's error parser
-// wraps every non-2xx reply, a 5xx included, in the type this handler treats as
-// a validation failure — so an outage is reported to the member as though they
-// had filled the form in wrongly.
+// wantUpstreamDown is what a member sees when the failure is ours rather than
+// theirs: no service address, no status code, and an instruction that is worth
+// following — the form they filled in was fine.
+const wantUpstreamDown = "Innloggingstjenesten svarer ikke akkurat nå. Prøv igjen om litt."
+
+// Who is at fault decides both the status and the wording, and FusionAuth's
+// error parser makes that easy to get wrong: it wraps every non-2xx reply, a
+// 5xx included, in the same *APIError the handler reads validation messages
+// out of. Matching on the type alone told a member whose registration was
+// perfectly valid that it was not, sent them back to correct a form with
+// nothing wrong with it, and hid the outage from anything watching for 5xx.
+func TestRegisterUserSeparatesItsOwnFailuresFromTheMembers(t *testing.T) {
+	for _, tc := range []struct {
+		name       string
+		status     int
+		body       string
+		wantStatus int
+		wantMsg    string
+	}{
+		{
+			name:       "a rejection the member can act on",
+			status:     http.StatusBadRequest,
+			body:       `{"generalErrors":[{"code":"[duplicate]","message":"E-posten er allerede i bruk."}]}`,
+			wantStatus: http.StatusBadRequest,
+			wantMsg:    "E-posten er allerede i bruk.",
+		},
+		{
+			name:       "a conflict is still the member's to resolve",
+			status:     http.StatusConflict,
+			body:       `{"generalErrors":[{"code":"[duplicate]","message":"E-posten er allerede i bruk."}]}`,
+			wantStatus: http.StatusBadRequest,
+			wantMsg:    "E-posten er allerede i bruk.",
+		},
+		{
+			name:       "the directory is broken",
+			status:     http.StatusInternalServerError,
+			body:       `{}`,
+			wantStatus: http.StatusBadGateway,
+			wantMsg:    wantUpstreamDown,
+		},
+		{
+			name:       "the directory is restarting",
+			status:     http.StatusServiceUnavailable,
+			body:       `{}`,
+			wantStatus: http.StatusBadGateway,
+			wantMsg:    wantUpstreamDown,
+		},
+		{
+			// The worst of the lot before the fix: FusionAuth's fallback
+			// message is "Uventet svar fra innloggingstjenesten (HTTP 502)",
+			// which was handed to the member as a 400 — a validation error
+			// telling them about an HTTP status.
+			name:       "something in front of the directory is broken",
+			status:     http.StatusBadGateway,
+			body:       `{}`,
+			wantStatus: http.StatusBadGateway,
+			wantMsg:    wantUpstreamDown,
+		},
+	} {
+		t.Run(tc.name, func(t *testing.T) {
+			fusion, _ := fakeFusion(t, func(w http.ResponseWriter, _ *http.Request) {
+				w.WriteHeader(tc.status)
+				_, _ = io.WriteString(w, tc.body)
+			})
+			mux := newAPI(t, apiConfig{fusion: fusion})
+
+			rec := putJSON(t, mux, "/api/user", validRegistration(t, "student"), nil)
+
+			wantStatus(t, rec, tc.wantStatus)
+			wantJSON(t, rec)
+			if got := messageOf(t, rec); got != tc.wantMsg {
+				t.Errorf("FusionAuth answered %d and the member was told %q, want %q",
+					tc.status, got, tc.wantMsg)
+			}
+		})
+	}
+}
+
+// A directory that answers with a server error is ours to fix, not the
+// member's: their registration is untouched and retrying it is the right
+// advice, so the failure must not arrive as a 400 that blames their input.
 func TestRegisterUserWhenTheDirectoryErrors(t *testing.T) {
 	fusion, _ := fakeFusion(t, func(w http.ResponseWriter, _ *http.Request) {
 		w.WriteHeader(http.StatusInternalServerError)
@@ -705,19 +778,22 @@ func TestRegisterUserWhenTheDirectoryErrors(t *testing.T) {
 
 	rec := putJSON(t, mux, "/api/user", validRegistration(t, "student"), nil)
 
-	if rec.Code < 400 {
-		t.Fatalf("an upstream failure was reported as %d; the member would be told "+
-			"their registration succeeded", rec.Code)
-	}
+	wantStatus(t, rec, http.StatusBadGateway)
 	wantJSON(t, rec)
-	if got := messageOf(t, rec); got == "" {
-		t.Error("the member is given an empty message and no idea what to do next")
+	if got := messageOf(t, rec); got != wantUpstreamDown {
+		t.Errorf("the member would be told %q, want %q", got, wantUpstreamDown)
+	}
+	// The fallback FusionAuth builds for a body it cannot read is a status code
+	// in Norwegian prose. It is a fine thing to log and a useless thing to show
+	// somebody trying to sign up.
+	if strings.Contains(rec.Body.String(), "HTTP 500") {
+		t.Errorf("the upstream status was shown to the member: %s", rec.Body.String())
 	}
 }
 
-// A directory that cannot be reached at all is ours to fix, not the member's,
-// so it is a gateway error and the message says as much without naming the
-// service or the address.
+// A directory that cannot be reached at all is the same class of problem as one
+// answering 500 — ours, and probably temporary — so it gets the same status and
+// the same wording, without naming the service or the address.
 func TestRegisterUserWhenTheDirectoryIsUnreachable(t *testing.T) {
 	mux := newAPI(t, apiConfig{fusion: deadFusion(t)})
 
@@ -725,8 +801,8 @@ func TestRegisterUserWhenTheDirectoryIsUnreachable(t *testing.T) {
 
 	wantStatus(t, rec, http.StatusBadGateway)
 	wantJSON(t, rec)
-	if got := messageOf(t, rec); got != "Ups. Noe gikk galt :/" {
-		t.Errorf("the message is %q, want %q", got, "Ups. Noe gikk galt :/")
+	if got := messageOf(t, rec); got != wantUpstreamDown {
+		t.Errorf("the message is %q, want %q", got, wantUpstreamDown)
 	}
 	if strings.Contains(rec.Body.String(), "connection refused") {
 		t.Error("the transport error was echoed to the caller")

@@ -6,6 +6,7 @@
 package api
 
 import (
+	"errors"
 	"log/slog"
 	"net/http"
 	"strconv"
@@ -137,11 +138,10 @@ func (s *Server) listEvents(w http.ResponseWriter, r *http.Request) {
 	user := auth.FromRequest(r)
 	styret := user.IsStyret()
 
-	page, _ := strconv.Atoi(r.URL.Query().Get("page"))
 	filter := events.Filter{
 		IncludeHidden: styret,
 		IncludeOld:    truthy(r.URL.Query().Get("old"), r.URL.Query().Has("old")),
-		Page:          page - 1, // the query parameter is one-based
+		Page:          pageParam(r.URL.Query().Get("page")) - 1, // the query parameter is one-based
 	}
 
 	list, err := s.events.List(r.Context(), filter)
@@ -193,6 +193,32 @@ func (s *Server) icalFeed(w http.ResponseWriter, r *http.Request) {
 	// Subscribers poll this; an hour is well inside how often events change.
 	w.Header().Set("Cache-Control", "public, max-age=3600")
 	_, _ = w.Write([]byte(cal.String()))
+}
+
+// maxPage bounds the one-based page number a caller may ask for.
+//
+// The repository multiplies the page by events.PageSize to get a skip, as an
+// int. Without a bound, ?page=99999999999999999999 reaches that multiplication
+// as the largest int — strconv.Atoi returns the clamped maximum alongside its
+// error — and the product wraps to a negative skip, which the driver rejects.
+// That turned a crafted query string from an anonymous caller into a 500.
+//
+// Anything at or past this bound lands beyond the end of the collection and
+// answers with an empty list, which is already what any other too-high page
+// does, so the clamp changes nothing a real caller can observe.
+const maxPage = 1_000_000
+
+// pageParam turns the ?page argument into a one-based page number in [1,
+// maxPage]. Anything unparseable — absent, empty, "abc", "1.5" — is the first
+// page, which is what the previous API did, and so is any number below one.
+func pageParam(raw string) int {
+	page, err := strconv.Atoi(raw)
+	if err != nil && !errors.Is(err, strconv.ErrRange) {
+		page = 1
+	}
+	// A range error keeps Atoi's clamped value, which the bounds below turn
+	// into the first page for a huge negative and the last for a huge positive.
+	return min(max(page, 1), maxPage)
 }
 
 // truthy reproduces the previous API's argument handling, where ?old,

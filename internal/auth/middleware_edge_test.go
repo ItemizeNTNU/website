@@ -137,25 +137,99 @@ func TestInjectCarriesTheWholeUser(t *testing.T) {
 	}
 }
 
-// The doc comment on Inject says an unopenable cookie "is cleared". It is not:
-// Read returns nil and the request goes on with the cookie still in the jar,
-// which is re-sent on every subsequent request. That is not a security problem,
-// but it is a discrepancy between the comment and the code — pinned here so
-// whichever of the two changes, this test says which one moved.
-func TestInjectDoesNotActuallyClearABadCookie(t *testing.T) {
+// A cookie Inject cannot open must be cleared, which is what its doc comment
+// promises. Left in place it is re-sent on every single request for as long as
+// the browser keeps it — after a secret rotation that is every request from
+// every returning visitor, indefinitely, for a value that can never be read
+// again. Clearing must not fail the request or change what the handler sees:
+// the visitor is anonymous either way.
+func TestInjectClearsACookieItCannotOpen(t *testing.T) {
+	sealer := newTestSealer(t, testSecret, true)
+	other := newTestSealer(t, "ffffffffffffffffffffffffffffffff", true)
+
+	foreign, err := other.Seal(NewSession(User{ID: "fa-1"}, time.Now().Add(time.Hour)))
+	if err != nil {
+		t.Fatal(err)
+	}
+	expired, err := sealer.Seal(&Session{User: User{ID: "fa-1"},
+		Expires: time.Now().Add(-time.Minute)})
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	for name, value := range map[string]string{
+		"garbage":        "!!!!",
+		"an empty value": "",
+		"a session sealed under a rotated secret": foreign,
+		"a session that has passed its expiry":    expired,
+	} {
+		t.Run(name, func(t *testing.T) {
+			r := httptest.NewRequest(http.MethodGet, "/", nil)
+			r.AddCookie(&http.Cookie{Name: SessionCookie, Value: value})
+
+			rec := httptest.NewRecorder()
+			var got *User
+			var ran bool
+			injector(sealer).Inject(seeing(&got, &ran)).ServeHTTP(rec, r)
+
+			if !ran || got != nil {
+				t.Fatalf("handler ran %v with user %v; clearing must not change the "+
+					"anonymous outcome", ran, got)
+			}
+
+			c := cookieNamed(t, rec, SessionCookie)
+			if c.Value != "" || c.MaxAge >= 0 {
+				t.Errorf("the response carried %s; a cookie that can never be opened "+
+					"again must be expired, not re-issued", c.String())
+			}
+		})
+	}
+}
+
+// A visitor who sent no session cookie must not be handed one back. Setting an
+// expiring cookie for a name that was never in the jar is pure noise on every
+// anonymous request — which is most of the traffic to a public site.
+func TestInjectDoesNotClearACookieThatWasNeverSent(t *testing.T) {
 	sealer := newTestSealer(t, testSecret, true)
 
 	r := httptest.NewRequest(http.MethodGet, "/", nil)
-	r.AddCookie(&http.Cookie{Name: SessionCookie, Value: "!!!!"})
+	rec := httptest.NewRecorder()
+	var got *User
+	var ran bool
+	injector(sealer).Inject(seeing(&got, &ran)).ServeHTTP(rec, r)
+
+	if cookies := rec.Result().Cookies(); len(cookies) != 0 {
+		t.Errorf("an anonymous request with no cookies came back with %d Set-Cookie "+
+			"headers, the first being %s", len(cookies), cookies[0].String())
+	}
+}
+
+// The ordinary signed-in case must be left completely alone: a valid session
+// that got cleared here would log the member out on their next page view.
+func TestInjectLeavesAValidSessionCookieAlone(t *testing.T) {
+	sealer := newTestSealer(t, testSecret, true)
+
+	sealed, err := sealer.Seal(NewSession(User{ID: "fa-1", Name: "Kari"},
+		time.Now().Add(time.Hour)))
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	r := httptest.NewRequest(http.MethodGet, "/", nil)
+	r.AddCookie(&http.Cookie{Name: SessionCookie, Value: sealed})
 
 	rec := httptest.NewRecorder()
 	var got *User
 	var ran bool
 	injector(sealer).Inject(seeing(&got, &ran)).ServeHTTP(rec, r)
 
-	if len(rec.Result().Cookies()) != 0 {
-		t.Skip("Inject now clears the bad cookie, which is what its doc comment claims; " +
-			"delete this test and the note about the discrepancy")
+	if got == nil {
+		t.Fatal("no user in the context for a valid session")
+	}
+	if cookies := rec.Result().Cookies(); len(cookies) != 0 {
+		t.Errorf("a valid session came back with %d Set-Cookie headers, the first being "+
+			"%s; a signed-in member would be logged out on their next request",
+			len(cookies), cookies[0].String())
 	}
 }
 
@@ -387,45 +461,55 @@ func TestAPIErrorBodies(t *testing.T) {
 	}
 }
 
-// quoteJSON is hand-rolled to keep this package free of a dependency on the api
-// package. It must agree with encoding/json for everything it is actually given.
-func TestQuoteJSONMatchesTheStandardLibrary(t *testing.T) {
-	for _, s := range []string{
-		"You are not logged in",
-		"Permission denied",
-		``,
-		`a "quoted" word`,
-		`a\backslash`,
-		"a\nnewline",
-		"æøå ÆØÅ",
-		"emoji 🎉",
-		`{"nested":"json"}`,
+// The error body has to survive any message, not only the two literals the
+// package passes today. Hand-rolled quoting used to escape ", \ and \n and
+// nothing else, so a tab, a carriage return or a NUL went out raw and the body
+// stopped being parseable — the failure the next person to route a provider or
+// database error through writeJSONError would have hit. The message must come
+// back out of a decoder exactly as it went in.
+func TestWriteJSONErrorSurvivesAwkwardMessages(t *testing.T) {
+	for name, msg := range map[string]string{
+		"the literals the package actually sends": "You are not logged in",
+		"empty":                             "",
+		"a tab, a CR and a NUL":             "a\tb\rc\x00d",
+		"a newline":                         "line\nline",
+		"a quote and a backslash":           `he said "hi" \ then left`,
+		"non-ASCII":                         "æøå ÆØÅ 🎉",
+		"something that looks like JSON":    `{"message":"nested"}`,
+		"HTML that must not break a client": `<script>&</script>`,
 	} {
-		t.Run(s, func(t *testing.T) {
-			want, err := json.Marshal(s)
-			if err != nil {
-				t.Fatal(err)
+		t.Run(name, func(t *testing.T) {
+			rec := httptest.NewRecorder()
+			writeJSONError(rec, http.StatusUnauthorized, msg)
+
+			var body struct {
+				Message string `json:"message"`
 			}
-			if got := quoteJSON(s); got != string(want) {
-				t.Errorf("quoteJSON(%q) = %s, want %s", s, got, want)
+			if err := json.Unmarshal(rec.Body.Bytes(), &body); err != nil {
+				t.Fatalf("the error body %q is not valid JSON: %v; a client would get a "+
+					"parse failure instead of the reason it was refused",
+					rec.Body.String(), err)
+			}
+			if body.Message != msg {
+				t.Errorf("the message decoded as %q, want %q; the text a client keys off "+
+					"was altered in transit", body.Message, msg)
 			}
 		})
 	}
 }
 
-// quoteJSON escapes only ", \ and \n. Any other control character below 0x20
-// goes out raw and makes the response invalid JSON. That is unreachable today —
-// every caller passes one of two literals — but it is a trap for the next
-// person who routes a database or provider error message through it.
-func TestQuoteJSONLeavesOtherControlCharactersRaw(t *testing.T) {
-	for _, s := range []string{"a\tb", "a\rb"} {
-		if json.Valid([]byte(quoteJSON(s))) {
-			t.Skipf("quoteJSON now escapes %q correctly; delete this test and the warning "+
-				"it carries", s)
+// The exact bytes of the two messages the package sends are part of the API:
+// the previous site's clients branch on this text, so a change here is a silent
+// break for them.
+func TestWriteJSONErrorBodyIsUnchangedForTheLiterals(t *testing.T) {
+	for _, msg := range []string{"You are not logged in", "Permission denied"} {
+		rec := httptest.NewRecorder()
+		writeJSONError(rec, http.StatusUnauthorized, msg)
+
+		if want := `{"message":"` + msg + `"}`; rec.Body.String() != want {
+			t.Errorf("body %s, want %s", rec.Body.String(), want)
 		}
 	}
-	t.Log("confirmed: quoteJSON must only ever be called with literal messages, never " +
-		"with text derived from an error or from user input")
 }
 
 // ── Context plumbing ──────────────────────────────────────────────────────

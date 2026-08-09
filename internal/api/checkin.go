@@ -17,8 +17,17 @@ import (
 // Its only caller was a page already restricted to the board, so nothing is
 // lost by enforcing that on the server too.
 func (s *Server) getCheckIn(w http.ResponseWriter, r *http.Request) {
-	event, err := s.events.ByCheckInCode(r.Context(), r.PathValue("code"))
+	code := r.PathValue("code")
+	event, err := s.events.ByCheckInCode(r.Context(), code)
 	if err != nil {
+		// A storage failure is still answered as "not found", on purpose:
+		// telling the two apart would confirm to somebody working through
+		// guesses which of them hit a real code. It does have to be logged
+		// though — swallowing it made an outage on this path look to everyone,
+		// operators included, like a mistyped code.
+		if !errors.Is(err, events.ErrNotFound) {
+			s.log.Error("looking up the check-in code failed", "code", code, "err", err)
+		}
 		writeJSON(w, http.StatusNotFound, message{"Event not found"})
 		return
 	}
@@ -28,6 +37,15 @@ func (s *Server) getCheckIn(w http.ResponseWriter, r *http.Request) {
 // postCheckIn registers the caller's attendance.
 func (s *Server) postCheckIn(w http.ResponseWriter, r *http.Request) {
 	user := auth.FromRequest(r)
+	if user == nil {
+		// Unreachable through Routes, which mounts this behind
+		// RequireLoginAPI. It is here so the handler is safe wherever it is
+		// mounted: user.ID below is a nil dereference, so a future route
+		// registration that forgets the wrapper would turn a missing gate into
+		// a panic in the request goroutine rather than a 401.
+		writeJSON(w, http.StatusUnauthorized, message{"You are not logged in"})
+		return
+	}
 	code := r.PathValue("code")
 
 	err := s.events.AddAttendance(r.Context(), code, events.Attendance{

@@ -31,6 +31,17 @@ const userAgent = "DiscordBot (https://itemize.no, 2.0)"
 // cannot exhaust memory.
 const maxBody = 1 << 20
 
+// maxRetryWait caps how long a 429 may hold the caller before we give up.
+//
+// Discord's per-route buckets reset within a second or two, so five seconds
+// covers every retry actually worth making. A global limit is different: it is
+// handed out in tens of seconds or minutes, and sleeping one out parks whatever
+// goroutine is here. For event sync that is a detached worker with its own
+// deadline, but the account-linking handlers pass the request context, which
+// carries no deadline at all — WriteTimeout does not cancel it. Past the cap we
+// fail visibly rather than hold a request open for a window we did not choose.
+const maxRetryWait = 5 * time.Second
+
 // snowflakePattern matches a Discord identifier: decimal digits, nothing else.
 //
 // These identifiers are concatenated into request paths, and anything carrying
@@ -71,21 +82,61 @@ func New(cfg config.Discord, log *slog.Logger) *Client {
 // Enabled reports whether the integration is available. Safe on a nil client.
 func (c *Client) Enabled() bool { return c != nil }
 
+// credential names the secret a request authenticated with.
+//
+// A 401 means something different for each of them, and the status alone
+// cannot tell them apart. The zero value is the bot token because that is what
+// every call except the two OAuth legs carries.
+type credential int
+
+const (
+	credentialBotToken     credential = iota // Authorization: Bot …
+	credentialClientSecret                   // client_secret in the token form
+	credentialAccessToken                    // Authorization: Bearer … (the member's)
+)
+
 // APIError is a non-2xx response from Discord.
 type APIError struct {
 	Status  int
 	Code    int    `json:"code"`
 	Message string `json:"message"`
+
+	// credential is which of our secrets the failing request carried. It is
+	// set where the request is built rather than inferred from the status,
+	// because the status cannot know.
+	credential credential
+}
+
+// newAPIError decodes a non-2xx response to a request that carried cred.
+func newAPIError(status int, payload []byte, cred credential) *APIError {
+	e := &APIError{Status: status, credential: cred}
+	_ = json.Unmarshal(payload, e)
+	return e
 }
 
 func (e *APIError) Error() string {
-	// A 401 on a bot-token call is almost always the token itself, and the
-	// bare status says nothing about where to look. Naming the variable turns
-	// a support conversation into a one-line check.
+	// A 401 says only that something was rejected, and the bare status sends
+	// nobody anywhere. Which secret to go and check depends entirely on which
+	// one the request carried, and the OAuth legs never send the bot token —
+	// blaming DISCORD_BOT_TOKEN there sends an operator after a problem that
+	// does not exist, usually for a callback someone simply reloaded.
 	if e.Status == http.StatusUnauthorized {
-		return "discord: the bot token was rejected (HTTP 401) — check " +
-			"DISCORD_BOT_TOKEN; it must be the bot token from Bot → Reset Token, " +
-			"not the client secret, and it is invalidated whenever it is reset"
+		switch e.credential {
+		case credentialClientSecret:
+			return "discord: the OAuth token exchange was rejected (HTTP 401) — the " +
+				"bot token is not used on this call; either DISCORD_CLIENT_SECRET no " +
+				"longer matches the application, or the authorization code had already " +
+				"been redeemed or expired, which is what a reloaded callback looks like"
+		case credentialAccessToken:
+			return "discord: the account lookup was rejected (HTTP 401) — this call " +
+				"uses the member's access token from the exchange, not " +
+				"DISCORD_BOT_TOKEN; the token was expired or revoked, and the member " +
+				"has to start the linking flow again"
+		default:
+			return "discord: the bot token was rejected (HTTP 401) — check " +
+				"DISCORD_BOT_TOKEN; it must be the bot token from Bot → Reset Token, " +
+				"not the client secret, and it is invalidated whenever it is reset"
+		}
 	}
 	if e.Message != "" {
 		return fmt.Sprintf("discord: %s (HTTP %d, code %d)", e.Message, e.Status, e.Code)
@@ -134,7 +185,22 @@ func (c *Client) do(ctx context.Context, method, path string, body, out any) err
 		}
 
 		if resp.StatusCode == http.StatusTooManyRequests && attempt < attempts {
+			// A caller that has already gone away gets a cancellation whatever
+			// we would have done next; there is nobody left to retry for.
+			if err := ctx.Err(); err != nil {
+				return err
+			}
 			wait := retryAfter(resp)
+			if wait > maxRetryWait {
+				// A global limit, not a per-route bucket. Waiting it out would
+				// hold this goroutine — an HTTP request handler, on the linking
+				// flow — for a window Discord chose and we cannot shorten.
+				c.log.Warn("rate limited by Discord for longer than we will wait",
+					"path", path, "wait", wait, "cap", maxRetryWait)
+				return fmt.Errorf("discord: rate limited for %s, longer than the %s "+
+					"this client will wait; giving up rather than holding the caller: %w",
+					wait, maxRetryWait, newAPIError(resp.StatusCode, payload, credentialBotToken))
+			}
 			c.log.Warn("rate limited by Discord, retrying", "path", path, "wait", wait)
 			select {
 			case <-ctx.Done():
@@ -145,9 +211,7 @@ func (c *Client) do(ctx context.Context, method, path string, body, out any) err
 		}
 
 		if resp.StatusCode < 200 || resp.StatusCode >= 300 {
-			apiErr := &APIError{Status: resp.StatusCode}
-			_ = json.Unmarshal(payload, apiErr)
-			return apiErr
+			return newAPIError(resp.StatusCode, payload, credentialBotToken)
 		}
 
 		if out != nil && len(payload) > 0 {
@@ -159,10 +223,18 @@ func (c *Client) do(ctx context.Context, method, path string, body, out any) err
 
 func retryAfter(resp *http.Response) time.Duration {
 	for _, header := range []string{"Retry-After", "X-RateLimit-Reset-After"} {
-		if v := resp.Header.Get(header); v != "" {
-			if seconds, err := strconv.ParseFloat(v, 64); err == nil {
-				return time.Duration(seconds * float64(time.Second))
-			}
+		v := resp.Header.Get(header)
+		if v == "" {
+			continue
+		}
+		if seconds, err := strconv.ParseFloat(v, 64); err == nil {
+			return max(time.Duration(seconds*float64(time.Second)), 0)
+		}
+		// RFC 7231 also allows an HTTP-date. Discord sends seconds, so this is
+		// the unusual path — but a date read as garbage falls back to a second
+		// and retries into the same limit. A date already past means "now".
+		if when, err := http.ParseTime(v); err == nil {
+			return max(time.Until(when), 0)
 		}
 	}
 	return time.Second

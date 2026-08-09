@@ -33,6 +33,35 @@ func discardLogger() *slog.Logger {
 	return slog.New(slog.NewTextHandler(io.Discard, nil))
 }
 
+// logCapture collects what a handler logged. Some of these handlers answer a
+// caller with deliberately less than they know — a storage failure served as
+// "not found", so that somebody working through guessed codes cannot tell which
+// of them hit — and the log line is then the only place the real failure
+// appears. A test that only reads the response cannot tell that apart from
+// swallowing the error entirely.
+type logCapture struct {
+	mu  sync.Mutex
+	buf strings.Builder
+}
+
+func (c *logCapture) Write(p []byte) (int, error) {
+	c.mu.Lock()
+	defer c.mu.Unlock()
+	return c.buf.Write(p)
+}
+
+func (c *logCapture) String() string {
+	c.mu.Lock()
+	defer c.mu.Unlock()
+	return c.buf.String()
+}
+
+// captureLogger is a logger whose output a test can read back.
+func captureLogger() (*slog.Logger, *logCapture) {
+	capture := &logCapture{}
+	return slog.New(slog.NewTextHandler(capture, &slog.HandlerOptions{Level: slog.LevelDebug})), capture
+}
+
 // errRepo is a generic infrastructure failure — anything that is not one of
 // the sentinel errors the handlers branch on.
 var errRepo = errors.New("the database is on fire")
@@ -105,6 +134,10 @@ type apiConfig struct {
 	fusion  *fusionauth.Client
 	baseURL string
 
+	// log defaults to a discarding one. Set it from captureLogger to assert on
+	// what a handler recorded.
+	log *slog.Logger
+
 	// nilFusion passes a literal nil client, which is what a caller that
 	// forgot to wire FusionAuth would produce. Configured() has a nil check
 	// for exactly this, and the handlers rely on it.
@@ -130,8 +163,13 @@ func newAPI(t *testing.T, cfg apiConfig) *http.ServeMux {
 		baseURL = "https://itemize.no"
 	}
 
+	log := cfg.log
+	if log == nil {
+		log = discardLogger()
+	}
+
 	mux := http.NewServeMux()
-	NewServer(cfg.repo, fusion, baseURL, discardLogger()).Routes(mux)
+	NewServer(cfg.repo, fusion, baseURL, log).Routes(mux)
 	return mux
 }
 

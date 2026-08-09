@@ -10,6 +10,7 @@ import (
 	"errors"
 	"fmt"
 	"log/slog"
+	"net"
 	"net/url"
 	"os"
 	"strconv"
@@ -100,6 +101,11 @@ const minSecretLen = 32
 // returns a validated Config. All validation failures are joined into the
 // returned error so a misconfigured deployment surfaces every problem at once.
 func Load() (*Config, error) {
+	// The environment name is resolved from the process environment only, and
+	// has to be: whether .env is read at all depends on the answer, so the file
+	// cannot be consulted first. ENV or NODE_ENV set inside .env therefore has
+	// no effect — a genuine chicken-and-egg rather than a defect, noted here and
+	// in .env.example so it is not mistaken for one.
 	env := envOr("NODE_ENV", "development")
 	if e := os.Getenv("ENV"); e != "" {
 		env = e
@@ -115,9 +121,8 @@ func Load() (*Config, error) {
 	}
 
 	cfg := &Config{
-		Env:  env,
-		Dev:  dev,
-		Addr: resolveAddr(),
+		Env: env,
+		Dev: dev,
 		FusionAuth: FusionAuth{
 			ClientID:     os.Getenv("FUSION_AUTH_CLIENT_ID"),
 			ClientSecret: os.Getenv("FUSION_AUTH_CLIENT_SECRET"),
@@ -137,6 +142,12 @@ func Load() (*Config, error) {
 	}
 
 	var errs []error
+
+	addr, err := ResolveAddr()
+	if err != nil {
+		errs = append(errs, err)
+	}
+	cfg.Addr = addr
 
 	base, err := parseHost("BASE_URL", os.Getenv("BASE_URL"), !dev)
 	if err != nil {
@@ -216,22 +227,47 @@ func botToken(raw string) string {
 	return token
 }
 
-// resolveAddr picks the listen address. The old Express server read PORT
+// ResolveAddr picks the listen address. The old Express server read PORT
 // while template.env and docker-compose documented LISTEN, so both are
 // accepted; PORT wins to match the deployed behaviour.
-func resolveAddr() string {
-	port := os.Getenv("PORT")
-	if port == "" {
-		port = os.Getenv("LISTEN")
+//
+// It is exported because the container health check has to probe exactly the
+// address the server binds. Deriving the probe URL separately is what made
+// LISTEN=:3000 — an address that binds perfectly well — report the container
+// as unhealthy while it was serving normally.
+//
+// The port is validated here rather than left to ListenAndServe, so a value
+// that cannot work stops the deployment at startup next to the variable that
+// caused it. Port 0 is rejected along with the out-of-range values even though
+// the kernel would happily accept it: it binds an unpredictable port, which
+// the health check can then never find, so the container never becomes healthy
+// and there is no case in which that is what anyone wanted.
+func ResolveAddr() (string, error) {
+	name, raw := "PORT", os.Getenv("PORT")
+	if raw == "" {
+		name, raw = "LISTEN", os.Getenv("LISTEN")
 	}
-	if port == "" {
-		port = "3000"
+	if raw == "" {
+		return ":3000", nil
 	}
+
 	// Accept a bare port, a :port, or a full host:port.
-	if _, err := strconv.Atoi(port); err == nil {
-		return ":" + port
+	addr := raw
+	if _, err := strconv.Atoi(raw); err == nil {
+		addr = ":" + raw
 	}
-	return port
+
+	_, port, err := net.SplitHostPort(addr)
+	if err != nil {
+		return "", fmt.Errorf(
+			"%s must be a port, :port or host:port, got %q", name, raw)
+	}
+	n, err := strconv.Atoi(port)
+	if err != nil || n < 1 || n > 65535 {
+		return "", fmt.Errorf(
+			"%s must name a port between 1 and 65535, got %q", name, raw)
+	}
+	return addr, nil
 }
 
 // parseHost validates an absolute URL used as a base for concatenation, and
@@ -266,6 +302,14 @@ func parseMongo(raw string) (Mongo, error) {
 		return Mongo{}, fmt.Errorf("MONGO_DB_URL is not a valid URL: %w", err)
 	}
 	db := strings.Trim(u.Path, "/")
+	// A stray extra segment — mongodb://host/a/b — is not a database name.
+	// MongoDB rejects it at the first query, hours of uptime away from the
+	// variable that caused it, so it is refused here instead.
+	if strings.Contains(db, "/") {
+		return Mongo{}, fmt.Errorf(
+			"MONGO_DB_URL must name a single database, e.g. "+
+				"mongodb://localhost:27017/website (got %q)", db)
+	}
 	if name := os.Getenv("MONGO_DB_NAME"); name != "" {
 		db = name
 	}

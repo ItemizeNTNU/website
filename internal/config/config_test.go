@@ -607,10 +607,6 @@ func TestParseMongo(t *testing.T) {
 		{name: "credentials in the URI", raw: "mongodb://user:pass@localhost:27017/website", wantDB: "website"},
 		{name: "replica set with several hosts", raw: "mongodb://a:27017,b:27017/website", wantDB: "website"},
 		{name: "mongodb+srv", raw: "mongodb+srv://cluster.example.net/website", wantDB: "website"},
-		// The whole path becomes the name, slashes and all. MongoDB will
-		// reject "a/b" at the first query rather than here, which is worth
-		// knowing about when a connection string picks up a stray segment.
-		{name: "a multi-segment path becomes the database name", raw: "mongodb://localhost:27017/a/b", wantDB: "a/b"},
 
 		{name: "MONGO_DB_NAME overrides the path", raw: "mongodb://localhost:27017/website", dbName: "itemize", wantDB: "itemize"},
 		{name: "MONGO_DB_NAME supplies a missing path", raw: "mongodb://localhost:27017", dbName: "itemize", wantDB: "itemize"},
@@ -620,6 +616,13 @@ func TestParseMongo(t *testing.T) {
 		{name: "no database in the path", raw: "mongodb://localhost:27017", wantErr: "MONGO_DB_URL must name a database"},
 		{name: "bare slash is no database", raw: "mongodb://localhost:27017/", wantErr: "MONGO_DB_URL must name a database"},
 		{name: "unparseable URL", raw: "mongodb://local host:27017/website", wantErr: "MONGO_DB_URL is not a valid URL"},
+		// A stray extra segment used to become the database name verbatim.
+		// MongoDB rejects "a/b" at the first query, which is a long way from
+		// the connection string that caused it.
+		{name: "a multi-segment path is refused", raw: "mongodb://localhost:27017/a/b", wantErr: "MONGO_DB_URL must name a single database"},
+		// Refused on the strength of the URL alone: the driver is handed the
+		// connection string verbatim, so an override cannot rescue it.
+		{name: "a multi-segment path is refused even with MONGO_DB_NAME set", raw: "mongodb://localhost:27017/a/b", dbName: "itemize", wantErr: "MONGO_DB_URL must name a single database"},
 	}
 
 	for _, tt := range tests {
@@ -654,12 +657,19 @@ func TestParseMongo(t *testing.T) {
 // The listen address has two spellings for historical reasons — the Express
 // server read PORT, template.env and docker-compose document LISTEN — and both
 // have to keep working, with PORT winning to match what is deployed today.
+//
+// A port that cannot be bound is refused here rather than passed on to
+// ListenAndServe, so the deployment stops at startup next to the variable that
+// caused it. The error also has to name the variable the operator actually
+// set: being told about PORT when LISTEN is what is in the compose file sends
+// them looking in the wrong place.
 func TestResolveAddr(t *testing.T) {
 	tests := []struct {
-		name   string
-		port   string
-		listen string
-		want   string
+		name    string
+		port    string
+		listen  string
+		want    string
+		wantErr string
 	}{
 		{name: "neither set falls back to 3000", want: ":3000"},
 		{name: "bare PORT", port: "8080", want: ":8080"},
@@ -668,29 +678,70 @@ func TestResolveAddr(t *testing.T) {
 		{name: "empty PORT falls through to LISTEN", port: "", listen: "9090", want: ":9090"},
 		{name: "PORT already has a colon", port: ":8080", want: ":8080"},
 		{name: "a full host:port binds one interface", port: "127.0.0.1:8080", want: "127.0.0.1:8080"},
+		{name: "a wildcard host:port", port: "0.0.0.0:8080", want: "0.0.0.0:8080"},
 		{name: "IPv6 host:port", port: "[::1]:8080", want: "[::1]:8080"},
-		// Port 0 asks the kernel for an ephemeral port. It is accepted, which
-		// is worth knowing: the server comes up on an unpredictable port and
-		// the container health check, which probes PORT, can never find it.
-		{name: "port zero is accepted verbatim", port: "0", want: ":0"},
-		// Nothing validates the range or the shape. An unusable value is
-		// passed straight to ListenAndServe, which is where it fails.
-		{name: "an out-of-range port is passed through", port: "99999", want: ":99999"},
-		{name: "a negative port is passed through", port: "-1", want: ":-1"},
-		{name: "a non-numeric value is passed through", port: "http", want: "http"},
-		{name: "surrounding whitespace defeats the numeric check", port: " 3000", want: " 3000"},
+		{name: "the lowest port", port: "1", want: ":1"},
+		{name: "the highest port", port: "65535", want: ":65535"},
+
+		// Port 0 asks the kernel for an ephemeral port. The server would come
+		// up on an unpredictable one, and the container health check — which
+		// probes the configured address — could never find it, so the container
+		// would stay unhealthy while serving. There is no deployment in which
+		// that is what was wanted, so it is refused outright rather than
+		// allowed in development.
+		{name: "port zero is refused", port: "0", wantErr: "PORT must name a port between 1 and 65535"},
+		{name: "an out-of-range port is refused", port: "99999", wantErr: "PORT must name a port between 1 and 65535"},
+		{name: "a negative port is refused", port: "-1", wantErr: "PORT must name a port between 1 and 65535"},
+		{name: "an out-of-range port in LISTEN names LISTEN", listen: "99999", wantErr: "LISTEN must name a port between 1 and 65535"},
+		{name: "a port out of range inside a host:port", port: "127.0.0.1:99999", wantErr: "PORT must name a port between 1 and 65535"},
+
+		{name: "a non-numeric value is refused", port: "http", wantErr: "PORT must be a port, :port or host:port"},
+		{name: "surrounding whitespace is refused", port: " 3000", wantErr: "PORT must be a port, :port or host:port"},
+		{name: "a host with no port is refused", listen: "127.0.0.1", wantErr: "LISTEN must be a port, :port or host:port"},
 	}
 
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
 			withEnv(t, map[string]string{"PORT": tt.port, "LISTEN": tt.listen})
 
-			if got := resolveAddr(); got != tt.want {
-				t.Errorf("resolveAddr() = %q with PORT=%q LISTEN=%q, want %q; the server would bind the wrong address",
+			got, err := ResolveAddr()
+			if tt.wantErr != "" {
+				if err == nil {
+					t.Fatalf("ResolveAddr() accepted PORT=%q LISTEN=%q and returned %q; the server would fail at ListenAndServe instead of at startup",
+						tt.port, tt.listen, got)
+				}
+				if !strings.Contains(err.Error(), tt.wantErr) {
+					t.Fatalf("ResolveAddr() error = %v with PORT=%q LISTEN=%q, want it to mention %q so the operator knows which variable to fix",
+						err, tt.port, tt.listen, tt.wantErr)
+				}
+				return
+			}
+			if err != nil {
+				t.Fatalf("ResolveAddr() rejected PORT=%q LISTEN=%q (%v); a bindable address must not stop the server",
+					tt.port, tt.listen, err)
+			}
+			if got != tt.want {
+				t.Errorf("ResolveAddr() = %q with PORT=%q LISTEN=%q, want %q; the server would bind the wrong address",
 					got, tt.port, tt.listen, tt.want)
 			}
 		})
 	}
+}
+
+// An unusable port has to come out of Load together with everything else that
+// is wrong, not from a crash inside ListenAndServe after the rest of the
+// startup has already succeeded.
+func TestLoadRejectsAnUnusablePort(t *testing.T) {
+	env := validEnv()
+	env["PORT"] = "99999"
+	env["BASE_URL"] = ""
+	withEnv(t, env)
+
+	_, err := Load()
+	wantErrors(t, err,
+		"PORT must name a port between 1 and 65535",
+		// Still joined with the other findings: one restart, every problem.
+		"BASE_URL is required")
 }
 
 // resolveAddr is only reached through Load in production, so the fallback

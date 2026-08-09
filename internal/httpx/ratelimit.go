@@ -1,6 +1,8 @@
 package httpx
 
 import (
+	"fmt"
+	"math"
 	"net"
 	"net/http"
 	"sync"
@@ -27,6 +29,9 @@ type RateLimiter struct {
 
 	burst  int
 	window time.Duration
+
+	stopOnce sync.Once
+	stop     chan struct{}
 }
 
 type bucket struct {
@@ -34,15 +39,49 @@ type bucket struct {
 	seen   time.Time
 }
 
+const (
+	// How often idle buckets are swept, and how long a bucket has to go
+	// untouched before it is swept.
+	reapInterval = 10 * time.Minute
+	idleTTL      = time.Hour
+)
+
 // NewRateLimiter allows burst requests, refilled over window.
+//
+// It panics if either is not positive. Both call sites pass constants, so a
+// bad value is a programmer error that a panic surfaces at startup — before
+// the process serves anything — rather than a misconfiguration arriving from
+// the outside world that we should tolerate at runtime. Silently substituting
+// a default would be worse than either: a window of zero used to divide by
+// zero in Allow and store a NaN in the bucket, after which every comparison
+// against it was false and that client was never refused again. A limiter that
+// looks installed but never limits is the failure mode this whole type exists
+// to avoid, so it must not be reachable at all.
 func NewRateLimiter(burst int, window time.Duration) *RateLimiter {
+	if burst <= 0 {
+		panic(fmt.Sprintf("httpx.NewRateLimiter: burst must be positive, got %d", burst))
+	}
+	if window <= 0 {
+		panic(fmt.Sprintf("httpx.NewRateLimiter: window must be positive, got %v", window))
+	}
 	l := &RateLimiter{
 		buckets: map[string]*bucket{},
 		burst:   burst,
 		window:  window,
+		stop:    make(chan struct{}),
 	}
-	go l.reap()
+	go l.reap(reapInterval)
 	return l
+}
+
+// Stop ends the reaper goroutine and releases its ticker. It is safe to call
+// more than once and safe never to call: the two limiters in this program live
+// for the lifetime of the process. It exists so that a limiter created per test
+// or per request does not leak a goroutine and a ticker for each one.
+//
+// A stopped limiter still limits; only the eviction of idle buckets stops.
+func (l *RateLimiter) Stop() {
+	l.stopOnce.Do(func() { close(l.stop) })
 }
 
 // Allow reports whether a request from key may proceed.
@@ -58,8 +97,15 @@ func (l *RateLimiter) Allow(key string) bool {
 		return true
 	}
 
-	// Refill in proportion to the time that has passed.
+	// Refill in proportion to the time that has passed. The window is positive
+	// by construction so this cannot divide by zero; the guard is belt and
+	// braces, because a NaN stored here makes every later "b.tokens < 1"
+	// comparison false and that bucket is never refused again. A clock that
+	// jumped backwards is treated as no time passing rather than as a debit.
 	refill := now.Sub(b.seen).Seconds() / l.window.Seconds() * float64(l.burst)
+	if math.IsNaN(refill) || refill < 0 {
+		refill = 0
+	}
 	b.tokens = min(b.tokens+refill, float64(l.burst))
 	b.seen = now
 
@@ -73,17 +119,30 @@ func (l *RateLimiter) Allow(key string) bool {
 // reap discards idle buckets so the map cannot grow without bound — otherwise
 // the limiter itself becomes the memory-exhaustion vector it was added to
 // prevent.
-func (l *RateLimiter) reap() {
-	for range time.Tick(10 * time.Minute) {
-		cutoff := time.Now().Add(-time.Hour)
+// It runs until Stop. The interval is a parameter rather than a constant so a
+// test can drive it without waiting ten minutes for the first tick.
+func (l *RateLimiter) reap(every time.Duration) {
+	t := time.NewTicker(every)
+	defer t.Stop()
 
-		l.mu.Lock()
-		for key, b := range l.buckets {
-			if b.seen.Before(cutoff) {
-				delete(l.buckets, key)
-			}
+	for {
+		select {
+		case <-l.stop:
+			return
+		case now := <-t.C:
+			l.evictIdle(now.Add(-idleTTL))
 		}
-		l.mu.Unlock()
+	}
+}
+
+// evictIdle drops every bucket last seen before cutoff.
+func (l *RateLimiter) evictIdle(cutoff time.Time) {
+	l.mu.Lock()
+	defer l.mu.Unlock()
+	for key, b := range l.buckets {
+		if b.seen.Before(cutoff) {
+			delete(l.buckets, key)
+		}
 	}
 }
 

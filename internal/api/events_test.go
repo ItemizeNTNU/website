@@ -148,24 +148,28 @@ func TestTruthy(t *testing.T) {
 // Getting that conversion wrong shifts every page by one, which reads as
 // "events are missing" rather than as a paging bug.
 //
-// Unparseable and out-of-range values are pinned as they behave rather than as
-// they ideally would: Atoi failing yields 0, so the filter receives -1, and the
-// repository clamps negatives to the first page. That is the current contract,
-// and a caller sending ?page=nonsense gets page one rather than an error.
+// Anything that is not a page number a caller could mean — absent, empty,
+// "abc", "1.5", zero, negative — is the first page rather than an error, which
+// is what the previous API did. The handler clamps rather than leaning on the
+// repository doing it, so the page it asks for is never negative: a negative
+// page becomes a negative skip, and a negative skip is an error from the driver
+// rather than a listing.
 func TestListEventsPaging(t *testing.T) {
 	for _, tc := range []struct {
 		query string
 		want  int
 	}{
-		{"", -1},
+		{"", 0},
 		{"?page=1", 0},
 		{"?page=2", 1},
 		{"?page=3", 2},
-		{"?page=0", -1},
-		{"?page=", -1},
-		{"?page=abc", -1},
-		{"?page=-5", -6},
-		{"?page=1.5", -1},
+		{"?page=0", 0},
+		{"?page=", 0},
+		{"?page=abc", 0},
+		{"?page=-5", 0},
+		{"?page=1.5", 0},
+		{"?page=1000000", maxPage - 1},
+		{"?page=1000001", maxPage - 1}, // clamped, and far past the end
 	} {
 		t.Run("GET /api/events"+tc.query, func(t *testing.T) {
 			repo := &stubRepo{}
@@ -181,25 +185,45 @@ func TestListEventsPaging(t *testing.T) {
 	}
 }
 
-// A page number too large for an int is worth its own case because
-// strconv.Atoi does not simply fail on one: it returns the clamped maximum
-// *and* an error, and the error is discarded here. The handler must at least
-// keep answering — a crafted query string is not something an anonymous caller
-// should be able to turn into a panic.
+// A page number too large for an int is worth its own case because strconv.Atoi
+// does not simply fail on one: it returns the clamped maximum *and* an error.
+// With the error discarded the filter carried roughly 9.2e18, the repository
+// multiplied that by the page size, the product wrapped negative, and the
+// driver refused the query — so an anonymous caller could turn a query string
+// they made up into a 500 on the public listing.
 //
-// What reaches storage in that case is asserted only loosely on purpose; see
-// the note in the report about the multiplication that follows it.
+// Both ends are checked: the page asked for must stay inside the clamp, so the
+// multiplication that follows it cannot overflow whatever the caller sent.
 func TestListEventsSurvivesAnAbsurdPageNumber(t *testing.T) {
-	repo := &stubRepo{}
-	mux := newAPI(t, apiConfig{repo: repo})
+	for _, tc := range []struct {
+		name  string
+		query string
+		want  int
+	}{
+		{"larger than an int", "?page=99999999999999999999", maxPage - 1},
+		{"more digits than a machine word", "?page=" + strings.Repeat("9", 400), maxPage - 1},
+		// Atoi clamps a huge negative to the minimum int, which used to reach
+		// the filter as an even more negative page.
+		{"smaller than an int", "?page=-99999999999999999999", 0},
+	} {
+		t.Run(tc.name, func(t *testing.T) {
+			repo := &stubRepo{}
+			mux := newAPI(t, apiConfig{repo: repo})
 
-	rec := getAs(t, mux, "/api/events?page=99999999999999999999", nil)
+			rec := getAs(t, mux, "/api/events"+tc.query, nil)
 
-	wantStatus(t, rec, http.StatusOK)
-	wantJSON(t, rec)
-	if repo.gotFilter.Page < 0 {
-		t.Errorf("an oversized page number wrapped to %d; a negative skip is an "+
-			"error from the driver rather than an empty page", repo.gotFilter.Page)
+			wantStatus(t, rec, http.StatusOK)
+			wantJSON(t, rec)
+			if repo.gotFilter.Page != tc.want {
+				t.Errorf("%q asked storage for page %d, want %d; a skip that has "+
+					"overflowed is an error from the driver — a 500 on the public "+
+					"listing for anyone who sends this", tc.query, repo.gotFilter.Page, tc.want)
+			}
+			if got := repo.gotFilter.Page * events.PageSize; got < 0 {
+				t.Errorf("page %d times the page size is %d; the skip has wrapped",
+					repo.gotFilter.Page, got)
+			}
+		})
 	}
 }
 

@@ -240,24 +240,117 @@ func TestCSRFReportsAnUnparseableBodyAsABadRequest(t *testing.T) {
 	}
 }
 
-// Multipart bodies are not read by ParseForm, so the token field is invisible
-// to the guard and the post is refused. No form on this site uses multipart
-// today; this test records the constraint so that adding a file upload fails
-// here rather than in production.
-func TestCSRFCannotSeeATokenInAMultipartBody(t *testing.T) {
+// multipartPost builds a multipart/form-data post carrying one token field, the
+// shape a form with a file input would submit.
+func multipartPost(cookie, field string) *http.Request {
 	body := "--X\r\n" +
 		`Content-Disposition: form-data; name="` + CSRFField + `"` + "\r\n\r\n" +
-		"abc\r\n--X--\r\n"
+		field + "\r\n--X--\r\n"
+
+	r := httptest.NewRequest(http.MethodPost, "/arrangementer", strings.NewReader(body))
+	r.Header.Set("Content-Type", "multipart/form-data; boundary=X")
+	r.AddCookie(&http.Cookie{Name: csrfCookie, Value: cookie})
+	r.Header.Set("Sec-Fetch-Site", "same-origin")
+	return r
+}
+
+// ParseForm does not read a multipart body — it leaves PostForm empty — so the
+// guard has to parse one itself or the token would be invisible and every
+// multipart post would be refused as expired. No form on the site uses
+// multipart today; this test is what will keep the first file upload from
+// failing with a message telling the visitor to reload a page that was fine.
+func TestCSRFReadsATokenFromAMultipartBody(t *testing.T) {
+	code, ran := reached(t, multipartPost("abc", "abc"))
+	if !ran {
+		t.Errorf("a multipart post carrying the right token was rejected with %d; "+
+			"the token in a multipart body must be found, or a form with a file input "+
+			"can never be submitted", code)
+	}
+}
+
+// The multipart path is not a way around the check: a body that carries the
+// wrong token must be refused exactly as an urlencoded one is. If it were not,
+// an attacker could bypass the guard by changing the form's enctype.
+func TestCSRFRejectsAWrongTokenInAMultipartBody(t *testing.T) {
+	code, ran := reached(t, multipartPost("abc", "wrong"))
+	if ran {
+		t.Error("a multipart post with a token that did not match the cookie reached the " +
+			"handler; switching a form to enctype=multipart/form-data would then defeat " +
+			"the whole double-submit guard")
+	}
+	if code != http.StatusForbidden {
+		t.Errorf("got %d, want 403", code)
+	}
+}
+
+// The guard parses the body before the handler does, so the handler has to
+// still find its own fields there. If parsing consumed the body without
+// populating PostForm, every field on a multipart form would arrive empty and
+// the handler would silently save nothing.
+func TestCSRFLeavesMultipartFieldsReadableByTheHandler(t *testing.T) {
+	body := "--X\r\n" +
+		`Content-Disposition: form-data; name="` + CSRFField + `"` + "\r\n\r\n" +
+		"abc\r\n--X\r\n" +
+		`Content-Disposition: form-data; name="tittel"` + "\r\n\r\n" +
+		"Julebord\r\n--X--\r\n"
 
 	r := httptest.NewRequest(http.MethodPost, "/arrangementer", strings.NewReader(body))
 	r.Header.Set("Content-Type", "multipart/form-data; boundary=X")
 	r.AddCookie(&http.Cookie{Name: csrfCookie, Value: "abc"})
 	r.Header.Set("Sec-Fetch-Site", "same-origin")
 
-	if code, ran := reached(t, r); ran {
-		t.Errorf("a multipart post passed the guard (status %d). That is not a security "+
-			"problem, but it means this test's premise has changed — if it now works, the "+
-			"warning it carried is obsolete", code)
+	var got string
+	CSRF(http.HandlerFunc(func(_ http.ResponseWriter, r *http.Request) {
+		got = r.FormValue("tittel")
+	})).ServeHTTP(httptest.NewRecorder(), r)
+
+	if got != "Julebord" {
+		t.Errorf("the handler read %q for the tittel field, want %q; the guard consumed the "+
+			"multipart body without leaving its values behind", got, "Julebord")
+	}
+}
+
+// A multipart body is bounded by the same cap as any other. Parsing one must
+// not be a way to make the server hold more than maxFormBytes.
+func TestCSRFRejectsAnOversizedMultipartBody(t *testing.T) {
+	body := "--X\r\n" +
+		`Content-Disposition: form-data; name="` + CSRFField + `"` + "\r\n\r\n" +
+		"abc\r\n--X\r\n" +
+		`Content-Disposition: form-data; name="filler"; filename="f.bin"` + "\r\n\r\n" +
+		strings.Repeat("x", maxFormBytes+1) + "\r\n--X--\r\n"
+
+	r := httptest.NewRequest(http.MethodPost, "/arrangementer", strings.NewReader(body))
+	r.Header.Set("Content-Type", "multipart/form-data; boundary=X")
+	r.AddCookie(&http.Cookie{Name: csrfCookie, Value: "abc"})
+	r.Header.Set("Sec-Fetch-Site", "same-origin")
+
+	code, ran := reached(t, r)
+	if ran {
+		t.Error("the handler ran on an over-sized multipart body; the size cap is not " +
+			"applied to multipart, so one client could occupy far more memory than the " +
+			"urlencoded path allows")
+	}
+	if code != http.StatusBadRequest {
+		t.Errorf("got %d, want 400 for a body over the %d-byte cap", code, maxFormBytes)
+	}
+}
+
+// A multipart header the parser cannot make sense of is a 400, not a 403 — the
+// same distinction the urlencoded path makes, and for the same reason: telling
+// the visitor to reload would not help.
+func TestCSRFReportsAMalformedMultipartBodyAsABadRequest(t *testing.T) {
+	r := httptest.NewRequest(http.MethodPost, "/arrangementer", strings.NewReader("not multipart"))
+	// No boundary parameter, so there is nothing to split the body on.
+	r.Header.Set("Content-Type", "multipart/form-data")
+	r.AddCookie(&http.Cookie{Name: csrfCookie, Value: "abc"})
+	r.Header.Set("Sec-Fetch-Site", "same-origin")
+
+	code, ran := reached(t, r)
+	if ran {
+		t.Error("the handler ran on a multipart body that could not be parsed")
+	}
+	if code != http.StatusBadRequest {
+		t.Errorf("got %d, want 400", code)
 	}
 }
 
