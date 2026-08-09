@@ -300,6 +300,43 @@ func TestNumber(t *testing.T) {
 			"  3  ", 0, 100,
 			3, "",
 		},
+		{
+			// ParseFloat accepts "NaN", and NaN compares false against both
+			// bounds — so without an explicit check it passes every range,
+			// however narrow, and reaches whatever the caller does with it.
+			"NaN parses but is not a number the range check can hold",
+			"NaN", 0, 100,
+			0, "Pris må være et tall.",
+		},
+		{
+			"the spelling of NaN is not significant",
+			"nan", 0, 100,
+			0, "Pris må være et tall.",
+		},
+		{
+			// Infinity is caught by a ceiling but not by its absence, and it is
+			// not a quantity anybody can have typed on purpose.
+			"positive infinity is refused as not a number",
+			"Inf", 0, 100,
+			0, "Pris må være et tall.",
+		},
+		{
+			"negative infinity too",
+			"-Inf", 0, 100,
+			0, "Pris må være et tall.",
+		},
+		{
+			"and the long spelling",
+			"infinity", 0, 100,
+			0, "Pris må være et tall.",
+		},
+		{
+			// A number this large is finite, so it is a range problem rather than
+			// a parse one — the distinction is what keeps the message truthful.
+			"a huge but finite number is out of range, not unparseable",
+			"1e300", 0, 100,
+			1e300, "Pris kan ikke være større enn 100.",
+		},
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {

@@ -59,11 +59,12 @@ func TestAcceptsGzip(t *testing.T) {
 		{"gzip, deflate, br", true},
 		{"br;q=1.0, gzip;q=0.8", true},
 		{"  gzip,deflate  ", true},
-		// RFC 9110 permits whitespace around the ";" that introduces the
-		// q-value. Only the space before the whole coding is trimmed here, so
-		// a client writing it this way is served uncompressed. Pinned so the
-		// deviation is visible rather than accidental.
-		{"gzip ; q=1.0", false},
+		// RFC 9110 permits whitespace on both sides of the ";" that introduces
+		// the q-value, so the coding name has to be trimmed after the cut as
+		// well as before it. Trimming only the whole coding leaves the name as
+		// "gzip " and this client is silently served uncompressed.
+		{"gzip ; q=1.0", true},
+		{"gzip\t;q=1.0", true},
 		{"identity", false},
 		{"deflate", false},
 		{"br", false},
@@ -72,10 +73,26 @@ func TestAcceptsGzip(t *testing.T) {
 		{"gzipper", false},
 		{",,,", false},
 		{";q=1", false},
-		// RFC 9110 gives q=0 the meaning "not acceptable". The parser here
-		// ignores q-values entirely, so this client is sent gzip anyway. Pinned
-		// so the deviation is visible rather than accidental.
-		{"gzip;q=0", true},
+		// RFC 9110 gives q=0 the meaning "not acceptable", in any of its legal
+		// spellings. Ignoring the q-value sends a gzipped body to a client that
+		// just said in as many words that it cannot read one.
+		{"gzip;q=0", false},
+		{"gzip;q=0.0", false},
+		{"gzip;q=0.000", false},
+		{"gzip ; q=0", false},
+		{"gzip;Q=0", false},
+		{"deflate, gzip;q=0", false},
+		// Anything above zero is acceptance: we do not rank codings, because
+		// gzip is the only one this server can produce.
+		{"gzip;q=0.001", true},
+		{"gzip;q=1", true},
+		// A wildcard refusal does not override an explicit offer of gzip: the
+		// specific entry wins, and without one the answer is already no.
+		{"gzip, *;q=0", true},
+		{"*;q=0", false},
+		// A malformed q-value is not a refusal; the offer still stands.
+		{"gzip;q=nonsense", true},
+		{"gzip;level=1", true},
 	}
 
 	for _, tt := range tests {
@@ -216,6 +233,17 @@ func TestGzipMiddleware(t *testing.T) {
 			accept:      "gzip",
 			contentType: "text/html; charset=utf-8",
 			status:      http.StatusNotModified,
+			wantVary:    true,
+		},
+		{
+			// A 206 body is a slice the handler picked, and its Content-Range
+			// counts offsets into the bytes it sent. Compressing it out here
+			// leaves those offsets describing a payload that is no longer on
+			// the wire, and a client resuming a download reassembles garbage.
+			name:        "206 is a range the handler already measured",
+			accept:      "gzip",
+			contentType: "text/html; charset=utf-8",
+			status:      http.StatusPartialContent,
 			wantVary:    true,
 		},
 		{

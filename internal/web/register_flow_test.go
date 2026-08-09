@@ -108,26 +108,110 @@ func TestRegistrationSurfacesDuplicateEmail(t *testing.T) {
 	}
 }
 
-// Subtlety: an HTTP 500 with an empty body from FusionAuth still parses into
-// an *APIError, so it takes the errors.As branch and renders as 422 with the
-// UserMessage fallback — not the generic 500 page.
-func TestRegistrationUpstream500RendersFallbackMessage(t *testing.T) {
-	fusion := fakeFusion(t, func(w http.ResponseWriter, r *http.Request) {
-		w.WriteHeader(http.StatusInternalServerError)
-	})
-	mux := newSite(t, siteConfig{fusion: fusion})
+// wantUpstreamDown is what the form says when the failure is ours rather than
+// the visitor's: no service address, no status code, and advice worth
+// following — what they typed was fine. Word for word the message the JSON
+// path returns (internal/api/users.go), so one outage reads the same way
+// whichever entry point a member came through.
+const wantUpstreamDown = "Innloggingstjenesten svarer ikke akkurat nå. Prøv igjen om litt."
 
-	rec := postForm(t, mux, "/registrer", validRegistrationForm(), nil)
-	if rec.Code != http.StatusUnprocessableEntity {
-		t.Fatalf("got %d, want 422 — a non-2xx response is an APIError whatever its status", rec.Code)
-	}
-	if !contains(rec.Body.String(), "Uventet svar fra innloggingstjenesten (HTTP 500).") {
-		t.Error("the fallback message naming the upstream status is missing")
+// Who is at fault decides both the status and the wording, and FusionAuth's
+// error parser makes that easy to get wrong: it wraps every non-2xx reply, a
+// 5xx included, in the same *APIError the handler reads validation messages
+// out of. Matching on the type alone told a visitor whose registration was
+// perfectly valid that it was not — a 422 on a form with nothing wrong with
+// it, sometimes quoting an HTTP status at them — and hid the outage from
+// anything watching for 5xx.
+//
+// Each case gets its own mux: five POSTs to /registrer per Server is the whole
+// rate-limit allowance (webtest_test.go).
+func TestRegistrationSeparatesOurFailuresFromTheVisitors(t *testing.T) {
+	const duplicate = `{"fieldErrors":{"user.email":[{"code":"[duplicate]","message":"E-posten er allerede i bruk."}]}}`
+
+	for _, tc := range []struct {
+		name       string
+		status     int // what FusionAuth answers
+		body       string
+		wantStatus int
+		wantMsg    string
+		wantEcho   bool // the typed values must come back to be corrected
+	}{
+		{
+			name:       "a rejection the visitor can act on",
+			status:     http.StatusBadRequest,
+			body:       duplicate,
+			wantStatus: http.StatusUnprocessableEntity,
+			wantMsg:    "E-posten er allerede i bruk.",
+			wantEcho:   true,
+		},
+		{
+			name:       "a conflict is still the visitor's to resolve",
+			status:     http.StatusConflict,
+			body:       duplicate,
+			wantStatus: http.StatusUnprocessableEntity,
+			wantMsg:    "E-posten er allerede i bruk.",
+			wantEcho:   true,
+		},
+		{
+			// Before the fix this rendered as a 422 carrying "Uventet svar fra
+			// innloggingstjenesten (HTTP 500)." — a validation error that
+			// quotes an HTTP status at somebody who typed nothing wrong.
+			name:       "the directory is broken",
+			status:     http.StatusInternalServerError,
+			body:       "",
+			wantStatus: http.StatusInternalServerError,
+			wantMsg:    wantUpstreamDown,
+		},
+		{
+			name:       "the directory is restarting",
+			status:     http.StatusServiceUnavailable,
+			body:       "",
+			wantStatus: http.StatusInternalServerError,
+			wantMsg:    wantUpstreamDown,
+		},
+		{
+			name:       "something in front of the directory is broken",
+			status:     http.StatusBadGateway,
+			body:       "",
+			wantStatus: http.StatusInternalServerError,
+			wantMsg:    wantUpstreamDown,
+		},
+	} {
+		t.Run(tc.name, func(t *testing.T) {
+			fusion := fakeFusion(t, func(w http.ResponseWriter, _ *http.Request) {
+				w.WriteHeader(tc.status)
+				_, _ = w.Write([]byte(tc.body))
+			})
+			mux := newSite(t, siteConfig{fusion: fusion})
+
+			rec := postForm(t, mux, "/registrer", validRegistrationForm(), nil)
+
+			if rec.Code != tc.wantStatus {
+				t.Fatalf("FusionAuth answered %d and the page came back %d, want %d",
+					tc.status, rec.Code, tc.wantStatus)
+			}
+			body := rec.Body.String()
+			if !contains(body, tc.wantMsg) {
+				t.Errorf("FusionAuth answered %d and the visitor is not told %q",
+					tc.status, tc.wantMsg)
+			}
+			if !tc.wantEcho {
+				// Nothing they typed was at fault, so nothing may suggest it was.
+				if contains(body, "Uventet svar fra innloggingstjenesten") {
+					t.Error("the outage is reported as an upstream HTTP status, which the visitor can do nothing with")
+				}
+				return
+			}
+			if !contains(body, `value="kari@example.no"`) {
+				t.Error("the rejected form came back empty, so the visitor retypes everything to fix one field")
+			}
+		})
 	}
 }
 
-// A transport failure — connection refused, DNS, timeout — is our problem,
-// and renders the generic 500 branch.
+// A transport failure — connection refused, DNS, timeout — is upstream being
+// unreachable rather than anything the visitor did, so it is reported the same
+// way as a 5xx from FusionAuth: a 500, and an invitation to try again.
 func TestRegistrationTransportFailureIs500(t *testing.T) {
 	srv := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {}))
 	fusion := fusionauth.New(srv.URL, "test-api-key")
@@ -138,8 +222,8 @@ func TestRegistrationTransportFailureIs500(t *testing.T) {
 	if rec.Code != http.StatusInternalServerError {
 		t.Fatalf("got %d, want 500", rec.Code)
 	}
-	if !contains(rec.Body.String(), "Ups. Noe gikk galt :/") {
-		t.Error("the visitor is not told something went wrong on our side")
+	if !contains(rec.Body.String(), wantUpstreamDown) {
+		t.Error("the visitor is not told the fault is ours and that retrying is worth it")
 	}
 }
 

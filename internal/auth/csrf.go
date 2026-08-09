@@ -3,6 +3,7 @@ package auth
 import (
 	"crypto/rand"
 	"encoding/base64"
+	"errors"
 	"html/template"
 	"net/http"
 )
@@ -63,6 +64,22 @@ func CSRF(next http.Handler) http.Handler {
 		// ParseForm has to run before reading the field, and doing it here
 		// means the handler's later call is a no-op rather than a re-read.
 		if err := r.ParseForm(); err != nil {
+			http.Error(w, "Skjemaet kunne ikke leses.", http.StatusBadRequest)
+			return
+		}
+		// ParseForm does not read a multipart body. It leaves PostForm non-nil
+		// but empty, so PostFormValue below would read "" and every multipart
+		// post — a file upload, once the site has one — would be rejected as if
+		// the token had expired. Parse it explicitly instead.
+		//
+		// maxFormBytes is passed as the in-memory limit deliberately: the
+		// MaxBytesReader above already caps the whole body at that figure, so
+		// nothing can be large enough to spill into a temporary file, and the
+		// bound on what one client can occupy is unchanged. ErrNotMultipart is
+		// the ordinary answer for the urlencoded posts every form on the site
+		// actually sends; anything else is a body we could not read.
+		if err := r.ParseMultipartForm(maxFormBytes); err != nil &&
+			!errors.Is(err, http.ErrNotMultipart) {
 			http.Error(w, "Skjemaet kunne ikke leses.", http.StatusBadRequest)
 			return
 		}

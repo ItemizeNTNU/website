@@ -15,9 +15,10 @@ import (
 // are already set always win, so an explicit `FOO=bar ./website` is never
 // silently overridden by a stale file.
 //
-// Supported: blank lines, `#` comments, `export ` prefixes, and values wrapped
-// in single or double quotes. Escape sequences are deliberately not
-// interpreted; a secret containing a backslash should survive verbatim.
+// Supported: blank lines, `#` comments, `export ` prefixes, values wrapped in
+// single or double quotes, and a leading UTF-8 byte-order mark. Escape
+// sequences are deliberately not interpreted; a secret containing a backslash
+// should survive verbatim.
 func loadDotenv(path string) error {
 	f, err := os.Open(path)
 	if err != nil {
@@ -29,8 +30,17 @@ func loadDotenv(path string) error {
 	defer f.Close()
 
 	sc := bufio.NewScanner(f)
-	for sc.Scan() {
-		line := strings.TrimSpace(sc.Text())
+	for first := true; sc.Scan(); first = false {
+		raw := sc.Text()
+		if first {
+			// A UTF-8 byte-order mark is what Notepad and friends put at the
+			// front of a saved file. It is invisible and it is not whitespace,
+			// so without this it becomes part of the first variable's name —
+			// and the operator is told FUSION_AUTH_HOST is missing while
+			// looking straight at the line that sets it.
+			raw = strings.TrimPrefix(raw, "\ufeff")
+		}
+		line := strings.TrimSpace(raw)
 		if line == "" || strings.HasPrefix(line, "#") {
 			continue
 		}

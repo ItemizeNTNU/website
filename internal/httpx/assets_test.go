@@ -801,6 +801,35 @@ func TestAssetsAreNotDoubleCompressed(t *testing.T) {
 	}
 }
 
+// A compressible asset small enough that gzip made it larger has no stored
+// compressed copy, so Assets serves it as identity — including for a range
+// request, where ServeContent computes Content-Range over those identity
+// bytes. The gzip middleware wraps the mux in production, so it sees that 206
+// on its way out; if it compressed the body, the offsets it is labelled with
+// would no longer describe what the client receives and a resumed download
+// would be stitched back together wrongly.
+func TestAssetsRangeIsNotCompressedDownstream(t *testing.T) {
+	tiny := testAssetFS()
+	tiny["static/robots.txt"] = &fstest.MapFile{Data: []byte("User-agent: *\nAllow: /\n")}
+	h := Gzip(newTestAssets(t, tiny, false))
+
+	rec := httptest.NewRecorder()
+	req := wireRequest(t, "/robots.txt")
+	req.Header.Set("Accept-Encoding", "gzip")
+	req.Header.Set("Range", "bytes=0-4")
+	h.ServeHTTP(rec, req)
+
+	if rec.Code != http.StatusPartialContent {
+		t.Fatalf("got %d, want 206 — the fixture no longer exercises the range path", rec.Code)
+	}
+	if enc := rec.Header().Get("Content-Encoding"); enc != "" {
+		t.Errorf("Content-Encoding = %q on a 206; the range offsets no longer describe the bytes on the wire", enc)
+	}
+	if got := rec.Body.String(); got != "User-" {
+		t.Errorf("body = %q, want the first five bytes the Content-Range promises", got)
+	}
+}
+
 // Dev mode rebuilds the table inside ServeHTTP while templates concurrently
 // call URL for the same table. Without the lock this is a straight data race,
 // and the symptom in production would be an intermittent panic under load.

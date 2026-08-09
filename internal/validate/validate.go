@@ -18,6 +18,7 @@ package validate
 
 import (
 	"fmt"
+	"math"
 	"sort"
 	"strconv"
 	"strings"
@@ -120,7 +121,14 @@ func (e *Errors) Number(field, label, v string, min, max float64) float64 {
 	// Accept the comma decimal separator; a Norwegian keyboard produces it and
 	// rejecting it is a needless papercut.
 	n, err := strconv.ParseFloat(strings.Replace(v, ",", ".", 1), 64)
-	if err != nil {
+	// "NaN", "Inf" and "-Inf" all parse, and the range check below cannot hold
+	// them: NaN compares false against both bounds, so it passes through
+	// untouched however narrow the range is. The only caller is the event
+	// duration, where NaN becomes an end time in the eighteenth century — the
+	// event reads as already finished and vanishes from the listing the moment
+	// it is saved. They are not numbers a form can mean, so they are refused
+	// with the same message as any other unparseable value.
+	if err != nil || math.IsNaN(n) || math.IsInf(n, 0) {
 		e.Add(field, label+" må være et tall.")
 		return 0
 	}

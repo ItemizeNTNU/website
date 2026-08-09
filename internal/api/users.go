@@ -125,13 +125,20 @@ func (s *Server) registerUser(w http.ResponseWriter, r *http.Request) {
 	}
 
 	if _, err := s.fusion.CreateUser(r.Context(), reg.ToFusionAuth()); err != nil {
+		// FusionAuth's parser wraps every non-2xx reply in *APIError, a 5xx
+		// included, so the status has to be checked as well. Without that an
+		// outage upstream was reported as a 400 carrying "Uventet svar fra
+		// innloggingstjenesten", which sends the member back to a form that has
+		// nothing wrong with it — and hides the outage from anything watching
+		// for 5xx.
 		var apiErr *fusionauth.APIError
-		if errors.As(err, &apiErr) {
+		if errors.As(err, &apiErr) && apiErr.Status < http.StatusInternalServerError {
 			writeJSON(w, http.StatusBadRequest, message{apiErr.UserMessage()})
 			return
 		}
 		s.log.Error("creating the user failed", "err", err)
-		writeJSON(w, http.StatusBadGateway, message{"Ups. Noe gikk galt :/"})
+		writeJSON(w, http.StatusBadGateway,
+			message{"Innloggingstjenesten svarer ikke akkurat nå. Prøv igjen om litt."})
 		return
 	}
 

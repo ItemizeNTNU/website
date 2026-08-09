@@ -1,6 +1,7 @@
 package httpx
 
 import (
+	"math"
 	"net/http"
 	"net/http/httptest"
 	"strconv"
@@ -10,8 +11,19 @@ import (
 	"time"
 )
 
+// newTestLimiter builds a limiter and stops its reaper when the test ends. A
+// test binary that creates one per case would otherwise accumulate a goroutine
+// and a ticker for every one of them, which is exactly the leak Stop exists to
+// close.
+func newTestLimiter(t *testing.T, burst int, window time.Duration) *RateLimiter {
+	t.Helper()
+	l := NewRateLimiter(burst, window)
+	t.Cleanup(l.Stop)
+	return l
+}
+
 func TestRateLimiterAllowsBurstThenRefuses(t *testing.T) {
-	l := NewRateLimiter(3, time.Hour)
+	l := newTestLimiter(t, 3, time.Hour)
 
 	for i := 1; i <= 3; i++ {
 		if !l.Allow("1.2.3.4") {
@@ -29,7 +41,7 @@ func TestRateLimiterAllowsBurstThenRefuses(t *testing.T) {
 
 func TestRateLimiterRefills(t *testing.T) {
 	// A short window so the refill is observable.
-	l := NewRateLimiter(2, 100*time.Millisecond)
+	l := newTestLimiter(t, 2, 100*time.Millisecond)
 
 	l.Allow("1.2.3.4")
 	l.Allow("1.2.3.4")
@@ -46,7 +58,7 @@ func TestRateLimiterRefills(t *testing.T) {
 // Reads must not be throttled. A university network shares one address, so
 // limiting ordinary browsing would take the site down for a lecture hall.
 func TestRateLimiterIgnoresSafeMethods(t *testing.T) {
-	l := NewRateLimiter(1, time.Hour)
+	l := newTestLimiter(t, 1, time.Hour)
 	h := l.Limit(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		w.WriteHeader(http.StatusOK)
 	}))
@@ -63,7 +75,7 @@ func TestRateLimiterIgnoresSafeMethods(t *testing.T) {
 }
 
 func TestLimitRejectsWithRetryAfter(t *testing.T) {
-	l := NewRateLimiter(1, time.Hour)
+	l := newTestLimiter(t, 1, time.Hour)
 	h := l.Limit(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		w.WriteHeader(http.StatusOK)
 	}))
@@ -148,7 +160,7 @@ func TestRateLimiterRefillsProportionally(t *testing.T) {
 
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			l := NewRateLimiter(10, time.Hour)
+			l := newTestLimiter(t, 10, time.Hour)
 			if got := countAllowed(l, "1.2.3.4", 10); got != 10 {
 				t.Fatalf("the initial burst allowed %d of 10", got)
 			}
@@ -168,7 +180,7 @@ func TestRateLimiterRefillsProportionally(t *testing.T) {
 // A shared address is one bucket, but distinct addresses must never interfere.
 // If they did, one abusive client would lock out everyone else on the site.
 func TestRateLimiterIsolatesKeys(t *testing.T) {
-	l := NewRateLimiter(2, time.Hour)
+	l := newTestLimiter(t, 2, time.Hour)
 	keys := []string{"1.2.3.4", "5.6.7.8", "2001:db8::1", "", "10.0.0.1"}
 
 	for _, key := range keys {
@@ -195,7 +207,7 @@ func TestRateLimiterIsolatesKeys(t *testing.T) {
 // A burst of one is the tightest useful setting and the one most likely to
 // expose an off-by-one: the first request must succeed and the second must not.
 func TestRateLimiterBurstOfOne(t *testing.T) {
-	l := NewRateLimiter(1, time.Hour)
+	l := newTestLimiter(t, 1, time.Hour)
 	if !l.Allow("1.2.3.4") {
 		t.Fatal("the very first request was refused")
 	}
@@ -208,16 +220,60 @@ func TestRateLimiterBurstOfOne(t *testing.T) {
 	}
 }
 
-// A burst of zero does not deny everything: the first request from an address
-// creates its bucket and is allowed unconditionally, and only the second is
-// refused. Pinned because "burst 0" reads like "block everything" and is not.
-func TestRateLimiterBurstOfZeroStillAllowsTheFirstRequest(t *testing.T) {
-	l := NewRateLimiter(0, time.Hour)
-	if !l.Allow("1.2.3.4") {
-		t.Error("behaviour changed: a burst of zero now refuses the first request too")
+// A limiter that cannot limit must not be constructible. A window of zero used
+// to divide by zero in the refill, storing a NaN that made every later
+// comparison false — the bucket was never refused again, so the endpoint that
+// mails whatever address is submitted was left unprotected for the life of the
+// process. Both call sites pass constants, so failing at construction turns a
+// silent security hole into a crash on the first run.
+func TestNewRateLimiterRejectsSettingsThatCannotLimit(t *testing.T) {
+	tests := []struct {
+		name   string
+		burst  int
+		window time.Duration
+	}{
+		{name: "zero window", burst: 5, window: 0},
+		{name: "negative window", burst: 5, window: -time.Hour},
+		{name: "zero burst", burst: 0, window: time.Hour},
+		{name: "negative burst", burst: -1, window: time.Hour},
 	}
+
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			defer func() {
+				if recover() == nil {
+					t.Errorf("NewRateLimiter(%d, %v) returned a limiter; a misconfiguration that never refuses anything must not start",
+						tt.burst, tt.window)
+				}
+			}()
+			l := NewRateLimiter(tt.burst, tt.window)
+			l.Stop() // unreachable unless the guard is gone, but do not leak if it is
+		})
+	}
+}
+
+// Belt and braces for the same failure: even if a NaN reached a bucket by some
+// other route, one must never be stored, because "NaN < 1" is false and that
+// client would then be allowed through forever.
+func TestRateLimiterNeverStoresNaNTokens(t *testing.T) {
+	l := newTestLimiter(t, 3, time.Hour)
+	for range 3 {
+		l.Allow("1.2.3.4")
+	}
+
+	// A clock that jumped backwards produces a negative elapsed time, which is
+	// the other way the refill arithmetic can misbehave. It must not hand out
+	// credit and must not corrupt the bucket.
+	rewind(t, l, "1.2.3.4", -time.Hour)
 	if l.Allow("1.2.3.4") {
-		t.Error("a second request was allowed with a burst of zero")
+		t.Error("an exhausted client got through after the clock jumped backwards")
+	}
+
+	l.mu.Lock()
+	tokens := l.buckets["1.2.3.4"].tokens
+	l.mu.Unlock()
+	if math.IsNaN(tokens) {
+		t.Error("the bucket holds NaN; every later comparison is false, so this client is never refused again")
 	}
 }
 
@@ -232,7 +288,7 @@ func TestRateLimiterIsSafeUnderConcurrency(t *testing.T) {
 	)
 	// A window this long makes refill during the test immeasurably small, so
 	// the total is exact rather than approximately right.
-	l := NewRateLimiter(burst, 24*time.Hour)
+	l := newTestLimiter(t, burst, 24*time.Hour)
 
 	var (
 		mu      sync.Mutex
@@ -265,7 +321,7 @@ func TestRateLimiterIsSafeUnderConcurrency(t *testing.T) {
 // Separate clients hammering at once must each get their full allowance, and
 // the map they all write to must survive it.
 func TestRateLimiterConcurrentDistinctKeys(t *testing.T) {
-	l := NewRateLimiter(3, 24*time.Hour)
+	l := newTestLimiter(t, 3, 24*time.Hour)
 
 	var wg sync.WaitGroup
 	for i := range 50 {
@@ -326,7 +382,7 @@ func TestClientIP(t *testing.T) {
 // full RemoteAddr would give each connection its own allowance, which is the
 // same as having no limiter for anyone willing to reconnect.
 func TestLimitSharesABucketAcrossPorts(t *testing.T) {
-	l := NewRateLimiter(2, time.Hour)
+	l := newTestLimiter(t, 2, time.Hour)
 	h := l.Limit(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		w.WriteHeader(http.StatusOK)
 	}))
@@ -370,7 +426,7 @@ func TestLimitCountsOnlyUnsafeMethods(t *testing.T) {
 
 	for _, tt := range tests {
 		t.Run(tt.method, func(t *testing.T) {
-			l := NewRateLimiter(1, time.Hour)
+			l := newTestLimiter(t, 1, time.Hour)
 			h := l.Limit(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 				w.WriteHeader(http.StatusOK)
 			}))
@@ -398,7 +454,7 @@ func TestLimitCountsOnlyUnsafeMethods(t *testing.T) {
 // A throttled request must not reach the handler at all — the handler is what
 // sends the mail the limit exists to prevent.
 func TestLimitStopsTheRequestReachingTheHandler(t *testing.T) {
-	l := NewRateLimiter(1, time.Hour)
+	l := newTestLimiter(t, 1, time.Hour)
 	reached := 0
 	h := l.Limit(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		reached++
@@ -420,7 +476,7 @@ func TestLimitStopsTheRequestReachingTheHandler(t *testing.T) {
 // The 429 is shown to a person who has just filled in a form, so it has to say
 // what happened in the site's language rather than showing Go's default text.
 func TestLimitExplainsItselfInNorwegian(t *testing.T) {
-	l := NewRateLimiter(1, time.Hour)
+	l := newTestLimiter(t, 1, time.Hour)
 	h := l.Limit(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {}))
 
 	var rec *httptest.ResponseRecorder
@@ -445,7 +501,7 @@ func TestLimitExplainsItselfInNorwegian(t *testing.T) {
 // Refilling has to work through the middleware too, not just through Allow:
 // a visitor locked out by a typo must eventually be able to submit again.
 func TestLimitRecoversAfterTheWindow(t *testing.T) {
-	l := NewRateLimiter(1, time.Hour)
+	l := newTestLimiter(t, 1, time.Hour)
 	h := l.Limit(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		w.WriteHeader(http.StatusOK)
 	}))
@@ -470,21 +526,15 @@ func TestLimitRecoversAfterTheWindow(t *testing.T) {
 
 // Idle buckets are deleted so the map cannot grow without bound — otherwise
 // the limiter is itself the memory-exhaustion vector it was added to prevent.
-// The reaper's ticker is fixed at ten minutes and takes no clock, so this
-// exercises the eviction rule directly rather than waiting for it to fire.
 func TestRateLimiterEvictionRule(t *testing.T) {
-	l := NewRateLimiter(5, time.Hour)
+	l := newTestLimiter(t, 5, time.Hour)
 	l.Allow("recent")
 	l.Allow("idle")
-	rewind(t, l, "idle", 2*time.Hour)
+	rewind(t, l, "idle", 2*idleTTL)
 
-	cutoff := time.Now().Add(-time.Hour)
+	l.evictIdle(time.Now().Add(-idleTTL))
+
 	l.mu.Lock()
-	for key, b := range l.buckets {
-		if b.seen.Before(cutoff) {
-			delete(l.buckets, key)
-		}
-	}
 	_, keptRecent := l.buckets["recent"]
 	_, keptIdle := l.buckets["idle"]
 	l.mu.Unlock()
@@ -494,5 +544,63 @@ func TestRateLimiterEvictionRule(t *testing.T) {
 	}
 	if keptIdle {
 		t.Error("a bucket untouched for two hours survived; the map would grow with every address ever seen")
+	}
+}
+
+// The reaper itself, not just the rule it applies: with the ten-minute
+// interval hardcoded this loop never ran in a test at all, so nothing would
+// have caught a reaper that ticked but swept nothing.
+func TestRateLimiterReaperEvictsOnTick(t *testing.T) {
+	l := newTestLimiter(t, 5, time.Hour)
+	l.Allow("recent")
+	l.Allow("idle")
+	rewind(t, l, "idle", 2*idleTTL)
+
+	go l.reap(time.Millisecond)
+
+	deadline := time.Now().Add(2 * time.Second)
+	for {
+		l.mu.Lock()
+		_, keptIdle := l.buckets["idle"]
+		_, keptRecent := l.buckets["recent"]
+		l.mu.Unlock()
+
+		if !keptIdle {
+			if !keptRecent {
+				t.Error("the reaper also evicted an active client, which hands them a fresh allowance")
+			}
+			return
+		}
+		if time.Now().After(deadline) {
+			t.Fatal("the reaper never swept an idle bucket; the map grows with every address the site ever sees")
+		}
+		time.Sleep(time.Millisecond)
+	}
+}
+
+// Every limiter used to run a ticker and a goroutine for the life of the
+// process with no way to stop them. That is survivable for the two limiters
+// this program builds at startup, but it makes the type unusable anywhere one
+// is created per request or per test.
+func TestRateLimiterStopEndsTheReaper(t *testing.T) {
+	l := NewRateLimiter(5, time.Hour)
+
+	done := make(chan struct{})
+	go func() {
+		l.reap(time.Millisecond)
+		close(done)
+	}()
+
+	l.Stop()
+	select {
+	case <-done:
+	case <-time.After(2 * time.Second):
+		t.Fatal("the reaper is still running after Stop; every limiter ever created leaks a goroutine and a ticker")
+	}
+
+	// Stop is safe to call twice, and a stopped limiter still limits.
+	l.Stop()
+	if !l.Allow("1.2.3.4") {
+		t.Error("a stopped limiter refuses everything; stopping the reaper must not take the endpoint offline")
 	}
 }

@@ -76,9 +76,9 @@ func (c *Client) Exchange(ctx context.Context, code, redirectURI string) (*User,
 		return nil, err
 	}
 	if resp.StatusCode < 200 || resp.StatusCode >= 300 {
-		apiErr := &APIError{Status: resp.StatusCode}
-		_ = json.Unmarshal(payload, apiErr)
-		return nil, apiErr
+		// The client secret and the code are what this request carried, so a
+		// 401 here is about one of those and never about the bot token.
+		return nil, newAPIError(resp.StatusCode, payload, credentialClientSecret)
 	}
 
 	var token tokenResponse
@@ -113,9 +113,8 @@ func (c *Client) currentUser(ctx context.Context, accessToken string) (*User, er
 		return nil, err
 	}
 	if resp.StatusCode < 200 || resp.StatusCode >= 300 {
-		apiErr := &APIError{Status: resp.StatusCode}
-		_ = json.Unmarshal(payload, apiErr)
-		return nil, apiErr
+		// This leg carries the member's bearer token, not the bot token.
+		return nil, newAPIError(resp.StatusCode, payload, credentialAccessToken)
 	}
 
 	var u User
@@ -123,10 +122,16 @@ func (c *Client) currentUser(ctx context.Context, accessToken string) (*User, er
 		return nil, err
 	}
 	if u.ID == "" {
-		return nil, errors.New("discord: the account response carried no id")
+		return nil, errNoAccountID
 	}
 	return &u, nil
 }
+
+// errNoAccountID is returned when Discord answers an account lookup without an
+// identifier — a 204, or a 200 carrying `{}`. The id is the only field the link
+// cannot do without: stored blank, it makes every later guild and role call
+// fail on an empty identifier.
+var errNoAccountID = errors.New("discord: the account response carried no id")
 
 // GetUser reads an account by identifier, using the bot's own credentials.
 func (c *Client) GetUser(ctx context.Context, id string) (*User, error) {
@@ -136,6 +141,12 @@ func (c *Client) GetUser(ctx context.Context, id string) (*User, error) {
 	var u User
 	if err := c.do(ctx, http.MethodGet, "/users/"+id, nil, &u); err != nil {
 		return nil, err
+	}
+	// The same guard currentUser applies. do leaves the destination untouched
+	// on an empty 2xx body, so without this a 204 would come back as a
+	// perfectly valid-looking account with no id in it.
+	if u.ID == "" {
+		return nil, errNoAccountID
 	}
 	return &u, nil
 }

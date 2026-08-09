@@ -248,6 +248,20 @@ func TestEmailShapes(t *testing.T) {
 		"kari nordmann@example.no", // a space, most often a stray paste
 		"kari@exa mple.no",
 		"kari\t@example.no",
+		// Control characters. The address is handed to FusionAuth, which builds
+		// a password-setting email from it, so a line break in the middle of one
+		// is not merely a malformed address — it is a character with meaning to
+		// everything downstream.
+		"kari@exa\nmple.no",
+		"kari\r@example.no",
+		"kari@example.no\x00x",
+		"kari\x1b[31m@example.no",
+		"kari@example.no\x7f",
+		"kari\vnordmann@example.no",
+		// A separator that is not U+0020. TrimSpace removes these at the ends,
+		// so only one in the middle survives to be rejected here.
+		"kari nordmann@example.no",
+		"kari@eksem pel.no",
 	}
 	for _, addr := range rejected {
 		t.Run("rejected/"+addr, func(t *testing.T) {
@@ -278,6 +292,57 @@ func TestEmailShapes(t *testing.T) {
 				t.Errorf("%q is now refused locally (%q); that is an improvement, "+
 					"but this test pins the boundary — move the address into the "+
 					"rejected list", addr, verr["email"])
+			}
+		})
+	}
+}
+
+// Every other field on this form has a ceiling; the address needs one too,
+// because it is forwarded verbatim to FusionAuth, which sends a
+// password-setting email to whatever it is given. 254 characters is as long as
+// a deliverable address can be — RFC 5321's limit on the envelope path — so
+// nothing a real member could use is refused.
+func TestEmailLengthCeiling(t *testing.T) {
+	const domain = "@example.no"
+	fill := func(runes int) string {
+		return strings.Repeat("a", runes-len(domain)) + domain
+	}
+
+	tests := []struct {
+		name  string
+		addr  string
+		valid bool
+	}{
+		{"an address at the maximum", fill(emailMax), true},
+		{"one character past the maximum", fill(emailMax + 1), false},
+		{"the kind of length only a crafted request carries", fill(5011), false},
+		// Counted in runes like every other field: an address made of Norwegian
+		// letters must not be refused at half the documented limit.
+		{"Norwegian letters are counted as runes, not bytes",
+			strings.Repeat("ø", emailMax-len(domain)) + domain, true},
+	}
+
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			f := employeeForm()
+			f.Set("email", tt.addr)
+
+			r, verr := FromForm(f, now)
+			msg := verr["email"]
+			if accepted := msg == ""; accepted != tt.valid {
+				t.Fatalf("an address of %d runes: accepted=%v (%q), want %v — an "+
+					"unbounded address is forwarded to the service that mails it",
+					len([]rune(tt.addr)), accepted, msg, tt.valid)
+			}
+			if tt.valid {
+				return
+			}
+			if !strings.Contains(msg, "lengre enn 254") {
+				t.Errorf("message %q does not tell the member the limit", msg)
+			}
+			if r.Email != tt.addr {
+				t.Error("the rejected address was not echoed back unchanged; a " +
+					"truncated echo would silently rewrite what the member typed")
 			}
 		})
 	}

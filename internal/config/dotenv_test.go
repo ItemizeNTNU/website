@@ -281,9 +281,11 @@ func TestLoadDotenvNeverOverridesTheEnvironment(t *testing.T) {
 }
 
 // A UTF-8 byte-order mark is what Notepad and some editors on Windows put at
-// the front of a saved file. It is invisible, and it becomes part of the first
-// variable's name — so the first variable in the file silently does not exist.
-// This is a known defect, pinned here so the behaviour cannot change unnoticed.
+// the front of a saved file. It is invisible and it is not whitespace, so
+// unless it is stripped it becomes part of the first variable's name and that
+// variable silently does not exist. FUSION_AUTH_HOST is the first entry in
+// .env.example, so the symptom is "FUSION_AUTH_HOST is required" reported to an
+// operator who is looking straight at the line that sets it.
 func TestLoadDotenvByteOrderMark(t *testing.T) {
 	const bom = "\ufeff"
 	unsetenv(t, "ITEMIZE_A", bom+"ITEMIZE_A", "ITEMIZE_B")
@@ -292,16 +294,36 @@ func TestLoadDotenvByteOrderMark(t *testing.T) {
 		t.Fatalf("loading the .env failed: %v", err)
 	}
 
-	if _, ok := os.LookupEnv("ITEMIZE_A"); ok {
-		t.Error("the byte-order mark is now stripped; this test documents the opposite and should be deleted along with the note in the parser")
+	if got, ok := os.LookupEnv("ITEMIZE_A"); !ok || got != "en" {
+		t.Errorf("ITEMIZE_A = %q (set=%t), want %q; the first variable of a file saved on Windows is lost, and the operator is told it is missing while looking straight at it",
+			got, ok, "en")
 	}
-	if got := os.Getenv(bom + "ITEMIZE_A"); got != "en" {
-		t.Errorf("the first assignment produced neither ITEMIZE_A nor a BOM-prefixed name (%q); the failure mode has changed", got)
+	if _, ok := os.LookupEnv(bom + "ITEMIZE_A"); ok {
+		t.Error("a BOM-prefixed name reached the environment; the mark is being carried into the key instead of stripped from the line")
 	}
-	// Only the first line is affected — the rest of the file loads normally,
-	// which is what makes the problem so hard to spot.
+	// The rest of the file always loaded normally, which is what made the
+	// problem so hard to spot. It has to keep doing so.
 	if got := os.Getenv("ITEMIZE_B"); got != "to" {
 		t.Errorf("ITEMIZE_B = %q, want %q", got, "to")
+	}
+}
+
+// The mark is only an encoding marker at the very start of the file. Anywhere
+// else it is an ordinary character in a name, and stripping it there would be
+// guesswork that quietly renames a variable.
+func TestLoadDotenvByteOrderMarkOnlyAtTheStart(t *testing.T) {
+	const bom = "\ufeff"
+	unsetenv(t, "ITEMIZE_A", "ITEMIZE_B", bom+"ITEMIZE_B")
+
+	if err := loadFixture(t, "ITEMIZE_A=en\n"+bom+"ITEMIZE_B=to\n"); err != nil {
+		t.Fatalf("loading the .env failed: %v", err)
+	}
+
+	if got := os.Getenv("ITEMIZE_A"); got != "en" {
+		t.Errorf("ITEMIZE_A = %q, want %q", got, "en")
+	}
+	if _, ok := os.LookupEnv("ITEMIZE_B"); ok {
+		t.Error("a byte-order mark in the middle of the file was stripped; only a leading one marks the encoding")
 	}
 }
 

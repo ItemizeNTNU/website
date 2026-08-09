@@ -6,6 +6,7 @@ import (
 	"net/url"
 	"strings"
 	"time"
+	"unicode"
 
 	"github.com/ItemizeNTNU/website/internal/fusionauth"
 	"github.com/ItemizeNTNU/website/internal/validate"
@@ -38,6 +39,12 @@ const studEmailSuffix = "@stud.ntnu.no"
 
 const studEmailMessage = "Vennligst ikke bruk din stud e-post adresse, " +
 	"da du mister tilgang til denne etter fullført utdannelse."
+
+// emailMax is the longest address that can actually be delivered: RFC 5321
+// caps the whole envelope path at 254 characters. Every other field here has a
+// ceiling; without one the address is forwarded verbatim to FusionAuth, which
+// sends a password-setting email to it.
+const emailMax = 254
 
 // Registration is a validated signup, ready to send to FusionAuth.
 type Registration struct {
@@ -107,9 +114,13 @@ func validateEmail(e *validate.Errors, raw string) string {
 		e.Add("email", "E-postadresse må fylles ut.")
 		return addr
 	}
+	if len([]rune(addr)) > emailMax {
+		e.Add("email", fmt.Sprintf("E-postadresse kan ikke være lengre enn %d tegn.", emailMax))
+		return addr
+	}
 	local, domain, ok := strings.Cut(addr, "@")
 	if !ok || local == "" || domain == "" || !strings.Contains(domain, ".") ||
-		strings.ContainsAny(addr, " \t") {
+		strings.IndexFunc(addr, notAllowedInEmail) >= 0 {
 		e.Add("email", "E-postadressen ser ikke gyldig ut.")
 		return addr
 	}
@@ -119,6 +130,19 @@ func validateEmail(e *validate.Errors, raw string) string {
 		e.Add("email", studEmailMessage)
 	}
 	return addr
+}
+
+// notAllowedInEmail reports the characters an address must never contain.
+//
+// The check used to name a space and a tab, which left \n, \r and NUL to pass
+// straight through. That matters more here than in an ordinary field: the
+// address is handed to FusionAuth, which builds an email from it, so a line
+// break is not merely malformed — it is a character with meaning to everything
+// downstream. IsControl covers U+0000–U+001F and U+007F; IsSpace covers the
+// separators TrimSpace leaves behind in the middle of the string, including
+// the non-breaking space a paste from a PDF carries.
+func notAllowedInEmail(r rune) bool {
+	return unicode.IsControl(r) || unicode.IsSpace(r)
 }
 
 // ToFusionAuth builds the user record.

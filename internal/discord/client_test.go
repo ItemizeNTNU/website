@@ -181,12 +181,79 @@ func TestNonSuccessStatusesBecomeAPIError(t *testing.T) {
 // A 401 on a bot call is nearly always the token itself, and "HTTP 401" sends
 // nobody anywhere. The message names the variable and the mistake people
 // actually make, so the fix is one line rather than a support thread.
+//
+// The bot token is also the zero value of the credential, so an APIError built
+// anywhere that does not say otherwise still gets this message.
 func TestUnauthorizedErrorNamesTheBotToken(t *testing.T) {
 	err := (&APIError{Status: http.StatusUnauthorized, Message: "401: Unauthorized", Code: 0}).Error()
 
 	for _, want := range []string{"DISCORD_BOT_TOKEN", "401", "client secret"} {
 		if !strings.Contains(err, want) {
 			t.Errorf("the 401 message does not mention %q: %s", want, err)
+		}
+	}
+}
+
+// A 401 has to point at the credential the failing request actually carried.
+// The two OAuth legs are never sent the bot token, so telling an operator to
+// check DISCORD_BOT_TOKEN for one of those — the usual cause being a reloaded
+// callback replaying a spent code — sends them rotating a secret that was
+// never involved while the real cause goes unread.
+func TestUnauthorizedErrorNamesTheCredentialThatWasUsed(t *testing.T) {
+	tests := []struct {
+		name    string
+		cred    credential
+		want    []string
+		unwant  []string
+		message string
+	}{
+		{
+			name: "a bot call blames the bot token",
+			cred: credentialBotToken,
+			want: []string{"DISCORD_BOT_TOKEN", "bot token"},
+		},
+		{
+			name:   "the token exchange blames the client secret and the spent code",
+			cred:   credentialClientSecret,
+			want:   []string{"DISCORD_CLIENT_SECRET", "reloaded callback"},
+			unwant: []string{"check DISCORD_BOT_TOKEN"},
+		},
+		{
+			name:   "the account lookup blames the member's access token",
+			cred:   credentialAccessToken,
+			want:   []string{"access token", "linking flow again"},
+			unwant: []string{"check DISCORD_BOT_TOKEN"},
+		},
+	}
+
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			got := (&APIError{Status: http.StatusUnauthorized, credential: tt.cred}).Error()
+
+			for _, want := range tt.want {
+				if !strings.Contains(got, want) {
+					t.Errorf("the 401 message does not mention %q, so the operator log "+
+						"does not say what to check: %s", want, got)
+				}
+			}
+			for _, unwant := range tt.unwant {
+				if strings.Contains(got, unwant) {
+					t.Errorf("the 401 message says %q for a call that never carried the "+
+						"bot token; it sends an operator after the wrong secret: %s", unwant, got)
+				}
+			}
+		})
+	}
+}
+
+// Only a 401 is credential-specific. Every other status keeps Discord's own
+// message and code, which is what makes a 403 diagnosable as "missing
+// permissions" rather than "something went wrong".
+func TestNonUnauthorizedErrorsIgnoreTheCredential(t *testing.T) {
+	for _, cred := range []credential{credentialBotToken, credentialClientSecret, credentialAccessToken} {
+		err := &APIError{Status: 403, Code: 50013, Message: "Missing Permissions", credential: cred}
+		if got, want := err.Error(), "discord: Missing Permissions (HTTP 403, code 50013)"; got != want {
+			t.Errorf("Error() = %q, want %q", got, want)
 		}
 	}
 }
@@ -357,9 +424,11 @@ func TestRateLimitGivesUpAfterOneRetry(t *testing.T) {
 	}
 }
 
-// A long Retry-After is real: Discord hands out multi-second waits under a
-// global limit. The wait has to be abandonable, or a cancelled HTTP request
-// would still hold its goroutine for the whole window.
+// A caller that has gone away gets a cancellation, whatever the retry logic
+// would otherwise have done with the 429. Cancellation is checked before the
+// wait is even measured, so this stays true for the long Retry-After that the
+// client now refuses outright: "the caller left" and "Discord asked for ten
+// minutes" are different problems, and only the first is worth logging as one.
 func TestRateLimitWaitHonoursCancellation(t *testing.T) {
 	ctx, cancel := context.WithCancel(context.Background())
 	defer cancel()
@@ -386,6 +455,72 @@ func TestRateLimitWaitHonoursCancellation(t *testing.T) {
 	}
 }
 
+// Under a global limit Discord hands out waits measured in tens of seconds or
+// minutes. Sleeping one out parks whatever goroutine is here, and on the
+// account-linking flow that is an HTTP handler whose request context carries no
+// deadline of its own — nothing would cut the wait short. Past the cap the call
+// has to come back promptly with an error saying why, rather than holding the
+// member's request open for a window Discord chose.
+func TestRateLimitLongerThanTheCapIsRefusedRatherThanSlept(t *testing.T) {
+	c, fake := newFakeDiscord(t, func(w http.ResponseWriter, r *http.Request) {
+		// What a global limit looks like.
+		w.Header().Set("Retry-After", "600")
+		w.Header().Set("Content-Type", "application/json")
+		w.WriteHeader(http.StatusTooManyRequests)
+		_, _ = io.WriteString(w, `{"message":"You are being rate limited.","code":0}`)
+	})
+
+	// Run off the test goroutine so a regression fails in seconds instead of
+	// sleeping out the ten minutes it was told to.
+	done := make(chan error, 1)
+	go func() { done <- c.AddMemberRole(context.Background(), testSnowflake) }()
+
+	select {
+	case err := <-done:
+		if err == nil {
+			t.Fatal("a ten-minute rate limit was reported as success")
+		}
+		// Still recognisably a 429: callers branch on the status, and the cap
+		// is our decision rather than a different answer from Discord.
+		var apiErr *APIError
+		if !errors.As(err, &apiErr) || apiErr.Status != http.StatusTooManyRequests {
+			t.Fatalf("got %v, want an error unwrapping to an APIError carrying 429", err)
+		}
+		// The operator log has to say we declined to wait, or this reads as an
+		// ordinary rate limit and nobody knows the retry never happened.
+		if !strings.Contains(err.Error(), "rate limited for") {
+			t.Errorf("error = %q, want it to say the wait was longer than we will hold", err)
+		}
+	case <-time.After(maxRetryWait + 2*time.Second):
+		t.Fatal("the call was still waiting out the Retry-After; a request handler " +
+			"would be parked for the whole rate-limit window")
+	}
+
+	if n := fake.count(); n != 1 {
+		t.Errorf("Discord saw %d requests, want 1 — the retry was abandoned, not made", n)
+	}
+}
+
+// A wait the client is willing to sit through is still retried. The cap must
+// bound the damage without turning the ordinary per-route bucket — which
+// resets in well under a second — into a failed call.
+func TestRateLimitWithinTheCapIsStillRetried(t *testing.T) {
+	c, fake := newFakeDiscord(t, sequence(
+		func(w http.ResponseWriter, r *http.Request) {
+			w.Header().Set("Retry-After", "0.05")
+			w.WriteHeader(http.StatusTooManyRequests)
+		},
+		jsonReply(200, `{"id":"`+testSnowflake+`"}`),
+	))
+
+	if _, err := c.GetUser(context.Background(), testSnowflake); err != nil {
+		t.Fatalf("a short rate limit was refused instead of retried: %v", err)
+	}
+	if n := fake.count(); n != 2 {
+		t.Errorf("Discord saw %d requests, want 2 (the original and one retry)", n)
+	}
+}
+
 // Discord reports the wait in two different headers depending on the endpoint
 // and whether the limit is global. Reading neither means always waiting the
 // one-second fallback, which either retries too early (and gets another 429)
@@ -405,12 +540,16 @@ func TestRetryAfterHeaderParsing(t *testing.T) {
 		{"no headers at all", http.Header{}, time.Second},
 		{"an empty Retry-After falls through",
 			http.Header{"Retry-After": {""}, "X-Ratelimit-Reset-After": {"4"}}, 4 * time.Second},
-		// RFC 7231 allows an HTTP-date here. Discord sends seconds, so this is
-		// a documented gap rather than a bug: an unparseable value falls back
-		// to a second, which retries early but never hangs.
-		{"an HTTP-date falls back rather than failing",
-			http.Header{"Retry-After": {"Wed, 21 Oct 2015 07:28:00 GMT"}}, time.Second},
+		// RFC 7231 allows an HTTP-date as well as a number. Discord sends
+		// seconds, so this is the unusual form — but read as garbage it falls
+		// back to a second and retries straight back into the same limit.
+		{"an HTTP-date already past means retry now",
+			http.Header{"Retry-After": {"Wed, 21 Oct 2015 07:28:00 GMT"}}, 0},
 		{"garbage falls back", http.Header{"Retry-After": {"soon"}}, time.Second},
+		// A window that has already elapsed, or a clock that disagrees. A
+		// negative duration would make time.After fire at once anyway, but it
+		// reaches the log first and "wait=-5s" reads as a bug in us.
+		{"a negative wait is clamped to now", http.Header{"Retry-After": {"-5"}}, 0},
 	}
 
 	for _, tt := range tests {
@@ -419,6 +558,23 @@ func TestRetryAfterHeaderParsing(t *testing.T) {
 				t.Errorf("waiting %s, want %s — the retry lands at the wrong moment", got, tt.want)
 			}
 		})
+	}
+}
+
+// The HTTP-date form has to produce a wait measured from now. An exact
+// duration would be a race against the clock, so this pins the window: the
+// point is that a date is read as a date rather than falling through to the
+// one-second default and retrying into a limit that has not lifted.
+func TestRetryAfterReadsAnHTTPDate(t *testing.T) {
+	when := time.Now().Add(2 * time.Second).UTC().Format(http.TimeFormat)
+
+	got := retryAfter(&http.Response{Header: http.Header{"Retry-After": {when}}})
+	// http.TimeFormat has second granularity, so anything from just over a
+	// second to the full two is the date being read correctly.
+	if got <= 0 || got > 2*time.Second {
+		t.Errorf("waiting %s for a date two seconds out, want a wait just under two "+
+			"seconds; a date read as garbage falls back to one second and retries "+
+			"before the limit has lifted", got)
 	}
 }
 

@@ -262,20 +262,30 @@ func TestServeShutsDownOnSIGTERM(t *testing.T) {
 	}
 }
 
-// The container health check runs the binary against itself, so the value of
-// PORT is read twice by two different pieces of code: resolveAddr turns it into
-// a listen address, healthcheck turns it into a URL. They do not agree on what
-// the variable may contain, and the mismatch is pinned down here — see the note
-// on healthcheck.
-func TestHealthcheckRejectsAddressForms(t *testing.T) {
+// The container health check runs the binary against itself, so PORT is read
+// twice by two different pieces of code: config.ResolveAddr turns it into a
+// listen address, healthcheck turns it into a URL. Every form the server binds
+// has to be probeable, or the container is reported unhealthy — and eventually
+// restarted — while it is serving perfectly well.
+//
+// The server here listens on 127.0.0.1, which every one of these forms reaches.
+func TestHealthcheckProbesEveryAddressForm(t *testing.T) {
+	port, _ := startHealthServer(t, http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		w.WriteHeader(http.StatusOK)
+	}))
+
 	tests := []struct {
 		name string
 		port string
 	}{
-		// docker-compose documents LISTEN, and ":3000" is a perfectly ordinary
-		// thing to put in it — resolveAddr accepts it and the server binds.
-		{name: "a leading colon", port: ":3000"},
-		{name: "a full host:port", port: "127.0.0.1:3000"},
+		{name: "a bare port", port: port},
+		// docker-compose and .env.example both document LISTEN, and ":3000" is
+		// a perfectly ordinary thing to put in it.
+		{name: "a leading colon", port: ":" + port},
+		{name: "a full host:port", port: "127.0.0.1:" + port},
+		// A wildcard bind is not an address to connect to; the probe has to
+		// fall back to loopback rather than dial 0.0.0.0.
+		{name: "a wildcard host:port", port: "0.0.0.0:" + port},
 	}
 
 	for _, tt := range tests {
@@ -283,8 +293,86 @@ func TestHealthcheckRejectsAddressForms(t *testing.T) {
 			t.Setenv("PORT", tt.port)
 			t.Setenv("LISTEN", "")
 
+			if got := healthcheck(); got != 0 {
+				t.Errorf("healthcheck returned %d for PORT=%q, but the server is answering; the container would be marked unhealthy and restarted while serving normally", got, tt.port)
+			}
+		})
+	}
+}
+
+// IPv6 is split out because the loopback interface is not guaranteed to exist
+// on every build machine. The bracketed form is the one thing a naive
+// "host:" + port concatenation gets wrong even when the host is right.
+func TestHealthcheckProbesAnIPv6Address(t *testing.T) {
+	ln, err := net.Listen("tcp", "[::1]:0")
+	if err != nil {
+		t.Skipf("no IPv6 loopback on this machine: %v", err)
+	}
+	srv := &http.Server{Handler: http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		w.WriteHeader(http.StatusOK)
+	})}
+	go func() { _ = srv.Serve(ln) }()
+	t.Cleanup(func() { _ = srv.Close() })
+
+	t.Setenv("PORT", ln.Addr().String())
+	t.Setenv("LISTEN", "")
+
+	if got := healthcheck(); got != 0 {
+		t.Errorf("healthcheck returned %d for PORT=%q, but the server is answering there", got, ln.Addr())
+	}
+}
+
+// probeURL is what turns the bound address into something dialable. The
+// wildcard cases are the ones that matter in the container: the server binds
+// every interface, and the probe has to pick the one it shares with it.
+func TestProbeURL(t *testing.T) {
+	tests := []struct {
+		name    string
+		addr    string
+		want    string
+		wantErr bool
+	}{
+		{name: "a bare port from PORT=3000", addr: ":3000", want: "http://127.0.0.1:3000/healthz"},
+		{name: "an explicit loopback host", addr: "127.0.0.1:3000", want: "http://127.0.0.1:3000/healthz"},
+		{name: "an IPv4 wildcard probes loopback", addr: "0.0.0.0:3000", want: "http://127.0.0.1:3000/healthz"},
+		{name: "an IPv6 wildcard probes IPv6 loopback", addr: "[::]:3000", want: "http://[::1]:3000/healthz"},
+		{name: "an IPv6 host keeps its brackets", addr: "[::1]:3000", want: "http://[::1]:3000/healthz"},
+		{name: "a named host", addr: "localhost:3000", want: "http://localhost:3000/healthz"},
+		// Not reachable through config.ResolveAddr any more, but probeURL must
+		// still refuse rather than build a URL that will not parse.
+		{name: "no port at all", addr: "3000", wantErr: true},
+	}
+
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			got, err := probeURL(tt.addr)
+			if tt.wantErr {
+				if err == nil {
+					t.Fatalf("probeURL(%q) = %q; an address that cannot be split must be reported, not turned into a malformed URL", tt.addr, got)
+				}
+				return
+			}
+			if err != nil {
+				t.Fatalf("probeURL(%q) failed: %v; the health check cannot probe an address the server binds", tt.addr, err)
+			}
+			if got != tt.want {
+				t.Errorf("probeURL(%q) = %q, want %q; the probe would dial the wrong place and report a serving container as unhealthy", tt.addr, got, tt.want)
+			}
+		})
+	}
+}
+
+// An unusable PORT stops the server from starting, so -healthcheck must not
+// answer 0 for it either — a probe that succeeds against a configuration the
+// server refuses would mark a container healthy that can never come up.
+func TestHealthcheckRejectsAnUnusablePort(t *testing.T) {
+	for _, port := range []string{"0", "99999", "ikke-et-tall"} {
+		t.Run(port, func(t *testing.T) {
+			t.Setenv("PORT", port)
+			t.Setenv("LISTEN", "")
+
 			if got := healthcheck(); got != 1 {
-				t.Errorf("healthcheck returned %d for PORT=%q; this test records that it cannot probe an address form the server itself accepts, and the behaviour has changed", got, tt.port)
+				t.Errorf("healthcheck returned %d for PORT=%q, which the server itself refuses to bind", got, port)
 			}
 		})
 	}

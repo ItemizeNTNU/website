@@ -2,6 +2,7 @@ package auth
 
 import (
 	"crypto/subtle"
+	"encoding/json"
 	"net/http"
 	"net/url"
 )
@@ -15,6 +16,21 @@ func (a *Authenticator) Inject(next http.Handler) http.Handler {
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		sess := a.sealer.Read(r)
 		if sess == nil {
+			// Clear it, so the claim above holds. A cookie that cannot be
+			// opened would otherwise be re-sent on every request for as long as
+			// the browser keeps it — the visitor is anonymous either way, but
+			// each request carries a kilobyte of dead weight forever. Only when
+			// one was actually sent: a first-time visitor has nothing to clear
+			// and must not be handed a Set-Cookie they never asked for.
+			//
+			// Written before the handler runs, deliberately. The login callback
+			// is behind this middleware too, and a member logging in after a key
+			// rotation arrives with a stale cookie on the very request that
+			// establishes the new one. A browser applies Set-Cookie in order, so
+			// the clear has to come first or it would undo the login.
+			if _, err := r.Cookie(SessionCookie); err == nil {
+				a.sealer.Clear(w)
+			}
 			next.ServeHTTP(w, r)
 			return
 		}
@@ -93,28 +109,26 @@ func RequireRoleAPI(role string) func(http.Handler) http.Handler {
 	}
 }
 
+// jsonError is the shape of an error body. Declared here rather than taken
+// from the api package, which depends on this one.
+type jsonError struct {
+	Message string `json:"message"`
+}
+
 func writeJSONError(w http.ResponseWriter, status int, msg string) {
 	w.Header().Set("Content-Type", "application/json; charset=utf-8")
 	w.WriteHeader(status)
-	// Small enough to hand-write, and doing so keeps this package free of a
-	// dependency on the api package, which depends on this one.
-	_, _ = w.Write([]byte(`{"message":` + quoteJSON(msg) + `}`))
-}
-
-func quoteJSON(s string) string {
-	out := make([]byte, 0, len(s)+2)
-	out = append(out, '"')
-	for i := 0; i < len(s); i++ {
-		switch c := s[i]; c {
-		case '"', '\\':
-			out = append(out, '\\', c)
-		case '\n':
-			out = append(out, '\\', 'n')
-		default:
-			out = append(out, c)
-		}
-	}
-	return string(append(out, '"'))
+	// encoding/json rather than hand-rolled quoting: the saving was one
+	// allocation on an error path, and the cost was a body that stopped being
+	// parseable the moment a message contained a tab, a carriage return or any
+	// other control character — which is exactly what happens the first time
+	// somebody passes a provider or database error through here.
+	//
+	// Marshalling a struct of one string cannot fail: invalid UTF-8 is replaced
+	// rather than rejected, so there is no error to report and nowhere to
+	// report it once the status has gone out.
+	body, _ := json.Marshal(jsonError{Message: msg})
+	_, _ = w.Write(body)
 }
 
 func constantTimeEqual(a, b string) bool {

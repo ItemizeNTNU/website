@@ -11,6 +11,13 @@ import (
 	"github.com/ItemizeNTNU/website/internal/validate"
 )
 
+// upstreamDownMessage is what somebody sees when the registration failed on
+// our side of the form: no service address, no status code, and advice worth
+// following — what they typed was fine. Kept word for word in step with the
+// JSON path in internal/api/users.go so the same outage reads the same way
+// whichever entry point a member came through.
+const upstreamDownMessage = "Innloggingstjenesten svarer ikke akkurat nå. Prøv igjen om litt."
+
 type registerView struct {
 	Page
 	Form   map[string]string
@@ -80,18 +87,22 @@ func (s *Server) submitRegistration(w http.ResponseWriter, r *http.Request) {
 
 	_, err := s.fusion.CreateUser(r.Context(), reg.ToFusionAuth())
 	if err != nil {
+		// FusionAuth's parser wraps every non-2xx reply in *APIError, a 5xx
+		// included, so the status has to be checked as well. Without that an
+		// outage upstream came back as a 422 on the form, telling somebody whose
+		// details were fine to correct them — and hiding the outage from
+		// anything watching for 5xx. Same split as internal/api/users.go.
 		var apiErr *fusionauth.APIError
-		switch {
-		case errors.As(err, &apiErr):
+		if errors.As(err, &apiErr) && apiErr.Status < http.StatusInternalServerError {
 			// FusionAuth's own message is the useful one here — "email already
 			// in use" is something the person can act on.
 			view.Errors = validate.Errors{"": apiErr.UserMessage()}
 			s.render(w, r, http.StatusUnprocessableEntity, "registrer", view)
-		default:
-			s.log.Error("creating the user failed", "err", err)
-			view.Errors = validate.Errors{"": "Ups. Noe gikk galt :/"}
-			s.render(w, r, http.StatusInternalServerError, "registrer", view)
+			return
 		}
+		s.log.Error("creating the user failed", "err", err)
+		view.Errors = validate.Errors{"": upstreamDownMessage}
+		s.render(w, r, http.StatusInternalServerError, "registrer", view)
 		return
 	}
 

@@ -204,7 +204,9 @@ func TestExchangeTokenEndpointFailures(t *testing.T) {
 			body:       `{"error":"invalid_grant","error_description":"Invalid \"code\" in request."}`,
 			wantStatus: 400,
 		},
-		{"a rejected client secret", 401, `{"error":"invalid_client"}`, 401, ""},
+		// The bot token is not sent to this endpoint, so a 401 here is the
+		// client secret or the code — never the bot token.
+		{"a rejected client secret", 401, `{"error":"invalid_client"}`, 401, "DISCORD_CLIENT_SECRET"},
 		{"the app was disabled", 403, `{"message":"Missing Access","code":50001}`, 403, "Missing Access"},
 		{"Discord is down", 503, ``, 503, ""},
 		{"rate limited", 429, `{"message":"You are being rate limited.","code":0}`, 429, ""},
@@ -419,6 +421,97 @@ func TestExchangeNamesTheFailingLeg(t *testing.T) {
 			t.Errorf("a cancelled exchange sent %d requests", n)
 		}
 	})
+}
+
+// A 401 on either OAuth leg must not blame the bot token, because neither
+// request is sent it. This message reaches the operator log verbatim from the
+// callback handler, and the everyday cause is a reloaded callback replaying a
+// spent code — pointing at DISCORD_BOT_TOKEN sends someone rotating a token
+// that works, while the actual cause goes unmentioned.
+func TestUnauthorizedOnTheOAuthLegsDoesNotBlameTheBotToken(t *testing.T) {
+	t.Run("the token exchange", func(t *testing.T) {
+		c, _ := newFakeDiscord(t, jsonReply(401, `{"error":"invalid_client"}`))
+
+		_, err := c.Exchange(context.Background(), "the-code", "https://itemize.no/cb")
+		assertUnauthorizedBlames(t, err, "DISCORD_CLIENT_SECRET")
+	})
+
+	t.Run("the account lookup", func(t *testing.T) {
+		c, _ := newFakeDiscord(t, sequence(
+			jsonReply(200, `{"access_token":"tok","token_type":"Bearer"}`),
+			jsonReply(401, `{"message":"401: Unauthorized","code":0}`),
+		))
+
+		_, err := c.Exchange(context.Background(), "the-code", "https://itemize.no/cb")
+		assertUnauthorizedBlames(t, err, "access token")
+	})
+
+	// The bot calls are the ones the old message was written for, and they must
+	// keep it: a rejected bot token really is a DISCORD_BOT_TOKEN problem.
+	t.Run("a bot call still names the bot token", func(t *testing.T) {
+		c, _ := newFakeDiscord(t, jsonReply(401, `{"message":"401: Unauthorized","code":0}`))
+
+		_, err := c.GetUser(context.Background(), testSnowflake)
+		if err == nil || !strings.Contains(err.Error(), "DISCORD_BOT_TOKEN") {
+			t.Fatalf("error = %v, want it to name DISCORD_BOT_TOKEN", err)
+		}
+	})
+}
+
+// assertUnauthorizedBlames checks that a 401 from an OAuth leg names want and
+// nothing about the bot token.
+func assertUnauthorizedBlames(t *testing.T, err error, want string) {
+	t.Helper()
+
+	var apiErr *APIError
+	if !errors.As(err, &apiErr) || apiErr.Status != http.StatusUnauthorized {
+		t.Fatalf("got %v, want an APIError carrying 401", err)
+	}
+	if !strings.Contains(err.Error(), want) {
+		t.Errorf("the 401 message does not mention %q, so the log does not say what "+
+			"was actually rejected: %s", want, err)
+	}
+	if strings.Contains(err.Error(), "check DISCORD_BOT_TOKEN") {
+		t.Errorf("the 401 message tells the operator to check DISCORD_BOT_TOKEN for a "+
+			"call that never carried it: %s", err)
+	}
+}
+
+// GetUser applies the same id guard as the OAuth account lookup, so the two
+// agree about what a usable account is. Without it a 204 or an empty object
+// decodes into an account with no identifier: the refresh stores a blank link,
+// GuildMember is then handed "" and answers ErrInvalidID, and the member
+// silently loses role management with "could not check guild membership" as the
+// only trace.
+func TestGetUserRejectsAnAccountWithoutAnID(t *testing.T) {
+	tests := []struct {
+		name   string
+		status int
+		body   string
+	}{
+		{"an empty object", 200, `{}`},
+		{"a username but no id", 200, `{"username":"kari","global_name":"Kari"}`},
+		{"an explicitly empty id", 200, `{"id":"","username":"kari"}`},
+		{"no content at all", 204, ``},
+	}
+
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			c, _ := newFakeDiscord(t, jsonReply(tt.status, tt.body))
+
+			u, err := c.GetUser(context.Background(), testSnowflake)
+			if err == nil {
+				t.Fatal("an account with no id was accepted; the link would be stored " +
+					"blank and every later role call would fail on an empty identifier")
+			}
+			if u != nil {
+				t.Errorf("got %+v alongside the error", u)
+			}
+			if !strings.Contains(err.Error(), "id") {
+				t.Errorf("error = %q, want it to say the id was missing", err)
+			}
+		})
+	}
 }
 
 // A linked account is rendered from whatever Discord returns, including names

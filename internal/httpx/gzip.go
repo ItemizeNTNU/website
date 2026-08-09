@@ -3,6 +3,7 @@ package httpx
 import (
 	"compress/gzip"
 	"net/http"
+	"strconv"
 	"strings"
 	"sync"
 )
@@ -38,10 +39,38 @@ func Gzip(next http.Handler) http.Handler {
 	})
 }
 
+// acceptsGzip reports whether the client offered gzip and did not then refuse
+// it with a zero q-value.
+//
+// A bare "*" does not count as an offer, so "*;q=0" needs no special handling:
+// without an explicit gzip token the answer is already no, and with one the
+// explicit entry wins over the wildcard under RFC 9110 anyway.
 func acceptsGzip(r *http.Request) bool {
 	for _, enc := range strings.Split(r.Header.Get("Accept-Encoding"), ",") {
-		name, _, _ := strings.Cut(strings.TrimSpace(enc), ";")
-		if strings.EqualFold(name, "gzip") {
+		// The whitespace has to come off after the cut as well as before it:
+		// RFC 9110 allows it on both sides of the ";", so "gzip ; q=1.0" is a
+		// perfectly legal way to ask for gzip.
+		name, params, _ := strings.Cut(enc, ";")
+		if strings.EqualFold(strings.TrimSpace(name), "gzip") {
+			return !refusedByQValue(params)
+		}
+	}
+	return false
+}
+
+// refusedByQValue reports whether a coding's parameters carry q=0, which
+// RFC 9110 defines as "not acceptable" — compressing for such a client is
+// doing the one thing it explicitly asked us not to do. Ranking the codings
+// against each other is not worth it here: gzip is the only encoding we can
+// produce, so the only question is whether it is allowed at all.
+func refusedByQValue(params string) bool {
+	for _, p := range strings.Split(params, ";") {
+		v, ok := strings.CutPrefix(strings.ToLower(strings.TrimSpace(p)), "q=")
+		if !ok {
+			continue
+		}
+		// Any legal spelling of zero: "0", "0.0", "0.000".
+		if q, err := strconv.ParseFloat(strings.TrimSpace(v), 64); err == nil && q <= 0 {
 			return true
 		}
 	}
@@ -89,7 +118,13 @@ func (w *gzipResponseWriter) WriteHeader(status int) {
 	h := w.Header()
 	// 204/304 have no body, and an existing Content-Encoding means the
 	// handler already compressed (or otherwise encoded) the payload.
+	//
+	// A 206 is excluded because its Content-Range counts offsets into the body
+	// the handler chose to send. Compressing it here would leave those offsets
+	// describing bytes that are no longer on the wire, and a client resuming a
+	// download would stitch the pieces back together wrongly.
 	if status != http.StatusNoContent && status != http.StatusNotModified &&
+		status != http.StatusPartialContent &&
 		h.Get("Content-Encoding") == "" && compressible(h.Get("Content-Type")) {
 
 		// The compressed length is unknown until the body is written, and an
