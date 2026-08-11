@@ -121,6 +121,17 @@ func (e Event) HasCheckIn() bool {
 
 // ComputeEnd derives the end time from the start and duration. Kept as a
 // method so the write path and the tests cannot disagree about it.
+//
+// The duration is optional. Without one the end is unknown, but `end` still
+// feeds everything downstream: the listing filter and the "Ferdig" chip would
+// declare an end-equals-start event finished the moment it begins, Discord
+// refuses a scheduled event that does not end after it starts, and the iCal
+// feed would emit a zero-length sliver. Midnight in Oslo after the start is
+// the honest bound — "some time that evening" — and keeps all of them sane.
 func (e Event) ComputeEnd() time.Time {
+	if e.Duration == 0 {
+		d := e.Date.In(timefmt.Oslo)
+		return time.Date(d.Year(), d.Month(), d.Day()+1, 0, 0, 0, 0, timefmt.Oslo)
+	}
 	return e.Date.Add(time.Duration(e.Duration * float64(time.Hour)))
 }

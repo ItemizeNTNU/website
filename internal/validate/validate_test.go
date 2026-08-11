@@ -352,6 +352,33 @@ func TestNumber(t *testing.T) {
 	}
 }
 
+func TestOptionalNumber(t *testing.T) {
+	tests := []struct {
+		name    string
+		in      string
+		wantN   float64
+		wantErr string
+	}{
+		{"empty is fine and means zero", "", 0, ""},
+		{"whitespace only is empty too", "   ", 0, ""},
+		{"a value present must still parse", "abc", 0, "Pris må være et tall."},
+		{"a value present must still be in range", "101", 101, "Pris kan ikke være større enn 100."},
+		{"a valid value passes through", "2,5", 2.5, ""},
+	}
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			var e Errors
+			got := e.OptionalNumber("f", "Pris", tt.in, 0, 100)
+			if got != tt.wantN {
+				t.Errorf("returned %v, want %v", got, tt.wantN)
+			}
+			if e["f"] != tt.wantErr {
+				t.Errorf("error = %q, want %q", e["f"], tt.wantErr)
+			}
+		})
+	}
+}
+
 func TestInt(t *testing.T) {
 	tests := []struct {
 		name     string

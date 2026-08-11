@@ -46,7 +46,8 @@ func FromForm(form url.Values) (*Event, validate.Errors) {
 		URL:  e.HTTPSURL("ctf.url", form.Get("ctf.url")),
 	}
 	ev.Info = e.Text("info", "Info", form.Get("info"), infoMin, infoMax)
-	ev.Duration = e.Number("duration", "Varighet", form.Get("duration"), 0, durationMax)
+	// Optional: an event without a duration simply shows no end time.
+	ev.Duration = e.OptionalNumber("duration", "Varighet", form.Get("duration"), 0, durationMax)
 
 	if date, err := timefmt.ParseFormValue(form.Get("date")); err != nil {
 		e.Add("date", "Når må fylles ut med gyldig dato og tid.")

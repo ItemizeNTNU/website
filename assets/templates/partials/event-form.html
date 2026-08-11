@@ -68,9 +68,9 @@
       <div class="field">
         <label for="f-duration">Varighet</label>
         <input id="f-duration" name="duration" type="number" step="0.5" min="0"
-          value="{{ .Form.Duration }}" required
+          value="{{ .Form.Duration }}"
           {{ if index .Errors "duration" }}aria-invalid="true"{{ end }} />
-        <p class="field__hint">Antall timer.</p>
+        <p class="field__hint">Antall timer. Kan stå tomt.</p>
         {{- with index .Errors "duration" }}<p class="field__error">{{ . }}</p>{{ end }}
       </div>
 
