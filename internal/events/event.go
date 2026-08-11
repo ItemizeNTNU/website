@@ -95,8 +95,14 @@ func (e Event) HexID() string {
 // Past reports whether the event has finished.
 func (e Event) Past() bool { return !e.End.IsZero() && e.End.Before(time.Now()) }
 
-// When renders the start time the way the site displays it.
-func (e Event) When() string { return timefmt.Smart(e.Date) }
+// When renders the time the way the site displays it: just the start when no
+// duration is set, the start–end span when one is.
+func (e Event) When() string {
+	if e.Duration > 0 {
+		return timefmt.Range(e.Date, e.ComputeEnd())
+	}
+	return timefmt.Smart(e.Date)
+}
 
 // WhenISO renders the start time for a machine — the datetime attribute on a
 // <time> element.
