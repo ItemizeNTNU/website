@@ -242,6 +242,43 @@ func TestWhenRendersInOslo(t *testing.T) {
 	}
 }
 
+// An event with a duration shows its full span; one without shows only the
+// start, since a zero-hour "span" would render a meaningless "17:15–17:15".
+func TestWhenShowsSpanOnlyWithADuration(t *testing.T) {
+	start := time.Date(2098, 7, 1, 15, 15, 0, 0, time.UTC) // 17:15 CEST, a Tuesday
+
+	tests := []struct {
+		name     string
+		duration float64
+		want     string
+	}{
+		{
+			"no duration shows just the start",
+			0,
+			"tirsdag 1. juli 2098 kl 17:15",
+		},
+		{
+			"a same-day duration collapses the end to a clock time",
+			2.5,
+			"tirsdag 1. juli 2098 kl 17:15–19:45",
+		},
+		{
+			"a duration past midnight spells out both ends",
+			12,
+			"tirsdag 1. juli 2098 kl 17:15 – onsdag 2. juli 2098 kl 05:15",
+		},
+	}
+
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			ev := Event{Date: start, Duration: tt.duration}
+			if got := ev.When(); got != tt.want {
+				t.Errorf("When() = %q, want %q", got, tt.want)
+			}
+		})
+	}
+}
+
 // ── BSON round-trips ──────────────────────────────────────────────────────
 
 // BSON datetimes hold milliseconds, so fixtures use whole-millisecond times:
