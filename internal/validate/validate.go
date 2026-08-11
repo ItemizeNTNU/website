@@ -141,6 +141,15 @@ func (e *Errors) Number(field, label, v string, min, max float64) float64 {
 	return n
 }
 
+// OptionalNumber is Number for a field that may be left blank: empty means
+// zero, but anything present must still parse and sit within the range.
+func (e *Errors) OptionalNumber(field, label, v string, min, max float64) float64 {
+	if strings.TrimSpace(v) == "" {
+		return 0
+	}
+	return e.Number(field, label, v, min, max)
+}
+
 // Int parses a whole number within a range.
 func (e *Errors) Int(field, label, v string, min, max int) int {
 	v = strings.TrimSpace(v)

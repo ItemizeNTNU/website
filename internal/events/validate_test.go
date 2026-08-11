@@ -120,14 +120,14 @@ func TestAcceptedTextIsStoredTrimmed(t *testing.T) {
 func TestEmptySubmissionAnnotatesEveryRequiredField(t *testing.T) {
 	_, verr := FromForm(url.Values{})
 
-	for _, field := range []string{"name", "location.name", "info", "duration", "date"} {
+	for _, field := range []string{"name", "location.name", "info", "date"} {
 		if _, ok := verr[field]; !ok {
 			t.Errorf("no message for %q on a wholly empty submission; the board would have to guess", field)
 		}
 	}
 	// The optional fields must stay quiet, or the form is a wall of red for
 	// things nobody has to fill in.
-	for _, field := range []string{"ctf.name", "ctf.url", "location.url", "register_url"} {
+	for _, field := range []string{"ctf.name", "ctf.url", "location.url", "register_url", "duration"} {
 		if msg, ok := verr[field]; ok {
 			t.Errorf("optional field %q was flagged with %q on an empty submission", field, msg)
 		}
@@ -165,8 +165,8 @@ func TestDurationBoundaries(t *testing.T) {
 		},
 		{"a typo of several thousand hours is rejected", "2000", "Varighet kan ikke være større enn 168.", 2000},
 		{"words are not a duration", "ikke tall", "Varighet må være et tall.", 0},
-		{"an empty duration is required, not defaulted to zero", "", "Varighet må fylles ut.", 0},
-		{"whitespace only is treated as empty", "   ", "Varighet må fylles ut.", 0},
+		{"an empty duration is allowed and means no end time", "", "", 0},
+		{"whitespace only is treated as empty", "   ", "", 0},
 		{
 			// Scientific notation parses, so the ceiling is what catches it.
 			"scientific notation is parsed and then rejected by the ceiling",
@@ -220,11 +220,12 @@ func TestNonFiniteDurationsAreRejectedBeforeTheyReachTheEndTime(t *testing.T) {
 				t.Fatalf("duration %q came back as %v; a rejected value must not be "+
 					"carried into the event at all", value, ev.Duration)
 			}
-			// The end time is derived, so a refused duration has to leave it at the
+			// The end time is derived; a refused duration zeroes out and takes
+			// the no-duration midnight fallback, which must land after the
 			// start rather than somewhere in the eighteenth century.
-			if end := ev.ComputeEnd(); !end.Equal(ev.Date) {
-				t.Errorf("end = %v, want the unchanged start %v — an end time before "+
-					"the start reads as an event that has already finished",
+			if end := ev.ComputeEnd(); !end.After(ev.Date) {
+				t.Errorf("end = %v, want a time after the start %v — an end time "+
+					"before the start reads as an event that has already finished",
 					end, ev.Date)
 			}
 		})

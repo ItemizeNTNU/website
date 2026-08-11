@@ -154,12 +154,28 @@ func TestComputeEnd(t *testing.T) {
 			time.Date(2026, 9, 1, 19, 45, 0, 0, timefmt.Oslo),
 		},
 		{
-			// The form's lower bound is zero, so this is reachable: an
-			// instantaneous event ends when it starts, and must not be filtered
-			// out of the listing as though `end` were missing.
-			"a zero duration ends exactly when it starts",
+			// The duration is optional, and blank means zero. An end equal to
+			// the start would mark the event "Ferdig" the moment it begins and
+			// Discord refuses an event that does not end after it starts, so
+			// the unknown end becomes midnight after the start instead.
+			"no duration ends at the following midnight",
 			plain, 0,
-			plain,
+			time.Date(2026, 9, 2, 0, 0, 0, 0, timefmt.Oslo),
+		},
+		{
+			// The start is stored in UTC; the midnight fallback must be the
+			// Oslo midnight, not the UTC one. 22:15 UTC on the 1st is already
+			// 00:15 on the 2nd in Oslo, so the event ends at midnight on the
+			// 3rd — a UTC calculation would end it before it starts.
+			"the midnight fallback is Oslo midnight",
+			time.Date(2026, 9, 1, 22, 15, 0, 0, time.UTC), 0,
+			time.Date(2026, 9, 3, 0, 0, 0, 0, timefmt.Oslo),
+		},
+		{
+			// time.Date normalizes day 32, so a month boundary is ordinary.
+			"the midnight fallback crosses a month boundary",
+			time.Date(2026, 9, 30, 18, 0, 0, 0, timefmt.Oslo), 0,
+			time.Date(2026, 10, 1, 0, 0, 0, 0, timefmt.Oslo),
 		},
 		{
 			// Not reachable through the form, which rejects negatives, but a

@@ -192,7 +192,11 @@ func (s *Server) deleteEvent(w http.ResponseWriter, r *http.Request) {
 
 // trimFloat renders a duration without a trailing ".0", so a two-hour event
 // shows "2" rather than "2.0" in the form. Half-hour durations still render
-// as "2.5".
+// as "2.5". Zero renders as an empty field: the duration is optional, and a
+// pre-filled "0" would read as a deliberate zero-hour event.
 func trimFloat(f float64) string {
+	if f == 0 {
+		return ""
+	}
 	return strconv.FormatFloat(f, 'f', -1, 64)
 }

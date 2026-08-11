@@ -151,7 +151,8 @@ func TestTrimFloat(t *testing.T) {
 	}{
 		{2, "2"},
 		{2.5, "2.5"},
-		{0, "0"},
+		// The duration is optional; zero pre-fills as blank, not "0".
+		{0, ""},
 		{0.25, "0.25"},
 	}
 	for _, tt := range tests {
