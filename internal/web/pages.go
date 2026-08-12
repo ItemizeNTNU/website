@@ -75,6 +75,16 @@ const (
 		"Hilsen XXXX"
 )
 
+// registrertView is the confirmation page's data. OfferDiscord gates the
+// "link Discord now" panel: true only when the integration is configured and
+// the sealed registration cookie proves a signup just happened here — anyone
+// else typing /registrert into the address bar gets the plain confirmation,
+// with no button leading into a flow that would bounce them straight back.
+type registrertView struct {
+	Page
+	OfferDiscord bool
+}
+
 // registrert confirms a completed signup. Someone already signed in has no
 // business here, matching the previous site.
 func (s *Server) registrert(w http.ResponseWriter, r *http.Request) {
@@ -82,9 +92,12 @@ func (s *Server) registrert(w http.ResponseWriter, r *http.Request) {
 		http.Redirect(w, r, "/profil", http.StatusSeeOther)
 		return
 	}
-	page := s.page(r, "Vellykket brukerregistrering!", "registrert")
-	page.Command = "./register --confirm"
-	s.render(w, r, http.StatusOK, "registrert", page)
+	view := registrertView{Page: s.page(r, "Vellykket brukerregistrering!", "registrert")}
+	view.Command = "./register --confirm"
+	if s.discordSvc.Available() {
+		_, view.OfferDiscord = s.readRegLinkCookie(r)
+	}
+	s.render(w, r, http.StatusOK, "registrert", view)
 }
 
 type utmeldingView struct {

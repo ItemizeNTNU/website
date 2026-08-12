@@ -22,7 +22,6 @@ import (
 	"github.com/ItemizeNTNU/website/internal/events"
 	"github.com/ItemizeNTNU/website/internal/fusionauth"
 	"github.com/ItemizeNTNU/website/internal/httpx"
-	"github.com/ItemizeNTNU/website/internal/users"
 	"github.com/ItemizeNTNU/website/internal/web"
 )
 
@@ -41,8 +40,23 @@ type siteConfig struct {
 	repo       events.Repository
 	svc        *events.Service
 	fusion     *fusionauth.Client
-	discordSvc *users.DiscordService
+	discordSvc web.DiscordLinker
 	baseURL    string
+}
+
+// testSealer seals and opens cookies with a fixed secret, and is the sealer
+// every Server built by newSite carries. Shared rather than per-test so a test
+// can forge a cookie the way the handler under test would have written it —
+// production works the same way, with one secret covering session and
+// registration cookies alike.
+var testSealer = mustSealer()
+
+func mustSealer() *auth.Sealer {
+	s, err := auth.NewSealer("test-secret-long-enough-to-be-real", true)
+	if err != nil {
+		panic(err)
+	}
+	return s
 }
 
 // newSite mirrors the wiring in newMux (routes_test.go) but with injectable
@@ -76,7 +90,7 @@ func newSite(t *testing.T, cfg siteConfig) *http.ServeMux {
 		t.Fatalf("building assets: %v", err)
 	}
 	site, err := web.NewServer(fsys, assetServer, cfg.repo, cfg.svc, fusion,
-		cfg.discordSvc, baseURL, discardLogger(), false)
+		cfg.discordSvc, testSealer, baseURL, discardLogger(), false)
 	if err != nil {
 		t.Fatalf("building server: %v", err)
 	}

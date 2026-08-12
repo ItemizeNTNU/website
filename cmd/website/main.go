@@ -116,18 +116,22 @@ func run(fromDisk bool) error {
 
 	discordSvc := users.NewDiscordService(discordClient, fusionClient, log)
 
-	site, err := web.NewServer(fsys, assetServer, repo, eventSvc, fusionClient,
-		discordSvc, cfg.BaseURL.String(), log, fromDisk)
-	if err != nil {
-		return err
-	}
-
 	https := cfg.BaseURL.Scheme == "https"
 
+	// Built before the web server because both sides use it: the authenticator
+	// seals sessions with it, and the site seals the registration-time Discord
+	// cookie with the same key.
 	sealer, err := auth.NewSealer(cfg.FusionAuth.Secret, https)
 	if err != nil {
 		return err
 	}
+
+	site, err := web.NewServer(fsys, assetServer, repo, eventSvc, fusionClient,
+		discordSvc, sealer, cfg.BaseURL.String(), log, fromDisk)
+	if err != nil {
+		return err
+	}
+
 	authn, err := auth.New(context.Background(), cfg, sealer, log)
 	if err != nil {
 		return err

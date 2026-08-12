@@ -242,6 +242,81 @@ func TestRegistrationSuccessRedirects(t *testing.T) {
 	}
 }
 
+// With Discord configured, the success redirect carries a sealed cookie that
+// lets /registrert offer linking right away — registration itself creates no
+// session, so this cookie is the only thing that can vouch for the new member
+// until the set-password email is acted on.
+func TestRegistrationSuccessSetsDiscordOfferCookie(t *testing.T) {
+	const createdID = "33333333-4444-4555-8666-777777777777"
+	fusion := fakeFusion(t, func(w http.ResponseWriter, r *http.Request) {
+		_, _ = w.Write([]byte(`{"user":{"id":"` + createdID + `"}}`))
+	})
+	mux := newSite(t, siteConfig{fusion: fusion, discordSvc: &fakeDiscordLinker{available: true}})
+
+	rec := postForm(t, mux, "/registrer", validRegistrationForm(), nil)
+	if rec.Code != http.StatusSeeOther {
+		t.Fatalf("got %d, want 303", rec.Code)
+	}
+	if got := rec.Header().Get("Location"); got != "/registrert" {
+		t.Errorf("redirected to %q, want /registrert", got)
+	}
+
+	c := cookieNamed(rec, "itemize_registrering")
+	if c == nil {
+		t.Fatal("no registration cookie was set, so /registrert can never offer the Discord link")
+	}
+	if !c.HttpOnly {
+		t.Error("the registration cookie is readable by script")
+	}
+	if c.Path != "/" {
+		t.Errorf("registration cookie Path = %q, want / so both /registrert and the /api callback see it", c.Path)
+	}
+	if c.MaxAge != 1800 {
+		t.Errorf("registration cookie MaxAge = %d, want 1800 — long enough to create a Discord account, short enough to bound the capability", c.MaxAge)
+	}
+
+	// The cookie must open to the created user, not to whatever was typed in
+	// the form — the sealed id is what the callback will link Discord to.
+	var reg struct {
+		Purpose string    `json:"p"`
+		UserID  string    `json:"u"`
+		Expires time.Time `json:"exp"`
+	}
+	if err := testSealer.Open(c.Value, &reg); err != nil {
+		t.Fatalf("the registration cookie does not open with the server's sealer: %v", err)
+	}
+	if reg.Purpose != "register-discord" {
+		t.Errorf("sealed purpose = %q, want register-discord — anything else is replayable as some other cookie", reg.Purpose)
+	}
+	if reg.UserID != createdID {
+		t.Errorf("sealed user id = %q, want the created user %q", reg.UserID, createdID)
+	}
+	if !reg.Expires.After(time.Now()) {
+		t.Error("the sealed value is already expired on arrival")
+	}
+}
+
+// With Discord unconfigured, a successful registration is byte-for-byte the
+// old behaviour: a bare redirect, no cookie hinting at a flow that could only
+// end in an error flash.
+func TestRegistrationWithoutDiscordSetsNoOfferCookie(t *testing.T) {
+	fusion := fakeFusion(t, func(w http.ResponseWriter, r *http.Request) {
+		_, _ = w.Write([]byte(`{"user":{"id":"33333333-4444-4555-8666-777777777777"}}`))
+	})
+	mux := newSite(t, siteConfig{fusion: fusion}) // no discordSvc
+
+	rec := postForm(t, mux, "/registrer", validRegistrationForm(), nil)
+	if rec.Code != http.StatusSeeOther {
+		t.Fatalf("got %d, want 303", rec.Code)
+	}
+	if got := rec.Header().Get("Location"); got != "/registrert" {
+		t.Errorf("redirected to %q, want /registrert", got)
+	}
+	if c := cookieNamed(rec, "itemize_registrering"); c != nil {
+		t.Errorf("a registration cookie %q was set with the integration off", c.Value)
+	}
+}
+
 // A signed-in visitor's POST bounces to the profile before FusionAuth is ever
 // contacted — no duplicate account, no email.
 func TestRegistrationSignedInPostBypassesFusion(t *testing.T) {

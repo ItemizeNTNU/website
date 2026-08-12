@@ -59,7 +59,7 @@ func TestEventCardRenders(t *testing.T) {
 		t.Fatal(err)
 	}
 	site, err := web.NewServer(fsys, assetServer, repo, nil,
-		fusionauth.New("https://auth.example", ""), nil, "https://itemize.no", log, false)
+		fusionauth.New("https://auth.example", ""), nil, testSealer, "https://itemize.no", log, false)
 	if err != nil {
 		t.Fatal(err)
 	}

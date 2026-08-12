@@ -85,7 +85,7 @@ func (s *Server) submitRegistration(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	_, err := s.fusion.CreateUser(r.Context(), reg.ToFusionAuth())
+	created, err := s.fusion.CreateUser(r.Context(), reg.ToFusionAuth())
 	if err != nil {
 		// FusionAuth's parser wraps every non-2xx reply in *APIError, a 5xx
 		// included, so the status has to be checked as well. Without that an
@@ -104,6 +104,16 @@ func (s *Server) submitRegistration(w http.ResponseWriter, r *http.Request) {
 		view.Errors = validate.Errors{"": upstreamDownMessage}
 		s.render(w, r, http.StatusInternalServerError, "registrer", view)
 		return
+	}
+
+	// The membership now exists; nothing below may stop the confirmation. The
+	// sealed cookie lets /registrert offer linking Discord right away, without
+	// a session — sealing failures are logged and swallowed inside the helper,
+	// because the convenience of that offer is worth strictly less than the
+	// registration it rides on. With Discord unconfigured no cookie is set and
+	// this redirect is all that happens, exactly as before.
+	if s.discordSvc.Available() {
+		s.setRegLinkCookie(w, created.ID)
 	}
 
 	http.Redirect(w, r, "/registrert", http.StatusSeeOther)
