@@ -1,7 +1,10 @@
 package web
 
 import (
+	"html/template"
 	"net/http"
+	"net/url"
+	"strings"
 
 	"github.com/ItemizeNTNU/website/internal/auth"
 	"github.com/ItemizeNTNU/website/internal/events"
@@ -15,6 +18,21 @@ type eventsView struct {
 	// Unavailable is set when the database could not be reached, so the page
 	// can say so instead of claiming there are no events.
 	Unavailable bool
+
+	// The subscribe box's three flavours of the same feed. FeedURL is the
+	// plain https:// address for copying into any client; WebcalURL swaps the
+	// scheme for webcal://, which Apple Calendar and Outlook treat as "add a
+	// subscription" where an https:// link would just download a file; and
+	// GoogleCalURL wraps the webcal address in Google Calendar's add-by-URL
+	// page, whose cid parameter is how a calendar is handed to it.
+	//
+	// WebcalURL is a template.URL because html/template only trusts http,
+	// https and mailto in an href and would rewrite webcal:// to #ZgotmplZ.
+	// Marking it trusted is sound here: the value is derived entirely from
+	// the configured base URL, never from user input.
+	FeedURL      string
+	WebcalURL    template.URL
+	GoogleCalURL string
 
 	// Admin form state. Only rendered for the board.
 	Form     eventForm
@@ -55,6 +73,15 @@ func (s *Server) renderEventsPage(
 	if showOld {
 		view.Command = "./events --all"
 	}
+
+	// Computed before the s.events nil check below: the feed address is
+	// derived from configuration alone, so the subscribe box keeps working
+	// while the database is down — which is exactly when a visitor is best
+	// served by a copy of the calendar that updates itself.
+	view.FeedURL = s.baseURL + "/api/events/ical"
+	webcal := "webcal://" + strings.TrimPrefix(strings.TrimPrefix(view.FeedURL, "https://"), "http://")
+	view.WebcalURL = template.URL(webcal)
+	view.GoogleCalURL = "https://calendar.google.com/calendar/r?cid=" + url.QueryEscape(webcal)
 
 	if styret {
 		view.CSRF = s.csrf(w, r)

@@ -3,7 +3,7 @@
   <h1 class="flush-bottom">Arrangementer</h1>
   <a
     class="push-right"
-    href="/api/events/ical"
+    href="#abonner"
     title="Abonner på kalenderen"
     aria-label="Abonner på kalenderen"
     >{{ template "icon" "calendar-check" }}</a
@@ -13,6 +13,8 @@
 <div class="prose">
   <p>Her finner du oversikt over våre fremtidige arrangementer.</p>
 </div>
+
+{{ template "calendar-subscribe" . }}
 
 {{- if .User.IsStyret }}
 {{ template "event-form" . }}

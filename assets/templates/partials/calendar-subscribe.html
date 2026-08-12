@@ -1,0 +1,45 @@
+{{- /*
+  The calendar subscription box.
+
+  A <details> disclosure rather than a dialog: the browser gives open/closed
+  state and keyboard support for free, so the box works with scripting
+  disabled — and the shared #app-dialog is shaped for confirmations, with an
+  accept and a cancel button, not for a panel of links. The id lets the
+  header icon deep-link straight to it.
+
+  The copy button ships with the hidden attribute and is unhidden by
+  45-calendar.js only when the Clipboard API exists, because the strict
+  Content-Security-Policy rules out inline scripting and a button that does
+  nothing is worse than no button. Without it the readonly input still holds
+  the address, selectable and copyable by hand.
+*/ -}}
+{{- define "calendar-subscribe" -}}
+<details class="subscribe" id="abonner">
+  <summary>{{ template "icon" "calendar-check" }} Abonner på kalenderen</summary>
+
+  <div class="details__body">
+    <p>
+      Legg til kalenderen i kalender-appen din, så dukker nye og oppdaterte
+      arrangementer opp av seg selv.
+    </p>
+
+    <div class="subscribe__url">
+      <label for="feed-url">Kalender-adresse</label>
+      <input id="feed-url" readonly value="{{ .FeedURL }}" />
+      <button type="button" class="btn" data-copy="{{ .FeedURL }}" hidden>
+        Kopier
+      </button>
+    </div>
+
+    <p class="row">
+      <a class="btn btn--ghost" href="{{ .GoogleCalURL }}" rel="noopener"
+        >Google Kalender {{ template "icon" "external-link" }}</a
+      >
+      <a class="btn btn--ghost" href="{{ .WebcalURL }}">Apple / Outlook</a>
+      <a class="btn btn--ghost" href="/api/events/ical" download="itemize.ics"
+        >Last ned .ics</a
+      >
+    </p>
+  </div>
+</details>
+{{- end -}}
