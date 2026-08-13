@@ -1,0 +1,35 @@
+{{- /*
+  The stopover between a fresh registration and Discord's consent screen.
+
+  It exists because of the CSP: form-action 'self' is enforced by Chrome
+  against every redirect a form submission is taken through, so the register
+  form's POST could never be answered with a redirect chain ending on
+  discord.com — the browser killed the navigation and left the form frozen.
+  Ending the chain here, on a same-origin 200, satisfies the policy; the
+  <meta refresh> then starts a fresh navigation that form-action has no say
+  over, and works with scripting disabled. The button is the fallback for
+  browsers configured to ignore meta refresh, and "Hopp over" is the exit
+  for anyone who changed their mind before Discord loaded.
+*/ -}}
+
+{{ define "head" }}
+<meta http-equiv="refresh" content="0;url={{ .AuthorizeURL }}" />
+{{ end }}
+
+{{ define "content" }}
+<h1>Sender deg til Discord …</h1>
+
+<div class="prose">
+  <p>
+    Du blir nå sendt videre til Discord for å koble kontoen din. Skjer det
+    ikke automatisk, kan du bruke knappen under. Har du ingen Discord-bruker,
+    kan du opprette en underveis.
+  </p>
+  <p>
+    <a class="btn btn--primary" href="{{ .AuthorizeURL }}" rel="noopener"
+      >Fortsett til Discord</a
+    >
+    <a class="btn btn--ghost" href="/registrert">Hopp over</a>
+  </p>
+</div>
+{{ end }}

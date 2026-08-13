@@ -12,6 +12,7 @@ import (
 // assets/templates/pages must be mirrored here.
 var pageTemplates = []string{
 	"templates/pages/arrangementer.html",
+	"templates/pages/discord-videresending.html",
 	"templates/pages/error.html",
 	"templates/pages/for-bedrifter.html",
 	"templates/pages/historie.html",

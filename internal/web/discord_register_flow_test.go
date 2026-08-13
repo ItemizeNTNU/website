@@ -150,6 +150,12 @@ func TestDiscordRegisterLinkRequiresValidCookie(t *testing.T) {
 // A valid cookie starts the same browser-bound OAuth round trip as the
 // profile flow, but with the longer thirty-minute window — this person may be
 // creating a Discord account on the way.
+//
+// The answer is a 200 forwarding page rather than a redirect: this request is
+// usually the tail of the register form's redirect chain, and Chrome enforces
+// the CSP's form-action 'self' on every hop of that chain — a 302 onto
+// discord.com from here was silently blocked, leaving the form frozen. The
+// page continues by meta refresh and offers the same URL as a button.
 func TestDiscordRegisterLinkStartsOAuthWithBoundState(t *testing.T) {
 	mux := newSite(t, siteConfig{discordSvc: &fakeDiscordLinker{available: true}})
 
@@ -158,31 +164,34 @@ func TestDiscordRegisterLinkStartsOAuthWithBoundState(t *testing.T) {
 		Name: "itemize_registrering", Value: regCookieValue(t, member.ID, time.Now().Add(time.Hour)),
 	}))
 
-	if rec.Code != http.StatusFound {
-		t.Fatalf("got %d, want 302 to Discord", rec.Code)
-	}
-	loc := rec.Header().Get("Location")
-	parsed, err := url.Parse(loc)
-	if err != nil || parsed.Host != "discord.com" {
-		t.Fatalf("redirected to %q, want the Discord authorize endpoint", loc)
-	}
-	state := parsed.Query().Get("state")
-	if state == "" {
-		t.Fatal("no state parameter; the callback would accept any forged completion")
+	if rec.Code != http.StatusOK {
+		t.Fatalf("got %d, want a 200 forwarding page — a redirect here is killed by the CSP's form-action when the request ends a form submission", rec.Code)
 	}
 
 	cookie := cookieNamed(rec, "itemize_discord_state")
 	if cookie == nil {
 		t.Fatal("no state cookie was set, so the callback can never verify the round trip")
 	}
-	if cookie.Value != state {
-		t.Errorf("cookie state %q differs from the URL's %q; every callback would be rejected", cookie.Value, state)
-	}
 	if !cookie.HttpOnly {
 		t.Error("the state cookie is readable by script")
 	}
 	if cookie.MaxAge != 1800 {
 		t.Errorf("state cookie MaxAge = %d, want 1800 — long enough to create a Discord account mid-flow", cookie.MaxAge)
+	}
+
+	body := rec.Body.String()
+	if !contains(body, `http-equiv="refresh"`) {
+		t.Error("the page has no meta refresh, so nobody is forwarded to Discord automatically")
+	}
+	if !contains(body, "https://discord.com/oauth2/authorize") {
+		t.Error("the page does not point at the Discord authorize endpoint")
+	}
+	// The state in the page's URL must be the one bound to the browser —
+	// anything else and the callback rejects the round trip. Raw URL-safe
+	// base64 survives both query- and HTML-escaping, so a plain substring
+	// check is exact.
+	if !contains(body, "state="+url.QueryEscape(cookie.Value)) {
+		t.Errorf("the authorize URL does not carry the cookie-bound state %q", cookie.Value)
 	}
 }
 

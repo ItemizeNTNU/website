@@ -215,7 +215,27 @@ func (s *Server) discordRegisterLink(w http.ResponseWriter, r *http.Request) {
 		s.ErrorPage(w, r, http.StatusServiceUnavailable)
 		return
 	}
-	http.Redirect(w, r, url, http.StatusFound)
+
+	// A 200 page that continues to Discord by <meta refresh>, not a 302: this
+	// request usually arrives as the tail of the register form's redirect
+	// chain, and Chrome enforces the CSP's form-action 'self' on every hop of
+	// that chain — a redirect onto discord.com from here was silently blocked,
+	// freezing the form. Ending the submission on a same-origin page and
+	// letting the meta refresh start a navigation of its own is what the
+	// policy permits, and it needs no scripting.
+	view := discordForwardView{
+		Page:         s.page(r, "Kobler til Discord", ""),
+		AuthorizeURL: url,
+	}
+	view.Command = "./discord --link"
+	s.render(w, r, http.StatusOK, "discord-videresending", view)
+}
+
+// discordForwardView carries the authorize URL to the forwarding page — the
+// meta refresh and the fallback button both point at it.
+type discordForwardView struct {
+	Page
+	AuthorizeURL string
 }
 
 // discordCallback completes the flow.
