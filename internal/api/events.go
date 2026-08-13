@@ -177,9 +177,13 @@ func (s *Server) icalFeed(w http.ResponseWriter, r *http.Request) {
 			stamp = &e.Created
 		}
 		cal.Add(ical.Event{
-			UID:         ical.UID(e.HexID()),
-			Start:       e.Date,
-			End:         e.End,
+			UID:   ical.UID(e.HexID()),
+			Start: e.Date,
+			// Derived rather than read from the document: legacy events stored
+			// before `end` existed have a zero End, and a VEVENT without DTEND
+			// is open-ended in most clients. ComputeEnd falls back to midnight
+			// in Oslo after the start for exactly this feed's benefit.
+			End:         e.ComputeEnd(),
 			Stamp:       *stamp,
 			Summary:     e.Name,
 			Description: e.Info,

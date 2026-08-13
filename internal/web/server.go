@@ -1,6 +1,7 @@
 package web
 
 import (
+	"context"
 	"io/fs"
 	"log/slog"
 	"net/http"
@@ -15,6 +16,21 @@ import (
 	"github.com/ItemizeNTNU/website/internal/users"
 )
 
+// DiscordLinker is what the handlers need from users.DiscordService.
+//
+// An interface rather than the concrete type because Complete talks to
+// discord.APIBase, which is a compile-time constant with no seam to point at
+// a test server — so the callback's success path could never be exercised
+// against the real service. Production always passes *users.DiscordService;
+// only the flow tests substitute anything else.
+type DiscordLinker interface {
+	Available() bool
+	AuthorizeURL(state, redirectURI string) (string, error)
+	Complete(ctx context.Context, userID, code, redirectURI string) (*users.Link, error)
+	Refresh(ctx context.Context, userID string) (*users.Link, error)
+	Unlink(ctx context.Context, userID string) error
+}
+
 // Server renders the HTML side of the site.
 type Server struct {
 	renderer *Renderer
@@ -25,8 +41,11 @@ type Server struct {
 	events     events.Repository
 	eventSvc   *events.Service
 	fusion     *fusionauth.Client
-	discordSvc *users.DiscordService
-	baseURL    string
+	discordSvc DiscordLinker
+	// sealer opens and seals the registration-time Discord cookie. The same
+	// sealer the session cookies use, so one configured secret covers both.
+	sealer  *auth.Sealer
+	baseURL string
 	// secureCookies mirrors whether the site is served over TLS.
 	secureCookies bool
 	// signupLimit throttles the endpoints that cause an email to be sent.
@@ -36,7 +55,7 @@ type Server struct {
 }
 
 // NewServer parses the templates and loads the editable content.
-func NewServer(fsys fs.FS, assets AssetResolver, repo events.Repository, svc *events.Service, fusion *fusionauth.Client, discordSvc *users.DiscordService, baseURL string, log *slog.Logger, dev bool) (*Server, error) {
+func NewServer(fsys fs.FS, assets AssetResolver, repo events.Repository, svc *events.Service, fusion *fusionauth.Client, discordSvc DiscordLinker, sealer *auth.Sealer, baseURL string, log *slog.Logger, dev bool) (*Server, error) {
 	site, err := content.Load(dev)
 	if err != nil {
 		return nil, err
@@ -44,6 +63,13 @@ func NewServer(fsys fs.FS, assets AssetResolver, repo events.Repository, svc *ev
 	renderer, err := NewRenderer(fsys, Funcs(assets), dev, log)
 	if err != nil {
 		return nil, err
+	}
+	if discordSvc == nil {
+		// A typed nil instead of a nil interface: DiscordService's methods all
+		// tolerate a nil receiver and answer "not configured", whereas calling
+		// through a nil interface panics. This keeps every "is Discord on?"
+		// check a plain method call.
+		discordSvc = (*users.DiscordService)(nil)
 	}
 	return &Server{
 		renderer:      renderer,
@@ -53,6 +79,7 @@ func NewServer(fsys fs.FS, assets AssetResolver, repo events.Repository, svc *ev
 		eventSvc:      svc,
 		fusion:        fusion,
 		discordSvc:    discordSvc,
+		sealer:        sealer,
 		baseURL:       baseURL,
 		secureCookies: strings.HasPrefix(baseURL, "https://"),
 		// Generous for a person filling in a form, useless for a script.
@@ -209,7 +236,13 @@ func (s *Server) Routes(mux *http.ServeMux) {
 	// are ordinary form posts and take the CSRF check.
 	login := auth.RequireLogin
 	mux.Handle("GET /api/discord/link", login(http.HandlerFunc(s.discordLink)))
-	mux.Handle("GET "+discordCallbackPath, login(http.HandlerFunc(s.discordCallback)))
+	// The callback is not behind login: it authenticates by session or by the
+	// sealed registration cookie, and fails closed when it holds neither.
+	mux.Handle("GET "+discordCallbackPath, http.HandlerFunc(s.discordCallback))
+	// Registration-time linking. Not behind signupLimit — it sends no email,
+	// and the sealed registration cookie is the only key that opens it — and
+	// not behind login, because the person it exists for has no session yet.
+	mux.HandleFunc("GET /registrer/discord", s.discordRegisterLink)
 	mux.Handle("POST /profil/discord/oppdater",
 		login(auth.CSRF(http.HandlerFunc(s.discordRefresh))))
 	mux.Handle("POST /profil/discord/koble-fra",

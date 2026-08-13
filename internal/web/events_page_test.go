@@ -159,6 +159,59 @@ func TestArrangementerEditPrefill(t *testing.T) {
 	})
 }
 
+// The subscribe box's three links are the same feed in the three shapes the
+// calendar clients expect: plain https:// for copying, webcal:// so Apple and
+// Outlook subscribe rather than download, and Google's add-by-URL page with
+// the webcal address percent-encoded into cid. The exact strings are pinned
+// because each is a contract with software outside this repository — a feed
+// address that drifts breaks every subscriber, and a mangled cid encoding
+// sends Google Calendar a URL it cannot parse. The test harness serves the
+// site as https://itemize.no, which is what the derivations start from.
+func TestArrangementerSubscribeLinks(t *testing.T) {
+	repo, _, _ := eventsPageRepo()
+	mux := newSite(t, siteConfig{repo: repo})
+
+	rec := get(t, mux, "/arrangementer", nil)
+	if rec.Code != http.StatusOK {
+		t.Fatalf("got %d, want 200", rec.Code)
+	}
+
+	body := rec.Body.String()
+	for _, want := range []string{
+		"https://itemize.no/api/events/ical",
+		"webcal://itemize.no/api/events/ical",
+		"https://calendar.google.com/calendar/r?cid=webcal%3A%2F%2Fitemize.no%2Fapi%2Fevents%2Fical",
+		// The download attribute is what makes "Last ned .ics" save a file
+		// instead of navigating to the feed.
+		`download="itemize.ics"`,
+	} {
+		if !contains(body, want) {
+			t.Errorf("the page is missing %q; a visitor cannot subscribe that way", want)
+		}
+	}
+}
+
+// The subscribe box is derived from configuration alone, so it must survive
+// the storage being gone: a visitor who cannot see the listing is exactly the
+// one best served by a self-updating copy of the calendar. newSite without a
+// repository mirrors a deployment whose database is unreachable at startup.
+func TestArrangementerSubscribeRendersWithoutStorage(t *testing.T) {
+	mux := newSite(t, siteConfig{})
+
+	rec := get(t, mux, "/arrangementer", nil)
+	if rec.Code != http.StatusOK {
+		t.Fatalf("got %d, want 200", rec.Code)
+	}
+
+	body := rec.Body.String()
+	if !contains(body, "Vi får ikke hentet arrangementene akkurat nå") {
+		t.Error("the page does not admit the calendar is unavailable")
+	}
+	if !contains(body, `id="abonner"`) || !contains(body, "webcal://itemize.no/api/events/ical") {
+		t.Error("the subscribe box vanished with the database, though it needs nothing from it")
+	}
+}
+
 // A database failure renders the page saying so, rather than a 500 or — worse
 // — an empty calendar that reads as "nothing planned".
 func TestArrangementerSaysSoWhenListingFails(t *testing.T) {

@@ -451,6 +451,26 @@ func TestICalFeedStampsEachEventSeparately(t *testing.T) {
 	}
 }
 
+// Events stored before `end` existed have a zero End, and older ones let the
+// duration default too. A VEVENT without DTEND is open-ended — clients render
+// it swallowing the rest of the day, or refuse it — so the feed derives the
+// end with ComputeEnd instead of copying the stored field. With no duration
+// that is midnight in Oslo after the start: the fixture starts 17:15 UTC on
+// 1 September, which is 19:15 CEST, so the following Oslo midnight is 22:00
+// UTC the same calendar day.
+func TestICalFeedDerivesEndForLegacyEvents(t *testing.T) {
+	e := pizzakveld(t)
+	e.Duration = 0
+	e.End = time.Time{}
+	mux := newAPI(t, apiConfig{repo: &stubRepo{public: []events.Event{e}}})
+
+	body := getAs(t, mux, "/api/events/ical", nil).Body.String()
+
+	if !strings.Contains(body, "DTEND:20980901T220000Z") {
+		t.Errorf("a legacy event without a stored end did not get the derived DTEND:\n%s", body)
+	}
+}
+
 // An empty calendar is still a calendar. Returning nothing at all would make
 // every subscribed client report a broken feed the first time the board had no
 // events queued.

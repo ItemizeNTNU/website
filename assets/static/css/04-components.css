@@ -389,6 +389,39 @@ details > .details__body {
   padding-top: var(--s5);
 }
 
+/* ── Calendar subscription ─────────────────────────────────────────────── */
+
+.subscribe {
+  margin: var(--s5) 0 var(--s6);
+}
+
+/* Label on its own line, then the address and its copy button sharing a row.
+   The address is monospace like the rest of the terminal motif — it is a URL
+   to be copied verbatim, not prose. */
+.subscribe__url {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: var(--s3);
+  margin-bottom: var(--s5);
+}
+
+.subscribe__url > label {
+  flex: 0 0 100%;
+  font-family: var(--font-mono);
+  font-size: var(--fs-sm);
+  color: var(--dim);
+}
+
+.subscribe__url > input {
+  flex: 1;
+  /* Inputs default to min-width:auto, which would refuse to shrink below the
+     full feed address and overflow a phone screen. */
+  min-width: 0;
+  font-family: var(--font-mono);
+  font-size: var(--fs-sm);
+}
+
 /* ── Dialog ────────────────────────────────────────────────────────────── */
 
 dialog {
