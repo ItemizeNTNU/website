@@ -535,7 +535,6 @@ func TestSecurityHeaders(t *testing.T) {
 				"img-src 'self' data: https://cdn.discordapp.com",
 				"font-src 'self'",
 				"connect-src 'self'",
-				"manifest-src 'self'",
 				"form-action 'self'",
 				"base-uri 'none'",
 				"frame-ancestors 'none'",

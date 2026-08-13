@@ -110,9 +110,6 @@ func SecurityHeaders(https bool) Middleware {
 		"img-src 'self' data: https://cdn.discordapp.com",
 		"font-src 'self'",
 		"connect-src 'self'",
-		// The layout links /manifest.json; without this the browser's fetch of
-		// it falls back to default-src 'none' and every page logs a violation.
-		"manifest-src 'self'",
 		"form-action 'self'",
 		"base-uri 'none'",
 		"frame-ancestors 'none'",

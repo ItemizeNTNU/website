@@ -106,21 +106,14 @@ func (s *Server) submitRegistration(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	// The membership now exists; nothing below may stop the confirmation. With
-	// Discord configured the new member is sent straight into the linking flow
-	// rather than past a button on the confirmation page — the sealed cookie
-	// is what vouches for them there, since registration ends with a
-	// set-password email and no session. The detour is safe to take blindly:
-	// every path out of /registrer/discord and the callback lands on
-	// /registrert, so declining, an outage, or an expired cookie costs the
-	// visitor nothing but the trip. Sealing failures are logged and swallowed
-	// inside the helper and answered with false here, because the convenience
-	// of the link is worth strictly less than the registration it rides on.
-	// With Discord unconfigured no cookie is set and the plain confirmation
-	// redirect is all that happens, exactly as before.
-	if s.discordSvc.Available() && s.setRegLinkCookie(w, created.ID) {
-		http.Redirect(w, r, "/registrer/discord", http.StatusSeeOther)
-		return
+	// The membership now exists; nothing below may stop the confirmation. The
+	// sealed cookie lets /registrert offer linking Discord right away, without
+	// a session — sealing failures are logged and swallowed inside the helper,
+	// because the convenience of that offer is worth strictly less than the
+	// registration it rides on. With Discord unconfigured no cookie is set and
+	// this redirect is all that happens, exactly as before.
+	if s.discordSvc.Available() {
+		s.setRegLinkCookie(w, created.ID)
 	}
 
 	http.Redirect(w, r, "/registrert", http.StatusSeeOther)

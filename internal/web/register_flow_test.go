@@ -242,13 +242,10 @@ func TestRegistrationSuccessRedirects(t *testing.T) {
 	}
 }
 
-// With Discord configured, a successful registration goes straight into the
-// linking flow instead of stopping at a button — every new member should end
-// up with a linked Discord account, and every exit from that flow lands back
-// on /registrert, so the detour can never cost the registration. The redirect
-// carries a sealed cookie because registration itself creates no session; the
-// cookie is the only thing that can vouch for the new member until the
-// set-password email is acted on.
+// With Discord configured, the success redirect carries a sealed cookie that
+// lets /registrert offer linking right away — registration itself creates no
+// session, so this cookie is the only thing that can vouch for the new member
+// until the set-password email is acted on.
 func TestRegistrationSuccessSetsDiscordOfferCookie(t *testing.T) {
 	const createdID = "33333333-4444-4555-8666-777777777777"
 	fusion := fakeFusion(t, func(w http.ResponseWriter, r *http.Request) {
@@ -260,13 +257,13 @@ func TestRegistrationSuccessSetsDiscordOfferCookie(t *testing.T) {
 	if rec.Code != http.StatusSeeOther {
 		t.Fatalf("got %d, want 303", rec.Code)
 	}
-	if got := rec.Header().Get("Location"); got != "/registrer/discord" {
-		t.Errorf("redirected to %q, want /registrer/discord — the new member should be sent straight into the linking flow", got)
+	if got := rec.Header().Get("Location"); got != "/registrert" {
+		t.Errorf("redirected to %q, want /registrert", got)
 	}
 
 	c := cookieNamed(rec, "itemize_registrering")
 	if c == nil {
-		t.Fatal("no registration cookie was set, so /registrer/discord would bounce the new member straight back out")
+		t.Fatal("no registration cookie was set, so /registrert can never offer the Discord link")
 	}
 	if !c.HttpOnly {
 		t.Error("the registration cookie is readable by script")

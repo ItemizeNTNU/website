@@ -62,18 +62,16 @@ type regLinkState struct {
 	Expires time.Time `json:"exp"`
 }
 
-// setRegLinkCookie seals the created user's id into the registration cookie
-// and reports whether it was set — the caller only detours the fresh member
-// through the Discord flow when there is a cookie for that flow to act on.
+// setRegLinkCookie seals the created user's id into the registration cookie.
 //
 // Failure is logged and swallowed: the membership already exists and the
 // confirmation must proceed — the cookie is a convenience on top of
 // registration, never a step of it.
-func (s *Server) setRegLinkCookie(w http.ResponseWriter, userID string) bool {
+func (s *Server) setRegLinkCookie(w http.ResponseWriter, userID string) {
 	if s.sealer == nil || userID == "" {
 		// No sealer means no way to make the cookie trustworthy; no id means
 		// nothing to vouch for. Either way the flow is simply not offered.
-		return false
+		return
 	}
 	sealed, err := s.sealer.Seal(regLinkState{
 		Purpose: regLinkPurpose,
@@ -82,7 +80,7 @@ func (s *Server) setRegLinkCookie(w http.ResponseWriter, userID string) bool {
 	})
 	if err != nil {
 		s.log.Error("sealing the registration cookie failed; the Discord offer is skipped", "err", err)
-		return false
+		return
 	}
 	http.SetCookie(w, &http.Cookie{
 		Name:     regLinkCookie,
@@ -93,7 +91,6 @@ func (s *Server) setRegLinkCookie(w http.ResponseWriter, userID string) bool {
 		Secure:   s.secureCookies,
 		SameSite: http.SameSiteLaxMode,
 	})
-	return true
 }
 
 // readRegLinkCookie opens the registration cookie and returns the user it
@@ -215,27 +212,7 @@ func (s *Server) discordRegisterLink(w http.ResponseWriter, r *http.Request) {
 		s.ErrorPage(w, r, http.StatusServiceUnavailable)
 		return
 	}
-
-	// A 200 page that continues to Discord by <meta refresh>, not a 302: this
-	// request usually arrives as the tail of the register form's redirect
-	// chain, and Chrome enforces the CSP's form-action 'self' on every hop of
-	// that chain — a redirect onto discord.com from here was silently blocked,
-	// freezing the form. Ending the submission on a same-origin page and
-	// letting the meta refresh start a navigation of its own is what the
-	// policy permits, and it needs no scripting.
-	view := discordForwardView{
-		Page:         s.page(r, "Kobler til Discord", ""),
-		AuthorizeURL: url,
-	}
-	view.Command = "./discord --link"
-	s.render(w, r, http.StatusOK, "discord-videresending", view)
-}
-
-// discordForwardView carries the authorize URL to the forwarding page — the
-// meta refresh and the fallback button both point at it.
-type discordForwardView struct {
-	Page
-	AuthorizeURL string
+	http.Redirect(w, r, url, http.StatusFound)
 }
 
 // discordCallback completes the flow.
